@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [ "feature/github-actions" ]
+    branches: [ "sjm150/project_setting" ]
   workflow_dispatch:
 
 permissions:
