@@ -2,9 +2,8 @@ package com.example.demo.dto
 
 import jakarta.validation.constraints.NotEmpty
 
-//import javax.validation.constraints.NotEmpty
 
-data class ConfirmEmailRequest (
+data class VerifyEmailRequest (
     @field:NotEmpty
     val email: String
 )
