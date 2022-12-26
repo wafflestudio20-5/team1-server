@@ -17,6 +17,6 @@ class UserService (
     fun updateUserMailVerified(userId: Long, verifyEmailRequest: VerifyEmailRequest) {
         val user: TempUserEntity = userRepository.findByIdOrNull(userId)
             ?: throw WafflyTime404("해당 유저 id를 찾을 수 없습니다")
-        user.snuMail = verifyEmailRequest.email
+        user.univEmail = verifyEmailRequest.email
     }
 }
