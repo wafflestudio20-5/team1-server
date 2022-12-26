@@ -1,9 +1,9 @@
-package com.example.demo.api
+package com.wafflytime.api
 
-import com.example.demo.dto.AuthToken
-import com.example.demo.dto.VerifyEmailRequest
-import com.example.demo.service.EmailService
-import com.example.demo.service.UserService
+import com.wafflytime.dto.AuthToken
+import com.wafflytime.dto.VerifyEmailRequest
+import com.wafflytime.service.EmailService
+import com.wafflytime.service.UserService
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PatchMapping

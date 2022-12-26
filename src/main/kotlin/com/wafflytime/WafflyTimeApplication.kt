@@ -1,4 +1,4 @@
-package com.example.demo
+package com.wafflytime
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

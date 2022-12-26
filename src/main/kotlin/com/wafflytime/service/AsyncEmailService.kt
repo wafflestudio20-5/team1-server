@@ -1,6 +1,6 @@
-package com.example.demo.service
+package com.wafflytime.service
 
-import com.example.demo.dto.VerifyEmailCode
+import com.wafflytime.dto.VerifyEmailCode
 import jakarta.mail.internet.MimeMessage
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper

@@ -1,4 +1,4 @@
-package com.example.demo.database
+package com.wafflytime.database
 
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate

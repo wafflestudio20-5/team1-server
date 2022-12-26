@@ -1,8 +1,8 @@
-package com.example.demo.service
+package com.wafflytime.service
 
-import com.example.demo.dto.VerifyEmailCode
-import com.example.demo.dto.VerifyEmailRequest
-import com.example.demo.exception.WafflyTime400
+import com.wafflytime.dto.VerifyEmailCode
+import com.wafflytime.dto.VerifyEmailRequest
+import com.wafflytime.exception.WafflyTime400
 import org.springframework.stereotype.Service
 import kotlin.random.Random
 

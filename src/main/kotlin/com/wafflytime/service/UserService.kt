@@ -1,8 +1,8 @@
-package com.example.demo.service
+package com.wafflytime.service
 
-import com.example.demo.database.TempUserEntity
-import com.example.demo.database.UserRepository
-import com.example.demo.exception.WafflyTime404
+import com.wafflytime.database.TempUserEntity
+import com.wafflytime.database.UserRepository
+import com.wafflytime.exception.WafflyTime404
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service

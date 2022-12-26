@@ -1,4 +1,4 @@
-package com.example.demo.dto
+package com.wafflytime.dto
 
 import jakarta.validation.constraints.NotEmpty
 

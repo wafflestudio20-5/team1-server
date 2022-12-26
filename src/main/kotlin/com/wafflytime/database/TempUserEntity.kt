@@ -1,4 +1,4 @@
-package com.example.demo.database
+package com.wafflytime.database
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Table

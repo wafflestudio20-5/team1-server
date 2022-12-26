@@ -1,4 +1,4 @@
-package com.example.demo.database
+package com.wafflytime.database
 
 import org.springframework.data.jpa.repository.JpaRepository
 

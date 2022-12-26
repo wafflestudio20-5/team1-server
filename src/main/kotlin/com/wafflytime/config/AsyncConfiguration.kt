@@ -1,4 +1,4 @@
-package com.example.demo.config
+package com.wafflytime.config
 
 import org.slf4j.MDC
 import org.springframework.context.annotation.Bean
