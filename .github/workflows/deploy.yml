@@ -1,0 +1,62 @@
+name: CI-CD
+
+on:
+  push:
+    branches: [ "feature/ci-cd" ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up AWS configuration
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Commit hash for Docker tag
+        id: commit
+        uses: pr-mpt/actions-commit-hash@v2
+
+      - name: Set up Docker CLI
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build
+
+      - name: Build & Push Docker Image on ECR
+        run: |
+          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR }}
+          docker build -t ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }} .
+          docker push ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}
+
+      - name: Pull image on EC2 & Run
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PEM_KEY }}
+          script: |
+            docker stop $(docker ps -a -q)
+            docker rm $(docker ps -a -q)
+            docker image rm $(docker ps -a -q)
+            aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR }}
+            docker pull ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}
+            docker run -dp 80:8080 ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}
