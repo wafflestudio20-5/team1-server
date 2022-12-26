@@ -6,7 +6,7 @@ import jakarta.persistence.Table
 @Entity
 class TempUserEntity(
     var nickname: String,
-    var emailVerified: Boolean = false,
+    var snuMail: String? = null,
 ) : BaseTimeEntity() {
 }
 
