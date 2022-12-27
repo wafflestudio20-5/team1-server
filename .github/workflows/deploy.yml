@@ -3,7 +3,6 @@ name: CI-CD
 on:
   push:
     branches: [ "feature/ci-cd" ]
-  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -56,7 +55,11 @@ jobs:
           script: |
             docker stop $(docker ps -a -q)
             docker rm $(docker ps -a -q)
-            docker image rm $(docker ps -a -q)
+            docker image rm $(docker images -a -q)
             aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR }}
             docker pull ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}
-            docker run -dp 80:8080 ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}
+            docker run \
+              -dp 80:8080 \
+              -e MAIL_USERNAME=${{ secrets.MAIL_USERNAME }} \
+              -e MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} \
+              ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}
