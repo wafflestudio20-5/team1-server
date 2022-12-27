@@ -1,4 +1,3 @@
-# OAuth
 spring:
   profiles:
     include: oauth
