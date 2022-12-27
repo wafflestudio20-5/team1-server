@@ -1,5 +1,7 @@
 package com.wafflytime.service
 
+import com.wafflytime.exception.WafflyTime400
+
 data class OAuth2Attribute(
     private val attributes: Map<String, Any>,
     private val attributeKey: String,
@@ -10,7 +12,7 @@ data class OAuth2Attribute(
             return when (provider) {
                 "google" -> ofGoogle(attributeKey, attributes)
                 "facebook" -> ofFacebook(attributeKey, attributes)
-                else -> throw Exception()
+                else -> throw WafflyTime400("제공하지 않는 소셜 로그인 서비스입니다.")
             }
         }
 
