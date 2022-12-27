@@ -7,13 +7,22 @@ data class OAuth2Attribute(
 ) {
     companion object {
         fun of(provider: String, attributeKey: String, attributes: Map<String, Any>): OAuth2Attribute {
-            when (provider) {
-                "google" -> return ofGoogle(attributeKey, attributes)
+            return when (provider) {
+                "google" -> ofGoogle(attributeKey, attributes)
+                "facebook" -> ofFacebook(attributeKey, attributes)
                 else -> throw Exception()
             }
         }
 
         private fun ofGoogle(attributeKey: String, attributes: Map<String, Any>): OAuth2Attribute {
+            return OAuth2Attribute(
+                attributes = attributes,
+                attributeKey = attributeKey,
+                email = attributes["email"] as String
+            )
+        }
+
+        private fun ofFacebook(attributeKey: String, attributes: Map<String, Any>): OAuth2Attribute {
             return OAuth2Attribute(
                 attributes = attributes,
                 attributeKey = attributeKey,
