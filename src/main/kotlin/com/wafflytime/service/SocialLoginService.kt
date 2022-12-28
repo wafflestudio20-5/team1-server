@@ -2,6 +2,7 @@ package com.wafflytime.service
 
 import com.wafflytime.database.SocialEntity
 import com.wafflytime.database.SocialRepository
+import com.wafflytime.exception.WafflyTime400
 import jakarta.transaction.Transactional
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
@@ -18,7 +19,7 @@ class SocialLoginService(
 ) : OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     @Transactional
     override fun loadUser(userRequest: OAuth2UserRequest?): OAuth2User {
-        userRequest ?: throw Exception()
+        userRequest ?: throw WafflyTime400("잘못된 로그인 요청입니다.")
         val oAuth2UserService = DefaultOAuth2UserService()
         val oAuth2User = oAuth2UserService.loadUser(userRequest)
         val registrationId = userRequest
@@ -40,8 +41,8 @@ class SocialLoginService(
         ) ?: socialRepository.save(SocialEntity(provider = registrationId, email = email))
 
         val role = social.user?.univEmail?.let {
-            "ROLE_VERIFIED_USER"
-        } ?: "ROLE_UNVERIFIED_USER"
+            "ROLE_USER"
+        } ?: "ROLE_GUEST"
 
         return DefaultOAuth2User(
             Collections.singleton(SimpleGrantedAuthority(role)),
