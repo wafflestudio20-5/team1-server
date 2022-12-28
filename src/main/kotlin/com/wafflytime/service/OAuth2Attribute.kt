@@ -11,7 +11,9 @@ data class OAuth2Attribute(
         fun of(provider: String, attributeKey: String, attributes: Map<String, Any>): OAuth2Attribute {
             return when (provider) {
                 "google" -> ofGoogle(attributeKey, attributes)
-                "facebook" -> ofFacebook(attributeKey, attributes)
+                "naver" -> ofNaver("id", attributes)
+                "kakao" -> ofKakao("email", attributes)
+                "github" -> ofGithub(attributeKey, attributes)
                 else -> throw WafflyTime400("제공하지 않는 소셜 로그인 서비스입니다.")
             }
         }
@@ -24,7 +26,25 @@ data class OAuth2Attribute(
             )
         }
 
-        private fun ofFacebook(attributeKey: String, attributes: Map<String, Any>): OAuth2Attribute {
+        private fun ofNaver(attributeKey: String, attributes: Map<String, Any>): OAuth2Attribute {
+            val response= attributes["response"] as Map<String, Any>
+            return OAuth2Attribute(
+                attributes = response,
+                attributeKey = attributeKey,
+                email = response["email"] as String
+            )
+        }
+
+        private fun ofKakao(attributeKey: String, attributes: Map<String, Any>): OAuth2Attribute {
+            val kakaoAccount= attributes["kakao_account"] as Map<String, Any>
+            return OAuth2Attribute(
+                attributes = kakaoAccount,
+                attributeKey = attributeKey,
+                email = kakaoAccount["email"] as String
+            )
+        }
+
+        private fun ofGithub(attributeKey: String, attributes: Map<String, Any>): OAuth2Attribute {
             return OAuth2Attribute(
                 attributes = attributes,
                 attributeKey = attributeKey,
