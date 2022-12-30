@@ -2,6 +2,6 @@ package com.wafflytime.database
 
 import org.springframework.data.jpa.repository.JpaRepository
 
-interface UserRepository : JpaRepository<TempUserEntity, Long> {
-    fun findByUnivEmail(univEmail: String) : TempUserEntity?
+interface UserRepository : JpaRepository<UserEntity, Long> {
+    fun findByUnivEmail(univEmail: String) : UserEntity?
 }
