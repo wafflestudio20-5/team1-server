@@ -30,8 +30,9 @@ data class AuthProperties @ConstructorBinding constructor(
 
 interface AuthTokenService {
     fun buildAuthToken(user: UserEntity, now: LocalDateTime): AuthToken
-    fun authenticate(accessToken: String): Jws<Claims>
     fun refresh(refreshToken: String): AuthToken
+    fun deleteRefreshToken(userId: Long)
+    fun authenticate(accessToken: String): Jws<Claims>
     fun getUserId(authResult: Jws<Claims>): Long
     fun isEmailVerified(authResult: Jws<Claims>): Boolean
 }
@@ -50,10 +51,7 @@ class AuthTokenServiceImpl(
         return buildAuthToken(user.id, now, user.univEmail != null)
     }
 
-    override fun authenticate(accessToken: String): Jws<Claims> {
-        return verifyToken(accessToken, accessSigningKey)
-    }
-
+    // TODO: 1대다가 되는 경우 추가 구현 필요
     @Transactional
     override fun refresh(refreshToken: String): AuthToken {
         val now = LocalDateTime.now()
@@ -70,6 +68,18 @@ class AuthTokenServiceImpl(
         } else {
             throw WafflyTime409("Refresh token taken over")
         }
+    }
+
+    @Transactional
+    override fun deleteRefreshToken(userId: Long) {
+        val refreshTokenEntity = refreshTokenRepository.findByUserId(userId)
+            ?: throw WafflyTime401("잘못된 인증입니다")
+
+        refreshTokenEntity.token = null
+    }
+
+    override fun authenticate(accessToken: String): Jws<Claims> {
+        return verifyToken(accessToken, accessSigningKey)
     }
 
     override fun getUserId(authResult: Jws<Claims>): Long {
