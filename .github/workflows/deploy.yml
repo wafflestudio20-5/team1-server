@@ -65,6 +65,4 @@ jobs:
               -e JWT_ISSUER=${{ secrets.JWT_ISSUER }} \
               -e JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }} \
               -e JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} \
-              -e JWT_EXPIRATION_MINUTES=${{ secrets.JWT_EXPIRATION_MINUTES }} \
-              -e JWT_REFRESH_EXPIRATION_DAYS=${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }} \
               ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}

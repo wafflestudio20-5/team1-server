@@ -36,5 +36,5 @@ auth.jwt:
   issuer: ${JWT_ISSUER}
   accessSecret: ${JWT_ACCESS_SECRET}
   refreshSecret: ${JWT_REFRESH_SECRET}
-  expiration: ${JWT_EXPIRATION_MINUTES}
-  refreshExpiration: ${JWT_REFRESH_EXPIRATION_DAYS}
+  expiration: 60 # minutes
+  refreshExpiration: 100 # days
