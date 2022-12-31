@@ -1,9 +1,9 @@
-package com.wafflytime.service
+package com.wafflytime.user.auth.service
 
-import com.wafflytime.database.RefreshTokenEntity
-import com.wafflytime.database.RefreshTokenRepository
-import com.wafflytime.database.UserEntity
-import com.wafflytime.dto.AuthToken
+import com.wafflytime.user.auth.database.RefreshTokenEntity
+import com.wafflytime.user.auth.database.RefreshTokenRepository
+import com.wafflytime.user.info.database.UserEntity
+import com.wafflytime.user.auth.controller.dto.AuthToken
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime409
 import io.jsonwebtoken.*
@@ -63,10 +63,10 @@ class AuthTokenServiceImpl(
         val refreshTokenEntity = refreshTokenRepository.findByUserId(userId)
             ?: throw WafflyTime401("잘못된 인증입니다")
 
-        if (refreshToken == refreshTokenEntity.token) {
+        if (refreshToken == tokenPrefix + refreshTokenEntity.token) {
             return buildAuthToken(userId, now, emailVerified)
         } else {
-            throw WafflyTime409("Refresh token taken over")
+            throw WafflyTime409("Refresh token take over detected")
         }
     }
 
@@ -91,13 +91,14 @@ class AuthTokenServiceImpl(
     }
 
     override fun isEmailVerified(authResult: Jws<Claims>): Boolean {
-        return authResult.body.get("email-verified", Boolean::class.java)
+        return authResult.body.get("email-verified", String::class.java)
+            ?.toBoolean()
             ?: throw WafflyTime401("잘못된 인증입니다")
     }
 
     private fun buildAuthToken(userId: Long, now: LocalDateTime, emailVerified: Boolean): AuthToken {
         val claims = Jwts.claims()
-        claims["email-verified"] = emailVerified
+        claims["email-verified"] = if (emailVerified) "true" else "false"
 
         val accessToken = buildJwtToken(authProperties.issuer, userId.toString(), accessSigningKey, now, now.plusMinutes(authProperties.expiration), claims)
         val refreshToken = buildJwtToken(authProperties.issuer, userId.toString(), refreshSigningKey, now, now.plusDays(authProperties.refreshExpiration), claims)
@@ -123,7 +124,7 @@ class AuthTokenServiceImpl(
             .setSubject(subject)
             .setIssuedAt(Timestamp.valueOf(issuedAt))
             .setExpiration(Timestamp.valueOf(expiration))
-            .signWith(key, SignatureAlgorithm.RS512)
+            .signWith(key, SignatureAlgorithm.HS512)
             .addClaims(claims)
             .compact()
     }

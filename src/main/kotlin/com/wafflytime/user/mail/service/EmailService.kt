@@ -1,8 +1,8 @@
-package com.wafflytime.service
+package com.wafflytime.user.mail.service
 
-import com.wafflytime.database.UserRepository
-import com.wafflytime.dto.VerifyEmailCode
-import com.wafflytime.dto.VerifyEmailRequest
+import com.wafflytime.user.info.database.UserRepository
+import com.wafflytime.user.mail.api.dto.VerifyEmailCode
+import com.wafflytime.user.mail.api.dto.VerifyEmailRequest
 import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime409
 import org.springframework.stereotype.Service

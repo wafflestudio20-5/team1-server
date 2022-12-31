@@ -2,7 +2,7 @@ package com.wafflytime.config
 
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime500
-import com.wafflytime.service.AuthTokenService
+import com.wafflytime.user.auth.service.AuthTokenService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Configuration
@@ -17,7 +17,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 // 로그인 상태를 요구하는 요청에서 userId parameter 에 사용
-@Target(AnnotationTarget.TYPE_PARAMETER)
+@Target(AnnotationTarget.VALUE_PARAMETER)
 annotation class UserIdFromToken
 
 // 로그인 상태를 요구하지 않는 요청에 사용
