@@ -74,19 +74,24 @@ class LocalAuthInterceptor(
 ): HandlerInterceptor {
 
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
-        val handlerCasted = handler as? HandlerMethod ?: return true
+        if (!request.requestURI.startsWith("/v3/api-docs")) {
 
-        if (!handlerCasted.hasMethodAnnotation(ExemptAuthentication::class.java)) {
-            val accessToken = request.getHeader("Authorization") ?: throw WafflyTime401("로그인 후 이용 가능합니다")
+            val handlerCasted = handler as? HandlerMethod ?: return true
 
-            val authResult = authTokenService.authenticate(accessToken)
-            request.setAttribute("UserIdFromToken", authTokenService.getUserId(authResult))
 
-            if (!handlerCasted.hasMethodAnnotation(ExemptEmailVerification::class.java)) {
-                if (!authTokenService.isEmailVerified(authResult)) {
-                    throw WafflyTime401("학교 이메일 인증 후 이용 가능합니다")
+            if (!handlerCasted.hasMethodAnnotation(ExemptAuthentication::class.java)) {
+                val accessToken = request.getHeader("Authorization") ?: throw WafflyTime401("로그인 후 이용 가능합니다")
+
+                val authResult = authTokenService.authenticate(accessToken)
+                request.setAttribute("UserIdFromToken", authTokenService.getUserId(authResult))
+
+                if (!handlerCasted.hasMethodAnnotation(ExemptEmailVerification::class.java)) {
+                    if (!authTokenService.isEmailVerified(authResult)) {
+                        throw WafflyTime401("학교 이메일 인증 후 이용 가능합니다")
+                    }
                 }
             }
+
         }
 
         return super.preHandle(request, response, handler)
