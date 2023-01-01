@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:latest
+    restart: always
+    environment:
+      - MYSQL_DATABASE=wafflytime_local_db
+      - MYSQL_ROOT_PASSWORD=wafflytime_local_pwd
+    ports:
+      - '3306:3306'
+    volumes:
+      - db:/var/lib/mysql
+volumes:
+  db:
+    driver: local

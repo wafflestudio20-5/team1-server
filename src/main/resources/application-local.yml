@@ -1,17 +1,12 @@
 spring:
   profiles:
-    active: dev
-
-  h2:
-    console:
-      enabled: true  # H2 Console을 사용할지 여부 (H2 Console은 H2 Database를 UI로 제공해주는 기능)
-      path: /h2-console  # H2 Console의 Path
+    active: local
 
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:mysql://localhost:3306/wafflytime_local_db?serverTimezone=UTC
+    username: root
+    password: wafflytime_local_pwd
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     properties:
@@ -19,5 +14,3 @@ spring:
         show_sql: true
     hibernate:
       ddl-auto: update
-
-
