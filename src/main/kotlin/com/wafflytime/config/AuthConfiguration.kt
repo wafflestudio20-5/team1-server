@@ -27,5 +27,4 @@ class AuthConfiguration {
             .and()
             .build()
     }
-
 }
