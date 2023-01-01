@@ -1,4 +1,4 @@
-package com.wafflytime.service
+package com.wafflytime.user.auth.service
 
 import com.wafflytime.exception.WafflyTime400
 import jakarta.transaction.Transactional
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-class SocialLoginService : OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+class SocialAuthService : OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     @Transactional
     override fun loadUser(userRequest: OAuth2UserRequest?): OAuth2User {
         userRequest ?: throw WafflyTime400("잘못된 로그인 요청입니다.")

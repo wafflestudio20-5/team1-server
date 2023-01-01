@@ -1,6 +1,6 @@
-package com.wafflytime.service
+package com.wafflytime.user.auth.service
 
-import com.wafflytime.database.UserRepository
+import com.wafflytime.user.info.database.UserRepository
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.core.Authentication

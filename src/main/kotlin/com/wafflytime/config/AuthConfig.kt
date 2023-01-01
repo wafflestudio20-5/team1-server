@@ -1,7 +1,7 @@
 package com.wafflytime.config
 
-import com.wafflytime.service.OAuth2SuccessHandler
-import com.wafflytime.service.SocialLoginService
+import com.wafflytime.user.auth.service.OAuth2SuccessHandler
+import com.wafflytime.user.auth.service.SocialAuthService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -15,7 +15,7 @@ import org.springframework.security.web.header.writers.frameoptions.XFrameOption
 @Configuration
 @EnableWebSecurity
 class AuthConfig(
-    private val socialLoginService: SocialLoginService,
+    private val socialAuthService: SocialAuthService,
     private val oAuth2SuccessHandler: OAuth2SuccessHandler,
 ) {
     @Bean
@@ -36,7 +36,7 @@ class AuthConfig(
             .and()
             .oauth2Login()
                 .userInfoEndpoint()
-                .userService(socialLoginService)
+                .userService(socialAuthService)
                 .and()
                 .successHandler(oAuth2SuccessHandler)
             .and()

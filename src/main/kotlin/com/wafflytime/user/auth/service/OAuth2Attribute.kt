@@ -1,4 +1,4 @@
-package com.wafflytime.service
+package com.wafflytime.user.auth.service
 
 import com.wafflytime.exception.WafflyTime400
 

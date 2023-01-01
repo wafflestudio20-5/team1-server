@@ -1,4 +1,4 @@
-package com.wafflytime.user.auth.controller
+package com.wafflytime.user.auth.controller.api
 
 import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.config.ExemptEmailVerification
