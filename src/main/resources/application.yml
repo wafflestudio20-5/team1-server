@@ -26,8 +26,15 @@ spring:
     password:
 
   jpa:
-    propoerties:
+    properties:
       hibernate:
         show_sql: true
     hibernate:
       ddl-auto: update
+
+auth.jwt:
+  issuer: ${JWT_ISSUER}
+  accessSecret: ${JWT_ACCESS_SECRET}
+  refreshSecret: ${JWT_REFRESH_SECRET}
+  expiration: 60 # minutes
+  refreshExpiration: 100 # days

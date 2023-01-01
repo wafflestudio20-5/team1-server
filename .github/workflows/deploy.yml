@@ -62,4 +62,7 @@ jobs:
               -dp 80:8080 \
               -e MAIL_USERNAME=${{ secrets.MAIL_USERNAME }} \
               -e MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} \
+              -e JWT_ISSUER=${{ secrets.JWT_ISSUER }} \
+              -e JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }} \
+              -e JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} \
               ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}

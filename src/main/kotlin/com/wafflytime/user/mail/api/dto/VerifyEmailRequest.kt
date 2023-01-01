@@ -1,4 +1,4 @@
-package com.wafflytime.dto
+package com.wafflytime.user.mail.api.dto
 
 import jakarta.validation.constraints.NotEmpty
 
