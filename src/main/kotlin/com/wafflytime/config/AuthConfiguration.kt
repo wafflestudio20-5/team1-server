@@ -23,6 +23,8 @@ class AuthConfiguration {
             .authorizeHttpRequests()
             .anyRequest().permitAll()
             .and()
+            .headers().frameOptions().disable()
+            .and()
             .build()
     }
 

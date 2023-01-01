@@ -3,8 +3,10 @@ package com.wafflytime.user.info.database
 import com.wafflytime.common.BaseTimeEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.Table
 
 @Entity
+@Table(name="wafflytime_user")
 class UserEntity(
     @field:Column(unique = true)
     val loginId: String? = null,
