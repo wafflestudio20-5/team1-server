@@ -2,7 +2,7 @@ name: CI-CD
 
 on:
   push:
-    branches: [ "feature/prod-db" ]
+    branches: [ "main" ]
 
 permissions:
   id-token: write
