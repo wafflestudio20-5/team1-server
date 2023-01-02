@@ -1,9 +1,11 @@
 package com.wafflytime.board.database
 
+import com.wafflytime.board.types.BoardType
 import com.wafflytime.common.BaseTimeEntity
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 
 @Entity
 @Table(name="board")
@@ -12,9 +14,11 @@ class BoardEntity(
     @field:Column(unique = true)
     val title: String,
 
+    @field:NotNull @Enumerated(EnumType.STRING) val type: BoardType,
+
     // TODO: 에타에서 게시판을 생성해 본 적이 없어서 게시판 생성을 요청한 학생에게 게시판 삭제 권한도 주어지는 것인지 확인. 임의로 우리가 하고 싶은대로 해도 될 듯
     // Owner null인 경우는 학생이 직접 생성한 게시판이 아닌 default로 만들어놓은 게시판(ex 자유게시판)
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="wafflytime_user_id")
     val user: UserEntity? = null,
 
