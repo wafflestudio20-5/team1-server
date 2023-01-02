@@ -31,7 +31,7 @@ class OAuthController(
 
     @ExemptAuthentication
     @PostMapping("/api/auth/social/signup")
-    fun localSignUp(@Valid @RequestBody request: SocialSignUpRequest) : AuthToken {
+    fun socialSignUp(@Valid @RequestBody request: SocialSignUpRequest) : AuthToken {
         return oAuthService.socialSignUp(request)
     }
 }
