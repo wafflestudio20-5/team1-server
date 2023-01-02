@@ -1,5 +1,6 @@
 package com.wafflytime.user.auth.service
 
+import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.exception.*
 import com.wafflytime.user.auth.OAuthProperties
 import com.wafflytime.user.auth.controller.dto.AuthToken
@@ -8,6 +9,7 @@ import com.wafflytime.user.auth.controller.dto.SocialLoginRequest
 import com.wafflytime.user.auth.controller.dto.SocialSignUpRequest
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
+import jakarta.transaction.Transactional
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
@@ -29,6 +31,8 @@ class OAuthServiceImpl(
     private val authTokenService: AuthTokenService,
 ) : OAuthService {
 
+    @ExemptAuthentication
+    @Transactional
     override fun getSocialEmail(providerName: String, code: String): String {
         val provider = oAuthProperties.provider[providerName]
             ?: throw WafflyTime400("제공하지 않는 OAuth Provider 입니다.")
@@ -36,6 +40,8 @@ class OAuthServiceImpl(
         return getSocialEmail(provider, providerName, accessToken)
     }
 
+    @ExemptAuthentication
+    @Transactional
     override fun socialLogin(request: SocialLoginRequest): AuthToken {
         val socialEmail = request.socialEmail
         val user = userRepository.findBySocialEmail(socialEmail)
@@ -43,6 +49,8 @@ class OAuthServiceImpl(
         return authTokenService.buildAuthToken(user, LocalDateTime.now())
     }
 
+    @ExemptAuthentication
+    @Transactional
     override fun socialSignUp(request: SocialSignUpRequest): AuthToken {
         val socialEmail = request.socialEmail
         if (userRepository.findBySocialEmail(socialEmail) != null) {
