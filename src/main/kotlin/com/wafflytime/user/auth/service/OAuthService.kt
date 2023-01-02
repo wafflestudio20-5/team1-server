@@ -1,8 +1,6 @@
 package com.wafflytime.user.auth.service
 
-import com.wafflytime.exception.WafflyTime400
-import com.wafflytime.exception.WafflyTime403
-import com.wafflytime.exception.WafflyTime409
+import com.wafflytime.exception.*
 import com.wafflytime.user.auth.OAuthProperties
 import com.wafflytime.user.auth.controller.dto.AuthToken
 import com.wafflytime.user.auth.controller.dto.OAuthToken
@@ -41,7 +39,7 @@ class OAuthServiceImpl(
     override fun socialLogin(request: SocialLoginRequest): AuthToken {
         val socialEmail = request.socialEmail
         val user = userRepository.findBySocialEmail(socialEmail)
-            ?: throw WafflyTime403("존재하지 않는 이메일입니다.")
+            ?: throw WafflyTime404("존재하지 않는 이메일입니다.")
         return authTokenService.buildAuthToken(user, LocalDateTime.now())
     }
 
@@ -67,7 +65,7 @@ class OAuthServiceImpl(
             .retrieve()
             .bodyToMono(OAuthToken::class.java)
             .block()
-            ?: throw WafflyTime400("잘못된 code 입니다.")
+            ?: throw WafflyTime401("잘못된 code 입니다.")
     }
 
     private fun tokenRequest(
@@ -96,7 +94,7 @@ class OAuthServiceImpl(
             .retrieve()
             .bodyToMono<Map<String, Any>>()
             .block()
-            ?: throw WafflyTime400("잘못된 token 입니다.")
+            ?: throw WafflyTime401("잘못된 token 입니다.")
 
         return when (providerName) {
             "google" -> google(attributes)
