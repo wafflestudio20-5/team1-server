@@ -60,7 +60,11 @@ dependencies {
 	implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
 	// OAuth
-	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+	//thymeleaf (프론트 붙이기 전 테스트용)
+	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+	implementation("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect")
 }
 
 // QueryDSL
