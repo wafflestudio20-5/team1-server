@@ -38,7 +38,7 @@ jobs:
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: build
+          arguments: build -x test
 
       - name: Build & Push Docker Image on ECR
         run: |
@@ -65,4 +65,8 @@ jobs:
               -e JWT_ISSUER=${{ secrets.JWT_ISSUER }} \
               -e JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }} \
               -e JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} \
+              -e SQL_HOST=${{ secrets.SQL_HOST }} \
+              -e SQL_DB=${{ secrets.SQL_DB }} \
+              -e SQL_USERNAME=${{ secrets.SQL_USERNAME }} \
+              -e SQL_PASSWORD=${{ secrets.SQL_PASSWORD }} \
               ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}

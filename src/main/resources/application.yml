@@ -1,6 +1,7 @@
 spring:
-  profiles:
-    active: dev
+  config:
+    import:
+      - optional:classpath:/application-local.yml
 
   mail:
     host: smtp.gmail.com
@@ -14,23 +15,6 @@ spring:
           auth: true
           starttls:
             enable: true
-  h2:
-    console:
-      enabled: true  # H2 Console을 사용할지 여부 (H2 Console은 H2 Database를 UI로 제공해주는 기능)
-      path: /h2-console  # H2 Console의 Path
-
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-
-  jpa:
-    properties:
-      hibernate:
-        show_sql: true
-    hibernate:
-      ddl-auto: update
 
 auth.jwt:
   issuer: ${JWT_ISSUER}
