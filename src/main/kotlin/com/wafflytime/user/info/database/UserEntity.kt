@@ -35,5 +35,4 @@ class UserEntity(
      *  쪽지 관련
      *  etc
      */
-
 }

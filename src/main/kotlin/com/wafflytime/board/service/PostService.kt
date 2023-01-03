@@ -10,6 +10,9 @@ import com.wafflytime.exception.WafflyTime404
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
 import jakarta.transaction.Transactional
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
@@ -44,7 +47,10 @@ class PostService(
         return PostResponse.of(post)
     }
 
-    fun getPosts(boardId: Long): List<PostResponse> {
-        TODO("Not yet implemented")
+    fun getPosts(boardId: Long, page: Int, size:Int): Page<PostResponse> {
+        val sort = Sort.by(Sort.Direction.DESC, "createdAt")
+        return postRepository.findAll(PageRequest.of(page, size, sort)).map {
+            PostResponse.of(it)
+        }
     }
 }
