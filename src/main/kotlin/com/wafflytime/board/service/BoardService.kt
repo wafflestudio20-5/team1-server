@@ -4,7 +4,6 @@ import com.wafflytime.board.database.BoardEntity
 import com.wafflytime.board.database.BoardRepository
 import com.wafflytime.board.dto.CreateBoardRequest
 import com.wafflytime.board.dto.CreateBoardResponse
-import com.wafflytime.board.dto.DeleteBoardRequest
 import com.wafflytime.board.dto.DeleteBoardResponse
 import com.wafflytime.board.type.BoardType
 import com.wafflytime.exception.WafflyTime400
