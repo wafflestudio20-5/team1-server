@@ -6,6 +6,7 @@ import com.wafflytime.board.database.PostRepository
 import com.wafflytime.board.dto.CreatePostRequest
 import com.wafflytime.board.dto.DeletePostResponse
 import com.wafflytime.board.dto.PostResponse
+import com.wafflytime.board.dto.UpdatePostRequest
 import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
@@ -31,7 +32,7 @@ class PostService(
         val board = boardRepository.findByIdOrNull(boardId) ?: throw WafflyTime404("board id가 존재하지 않습니다")
         val user: UserEntity = userRepository.findByIdOrNull(userId)!!
 
-        if (!board.allowAnonymous && request.isAnonymous) throw WafflyTime404("이 게시판은 익명으로 게시글을 작성할 수 없습니다")
+        if (!board.allowAnonymous && request.isWriterAnonymous) throw WafflyTime404("이 게시판은 익명으로 게시글을 작성할 수 없습니다")
 
         val post: PostEntity = postRepository.save(PostEntity(
             title = request.title,
@@ -39,7 +40,7 @@ class PostService(
             writer = user,
             board = board,
             isQuestion = request.isQuestion,
-            isWriterAnonymous = request.isAnonymous)
+            isWriterAnonymous = request.isWriterAnonymous)
         )
         return PostResponse.of(post)
     }
@@ -75,9 +76,19 @@ class PostService(
         }
     }
 
+    @Transactional
+    fun updatePost(userId: Long, boardId: Long, postId: Long, request: UpdatePostRequest): PostResponse {
+        val post = validateBoardAndPost(boardId, postId)
+        if (userId != post.writer.id) throw WafflyTime401("게시물 작성자가 아닌 유저는 게시물을 수정할 수 없습니다")
+        post.update(request)
+        return PostResponse.of(post)
+    }
+
     fun validateBoardAndPost(boardId: Long, postId: Long) : PostEntity {
         val post: PostEntity = postRepository.findByIdOrNull(postId) ?: throw WafflyTime404("post id가 존재하지 않습니다")
         if (post.board.id != boardId) throw  WafflyTime400("board id와 post id가 매치되지 않습니다 : 해당 게시판에 속한 게시물이 아닙니다")
         return post
     }
+
+
 }

@@ -3,6 +3,7 @@ package com.wafflytime.board.controller
 import com.wafflytime.board.dto.CreatePostRequest
 import com.wafflytime.board.dto.DeletePostResponse
 import com.wafflytime.board.dto.PostResponse
+import com.wafflytime.board.dto.UpdatePostRequest
 import com.wafflytime.board.service.PostService
 import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
@@ -43,6 +44,17 @@ class PostController(
         @Valid @RequestBody request: CreatePostRequest
     ) : ResponseEntity<PostResponse> {
         return ResponseEntity.ok(postService.createPost(userId, boardId, request))
+    }
+
+    @ExemptEmailVerification
+    @PutMapping("/api/board/{boardId}/post/{postId}")
+    fun updatePost(
+        @UserIdFromToken userId: Long,
+        @PathVariable boardId: Long,
+        @PathVariable postId: Long,
+        @Valid @RequestBody request: UpdatePostRequest
+    ) : ResponseEntity<PostResponse> {
+        return ResponseEntity.ok(postService.updatePost(userId, boardId, postId, request))
     }
 
     @ExemptEmailVerification

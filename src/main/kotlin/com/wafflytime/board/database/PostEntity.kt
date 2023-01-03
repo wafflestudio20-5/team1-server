@@ -1,15 +1,15 @@
 package com.wafflytime.board.database
 
+import com.wafflytime.board.dto.UpdatePostRequest
 import com.wafflytime.common.BaseTimeEntity
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User
 
 @Entity
 @Table(name="post")
 class PostEntity(
-    val title: String,
-    val contents: String,
+    var title: String,
+    var contents: String,
 
     // writer 와 board 의 owner 인 유저만 post 를 지울 수 있음
     @ManyToOne(fetch = FetchType.EAGER)
@@ -32,6 +32,14 @@ class PostEntity(
     // TODO(재웅) : 사진 첨부 여부 고려
 
     // TODO : 질문글인 경우 게시판 상위로 보여지게 하는 알고리즘도 적용하면 좋겠지만 시간이 되면 도전
-    val isQuestion: Boolean = false,
-    val isWriterAnonymous: Boolean = true,
-) : BaseTimeEntity()
+    var isQuestion: Boolean = false,
+    var isWriterAnonymous: Boolean = true,
+) : BaseTimeEntity() {
+
+    fun update(request: UpdatePostRequest) {
+        this.title = request.title ?: this.title
+        this.contents = request.contents ?: this.contents
+        this.isQuestion = request.isQuestion ?: this.isQuestion
+        this.isWriterAnonymous = request.isWriterAnonymous ?: this.isWriterAnonymous
+    }
+}

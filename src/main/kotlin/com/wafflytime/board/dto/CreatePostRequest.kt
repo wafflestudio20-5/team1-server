@@ -8,5 +8,5 @@ data class CreatePostRequest(
     @NotEmpty
     val contents: String,
     val isQuestion: Boolean = false,
-    val isAnonymous: Boolean = true
+    val isWriterAnonymous: Boolean = true
 )
