@@ -43,9 +43,16 @@ class BoardService(
             title = request.title,
             description = request.description,
             user = user,
-            type = request.boardType
+            type = request.boardType,
+            allowAnonymous = request.allowAnonymous
         ))
-        return CreateBoardResponse(userId = userId, boardId = board.id, title = board.title, description = board.description)
+        return CreateBoardResponse(
+            userId = userId,
+            boardId = board.id,
+            title = board.title,
+            description = board.description,
+            allowAnonymous = board.allowAnonymous
+        )
     }
 
     @Transactional
