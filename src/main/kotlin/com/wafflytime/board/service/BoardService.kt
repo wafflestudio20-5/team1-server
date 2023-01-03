@@ -38,8 +38,13 @@ class BoardService(
                 throw WafflyTime400("admin은 CUSTOM 타입으로 게시판을 생성하지 않습니다")
             }
         }
-        boardRepository.save(BoardEntity(title = request.title, user = user, type = request.boardType))
-        return CreateBoardResponse(id = userId, title = request.title)
+        val board = boardRepository.save(BoardEntity(
+            title = request.title,
+            description = request.description,
+            user = user,
+            type = request.boardType
+        ))
+        return CreateBoardResponse(userId = userId, boardId = board.id, title = board.title, description = board.description)
     }
 
     @Transactional
