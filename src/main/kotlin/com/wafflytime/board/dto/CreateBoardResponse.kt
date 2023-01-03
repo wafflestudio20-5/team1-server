@@ -1,6 +1,8 @@
 package com.wafflytime.board.dto
 
 data class CreateBoardResponse(
-    val id: Long?,
-    val title: String
+    val userId: Long,
+    val boardId: Long,
+    val title: String,
+    val description: String
 )

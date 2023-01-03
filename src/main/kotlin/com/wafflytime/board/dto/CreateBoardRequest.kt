@@ -8,5 +8,6 @@ data class CreateBoardRequest(
     @NotBlank
     val title: String,
     @NotNull
-    val boardType: BoardType
+    val boardType: BoardType,
+    val description: String = ""
 )
