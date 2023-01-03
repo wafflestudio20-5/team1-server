@@ -6,7 +6,7 @@ import com.wafflytime.user.info.api.dto.UserInfo
 import com.wafflytime.user.info.service.UserService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
@@ -20,7 +20,7 @@ class UserController(
         return userService.getUserInfo(userId)
     }
 
-    @PostMapping("/api/user/me")
+    @PutMapping("/api/user/me")
     fun updateMyInfo(
         @UserIdFromToken userId: Long,
         @Valid @RequestBody request: UpdateUserInfoRequest,
