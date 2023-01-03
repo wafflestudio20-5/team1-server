@@ -9,6 +9,7 @@ import com.wafflytime.user.auth.api.dto.AuthToken
 import com.wafflytime.user.auth.api.dto.OAuthToken
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
+import com.wafflytime.user.info.type.UserRole
 import jakarta.transaction.Transactional
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
@@ -46,7 +47,7 @@ class OAuthServiceImpl(
         if (userRepository.findBySocialEmail(socialEmail) != null) {
             throw WafflyTime409("이미 이 소셜 이메일로 가입한 계정이 존재합니다")
         }
-        val user = userRepository.save(UserEntity(socialEmail = socialEmail))
+        val user = userRepository.save(UserEntity(socialEmail = socialEmail, role = UserRole.ROLE_USER))
         return authTokenService.buildAuthToken(user, LocalDateTime.now())
     }
 
