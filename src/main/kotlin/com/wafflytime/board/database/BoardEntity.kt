@@ -1,6 +1,6 @@
 package com.wafflytime.board.database
 
-import com.wafflytime.board.types.BoardType
+import com.wafflytime.board.type.BoardType
 import com.wafflytime.common.BaseTimeEntity
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
