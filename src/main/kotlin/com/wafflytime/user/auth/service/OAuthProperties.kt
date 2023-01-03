@@ -1,4 +1,4 @@
-package com.wafflytime.user.auth
+package com.wafflytime.user.auth.service
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
