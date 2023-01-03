@@ -4,11 +4,14 @@ import com.wafflytime.board.database.BoardRepository
 import com.wafflytime.board.database.PostEntity
 import com.wafflytime.board.database.PostRepository
 import com.wafflytime.board.dto.CreatePostRequest
+import com.wafflytime.board.dto.DeletePostResponse
 import com.wafflytime.board.dto.PostResponse
 import com.wafflytime.exception.WafflyTime400
+import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
+import com.wafflytime.user.info.type.UserRole
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -42,8 +45,7 @@ class PostService(
     }
 
     fun getPost(boardId: Long, postId: Long): PostResponse {
-        val post = postRepository.findByIdOrNull(postId) ?: throw WafflyTime404("post id에 해당한는 post를 찾을 수 없습니다")
-        if (post.board.id != boardId) throw  WafflyTime400("board id와 post id가 매치되지 않습니다 : 해당 게시판에 속한 게시물이 아닙니다")
+        val post = validateBoardAndPost(boardId, postId)
         return PostResponse.of(post)
     }
 
@@ -52,5 +54,30 @@ class PostService(
         return postRepository.findAll(PageRequest.of(page, size, sort)).map {
             PostResponse.of(it)
         }
+    }
+
+    @Transactional
+    fun deletePost(userId: Long, boardId: Long, postId: Long): DeletePostResponse {
+        val post = validateBoardAndPost(boardId, postId)
+        val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("user id가 존재하지 않습니다")
+
+        // 게시물 작성자, 게시판 주인, admin 만 게시물을 삭제 할 수 있다
+        if (userId == post.writer.id || user.role == UserRole.ROLE_ADMIN || userId == post.board.owner!!.id) {
+            postRepository.delete(post)
+            return DeletePostResponse(
+                boardId = boardId,
+                boardTitle = post.board.title,
+                postId = postId,
+                postTitle = post.title
+            )
+        } else {
+            throw WafflyTime401("게시물을 삭제할 권한이 없습니다")
+        }
+    }
+
+    fun validateBoardAndPost(boardId: Long, postId: Long) : PostEntity {
+        val post: PostEntity = postRepository.findByIdOrNull(postId) ?: throw WafflyTime404("post id가 존재하지 않습니다")
+        if (post.board.id != boardId) throw  WafflyTime400("board id와 post id가 매치되지 않습니다 : 해당 게시판에 속한 게시물이 아닙니다")
+        return post
     }
 }

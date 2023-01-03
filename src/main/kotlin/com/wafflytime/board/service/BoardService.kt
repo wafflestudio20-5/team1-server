@@ -42,7 +42,7 @@ class BoardService(
         val board = boardRepository.save(BoardEntity(
             title = request.title,
             description = request.description,
-            user = user,
+            owner = user,
             type = request.boardType,
             allowAnonymous = request.allowAnonymous
         ))
@@ -62,7 +62,7 @@ class BoardService(
 
         if (user.role == UserRole.ROLE_USER) {
             if (board.type == BoardType.DEFAULT) throw WafflyTime401("일반 유저는 default 게시판을 삭제할 수 없습니다")
-            if (board.user!!.id != userId) throw WafflyTime400("게시판 owner가 아닌 유저는 게시판을 삭제할 수 없습니다")
+            if (board.owner!!.id != userId) throw WafflyTime400("게시판 owner가 아닌 유저는 게시판을 삭제할 수 없습니다")
         }
         boardRepository.delete(board)
         return DeleteBoardResponse(boardId = board.id, title = board.title)
