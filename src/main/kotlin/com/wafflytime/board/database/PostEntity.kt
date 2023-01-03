@@ -29,6 +29,8 @@ class PostEntity(
     @OneToMany(mappedBy = "post", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
     val scraps: MutableList<ScrapEntity> = mutableListOf(),
 
+    // TODO(재웅) : 사진 첨부 여부 고려
+
     // TODO : 질문글인 경우 게시판 상위로 보여지게 하는 알고리즘도 적용하면 좋겠지만 시간이 되면 도전
     val isQuestion: Boolean = false,
     val isWriterAnonymous: Boolean = true,
