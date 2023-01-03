@@ -9,11 +9,6 @@ import org.springframework.web.bind.annotation.*
 class OAuthController(
     private val oAuthService: OAuthService,
 ) {
-
-    @ExemptAuthentication
-    @RequestMapping("/index")
-    fun index() = "index"
-
     @ExemptAuthentication
     @PostMapping("/api/auth/social/login/{provider}")
     fun socialLogin(@PathVariable provider: String, @RequestParam code: String) : AuthToken {
