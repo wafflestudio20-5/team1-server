@@ -9,9 +9,10 @@ import org.springframework.boot.autoconfigure.security.SecurityProperties.User
 @Table(name="post")
 class PostEntity(
     val title: String,
+    val contents: String,
 
     // writer 와 board 의 owner 인 유저만 post 를 지울 수 있음
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="wafflytime_user_id")
     val writer: UserEntity,
 
@@ -29,5 +30,6 @@ class PostEntity(
     val scraps: MutableList<ScrapEntity> = mutableListOf(),
 
     // 질문글인 경우 게시판 상위로 보여지게 하는 알고리즘도 적용하면 좋겠지만 시간이 안 될 것 같다
-    val isQuestion: Boolean = false
+    val isQuestion: Boolean = false,
+    val isWriterAnonymous: Boolean = true,
 ) : BaseTimeEntity()
