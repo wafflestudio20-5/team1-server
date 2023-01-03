@@ -19,9 +19,7 @@ class UserEntity(
 
     @field:NotNull @Enumerated(EnumType.STRING)
     val role: UserRole
-
-    ): BaseTimeEntity() {
-
+): BaseTimeEntity() {
     /**
      * TODO:
      *  작성글 목록
@@ -30,5 +28,4 @@ class UserEntity(
      *  쪽지 관련
      *  etc
      */
-
 }
