@@ -1,5 +1,6 @@
 package com.wafflytime.board.controller
 
+import com.wafflytime.board.dto.BoardResponse
 import com.wafflytime.board.dto.CreateBoardRequest
 import com.wafflytime.board.dto.CreateBoardResponse
 import com.wafflytime.board.dto.DeleteBoardResponse
@@ -14,6 +15,19 @@ import org.springframework.web.bind.annotation.*
 class BoardController(
     private val boardService: BoardService
 ) {
+
+    @ExemptEmailVerification
+    @GetMapping("/api/board/{boardId}")
+    fun getBoard(@PathVariable boardId: Long) : ResponseEntity<BoardResponse> {
+        return ResponseEntity.ok().body(boardService.getBoard(boardId))
+    }
+
+    @ExemptEmailVerification
+    @GetMapping("/api/boards")
+    fun getBoards() : ResponseEntity<List<BoardResponse>> {
+        // boards 는 적어서 pageable 할 필요 없음
+        return ResponseEntity.ok().body(boardService.getAllBoards())
+    }
 
     @ExemptEmailVerification
     @PostMapping("/api/board")

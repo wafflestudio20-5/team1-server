@@ -2,6 +2,7 @@ package com.wafflytime.board.service
 
 import com.wafflytime.board.database.BoardEntity
 import com.wafflytime.board.database.BoardRepository
+import com.wafflytime.board.dto.BoardResponse
 import com.wafflytime.board.dto.CreateBoardRequest
 import com.wafflytime.board.dto.CreateBoardResponse
 import com.wafflytime.board.dto.DeleteBoardResponse
@@ -58,5 +59,14 @@ class BoardService(
         }
         boardRepository.delete(board)
         return DeleteBoardResponse(boardId = board.id, title = board.title)
+    }
+
+    fun getAllBoards(): List<BoardResponse> {
+        return boardRepository.findAll().map { BoardResponse.of(it) }
+    }
+
+    fun getBoard(boardId: Long): BoardResponse {
+        val board = boardRepository.findByIdOrNull(boardId) ?: throw WafflyTime404("board id가 존재하지 않습니다")
+        return BoardResponse.of(board)
     }
 }
