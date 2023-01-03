@@ -21,12 +21,12 @@ class PostEntity(
 
     @OneToMany(mappedBy = "post", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
     val replies: MutableList<ReplyEntity> = mutableListOf(),
-//
-//    @OneToMany(mappedBy = "post", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
-//    val likes: MutableList<LikeEntity> = mutableListOf(),
-//
-//    @OneToMany(mappedBy = "post", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
-//    val scraps: MutableList<ScrapEntity> = mutableListOf(),
+
+    @OneToMany(mappedBy = "post", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
+    val likes: MutableList<LikeEntity> = mutableListOf(),
+
+    @OneToMany(mappedBy = "post", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
+    val scraps: MutableList<ScrapEntity> = mutableListOf(),
 
     // 질문글인 경우 게시판 상위로 보여지게 하는 알고리즘도 적용하면 좋겠지만 시간이 안 될 것 같다
     val isQuestion: Boolean = false
