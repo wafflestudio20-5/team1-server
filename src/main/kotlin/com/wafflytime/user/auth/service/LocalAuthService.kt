@@ -3,9 +3,9 @@ package com.wafflytime.user.auth.service
 import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
-import com.wafflytime.user.auth.controller.dto.AuthToken
-import com.wafflytime.user.auth.controller.dto.LoginRequest
-import com.wafflytime.user.auth.controller.dto.SignUpRequest
+import com.wafflytime.user.auth.api.dto.AuthToken
+import com.wafflytime.user.auth.api.dto.LoginRequest
+import com.wafflytime.user.auth.api.dto.SignUpRequest
 import com.wafflytime.exception.WafflyTime404
 import jakarta.transaction.Transactional
 import org.springframework.security.crypto.password.PasswordEncoder

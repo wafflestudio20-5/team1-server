@@ -69,4 +69,11 @@ jobs:
               -e SQL_DB=${{ secrets.SQL_DB }} \
               -e SQL_USERNAME=${{ secrets.SQL_USERNAME }} \
               -e SQL_PASSWORD=${{ secrets.SQL_PASSWORD }} \
+              -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+              -e NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }} \
+              -e NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }} \
+              -e KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }} \
+              -e GIT_CLIENT_ID=${{ secrets.GIT_CLIENT_ID }} \
+              -e GIT_CLIENT_SECRET=${{ secrets.GIT_CLIENT_SECRET }} \
               ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}

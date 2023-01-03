@@ -6,6 +6,25 @@ plugins {
 	kotlin("jvm") version "1.7.21"
 	kotlin("plugin.spring") version "1.7.21"
 	kotlin("plugin.jpa") version "1.7.21"
+	kotlin("plugin.allopen") version "1.3.71"
+	kotlin("plugin.noarg") version "1.3.71"
+	id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
+
+	kotlin("kapt") version "1.7.10"
+
+}
+
+apply {
+	plugin("org.jlleitschuh.gradle.ktlint")
+}
+
+allOpen {
+	annotation("jakarta.persistence.Entity")
+	annotation("jakarta.persistence.MappedSuperclass")
+}
+
+noArg {
+	annotation("jakarta.persistence.Entity")
 }
 
 group = "com.wafflytime"
@@ -23,6 +42,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 
+	// db
 //	runtimeOnly("com.h2database:h2")
 	runtimeOnly("mysql:mysql-connector-java")
 
@@ -39,6 +59,19 @@ dependencies {
 	implementation("io.jsonwebtoken:jjwt-impl:0.11.5")
 	implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
+	// OAuth
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+	//thymeleaf (프론트 붙이기 전 테스트용)
+	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+	implementation("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect")
+}
+
+// QueryDSL
+sourceSets {
+	named("main") {
+		java.srcDir("$buildDir/generated/source/kapt/main")
+	}
 }
 
 tasks.withType<KotlinCompile> {

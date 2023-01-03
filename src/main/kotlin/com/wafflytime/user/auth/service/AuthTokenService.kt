@@ -1,11 +1,11 @@
 package com.wafflytime.user.auth.service
 
+import com.wafflytime.exception.WafflyTime401
+import com.wafflytime.exception.WafflyTime409
+import com.wafflytime.user.auth.api.dto.AuthToken
 import com.wafflytime.user.auth.database.RefreshTokenEntity
 import com.wafflytime.user.auth.database.RefreshTokenRepository
 import com.wafflytime.user.info.database.UserEntity
-import com.wafflytime.user.auth.controller.dto.AuthToken
-import com.wafflytime.exception.WafflyTime401
-import com.wafflytime.exception.WafflyTime409
 import io.jsonwebtoken.*
 import io.jsonwebtoken.security.Keys
 import jakarta.transaction.Transactional
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service
 import java.security.Key
 import java.sql.Timestamp
 import java.time.LocalDateTime
-import java.util.*
 
 @ConfigurationProperties("auth.jwt")
 data class AuthProperties @ConstructorBinding constructor(
