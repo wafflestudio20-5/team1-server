@@ -18,6 +18,11 @@ class UserEntity(
     var nickname: String? = null,
 ): BaseTimeEntity() {
 
+    fun update(password: String?, nickname: String?) {
+        if (loginId != null && password != null) this.password = password
+        if (nickname != null) this.nickname = nickname
+    }
+
     /**
      * TODO:
      *  작성글 목록
