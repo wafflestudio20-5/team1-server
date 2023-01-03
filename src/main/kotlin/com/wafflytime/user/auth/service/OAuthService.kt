@@ -5,7 +5,6 @@ import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
 import com.wafflytime.exception.WafflyTime409
-import com.wafflytime.user.auth.OAuthProperties
 import com.wafflytime.user.auth.api.dto.AuthToken
 import com.wafflytime.user.auth.api.dto.OAuthToken
 import com.wafflytime.user.info.database.UserEntity
