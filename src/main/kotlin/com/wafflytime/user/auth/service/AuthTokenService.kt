@@ -2,7 +2,7 @@ package com.wafflytime.user.auth.service
 
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime409
-import com.wafflytime.user.auth.controller.dto.AuthToken
+import com.wafflytime.user.auth.api.dto.AuthToken
 import com.wafflytime.user.auth.database.RefreshTokenEntity
 import com.wafflytime.user.auth.database.RefreshTokenRepository
 import com.wafflytime.user.info.database.UserEntity

@@ -1,12 +1,13 @@
 package com.wafflytime.user.auth.service
 
 import com.wafflytime.config.ExemptAuthentication
-import com.wafflytime.exception.*
+import com.wafflytime.exception.WafflyTime400
+import com.wafflytime.exception.WafflyTime401
+import com.wafflytime.exception.WafflyTime404
+import com.wafflytime.exception.WafflyTime409
 import com.wafflytime.user.auth.OAuthProperties
-import com.wafflytime.user.auth.controller.dto.AuthToken
-import com.wafflytime.user.auth.controller.dto.OAuthToken
-import com.wafflytime.user.auth.controller.dto.SocialLoginRequest
-import com.wafflytime.user.auth.controller.dto.SocialSignUpRequest
+import com.wafflytime.user.auth.api.dto.AuthToken
+import com.wafflytime.user.auth.api.dto.OAuthToken
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
 import jakarta.transaction.Transactional
@@ -19,9 +20,8 @@ import org.springframework.web.reactive.function.client.bodyToMono
 import java.time.LocalDateTime
 
 interface OAuthService {
-    fun getSocialEmail(providerName: String, code: String): String
-    fun socialLogin(request: SocialLoginRequest): AuthToken
-    fun socialSignUp(request: SocialSignUpRequest): AuthToken
+    fun socialLogin(providerName: String, code: String): AuthToken
+    fun socialSignUp(providerName: String, code: String): AuthToken
 }
 
 @Service
@@ -33,35 +33,29 @@ class OAuthServiceImpl(
 
     @ExemptAuthentication
     @Transactional
-    override fun getSocialEmail(providerName: String, code: String): String {
+    override fun socialLogin(providerName: String, code: String): AuthToken {
+        val socialEmail = getSocialEmail(providerName, code)
+        val user = userRepository.findBySocialEmail(socialEmail)
+            ?: throw WafflyTime404("존재하지 않는 소셜 이메일입니다.")
+        return authTokenService.buildAuthToken(user, LocalDateTime.now())
+    }
+
+    @ExemptAuthentication
+    @Transactional
+    override fun socialSignUp(providerName: String, code: String): AuthToken {
+        val socialEmail = getSocialEmail(providerName, code)
+        if (userRepository.findBySocialEmail(socialEmail) != null) {
+            throw WafflyTime409("이미 이 소셜 이메일로 가입한 계정이 존재합니다")
+        }
+        val user = userRepository.save(UserEntity(socialEmail = socialEmail))
+        return authTokenService.buildAuthToken(user, LocalDateTime.now())
+    }
+
+    fun getSocialEmail(providerName: String, code: String): String {
         val provider = oAuthProperties.provider[providerName]
             ?: throw WafflyTime400("제공하지 않는 OAuth Provider 입니다.")
         val accessToken = getAccessToken(provider, code)
         return getSocialEmail(provider, providerName, accessToken)
-    }
-
-    @ExemptAuthentication
-    @Transactional
-    override fun socialLogin(request: SocialLoginRequest): AuthToken {
-        val socialEmail = request.socialEmail
-        val user = userRepository.findBySocialEmail(socialEmail)
-            ?: throw WafflyTime404("존재하지 않는 이메일입니다.")
-        return authTokenService.buildAuthToken(user, LocalDateTime.now())
-    }
-
-    @ExemptAuthentication
-    @Transactional
-    override fun socialSignUp(request: SocialSignUpRequest): AuthToken {
-        val socialEmail = request.socialEmail
-        if (userRepository.findBySocialEmail(socialEmail) != null) {
-            throw WafflyTime409("이미 이 social email로 가입한 계정이 존재합니다")
-        }
-        val univEmail = request.univEmail
-        if (userRepository.findByUnivEmail(univEmail) != null) {
-            throw WafflyTime409("이미 이 snu mail로 가입한 계정이 존재합니다")
-        }
-        val user = userRepository.save(UserEntity(socialEmail = socialEmail, univEmail = univEmail))
-        return authTokenService.buildAuthToken(user, LocalDateTime.now())
     }
 
     private fun getAccessToken(provider: OAuthProperties.Provider, code: String): OAuthToken {
