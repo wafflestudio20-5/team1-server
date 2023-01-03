@@ -1,7 +1,7 @@
 package com.wafflytime.board.controller
 
-import com.wafflytime.board.database.PostEntity
 import com.wafflytime.board.dto.CreatePostRequest
+import com.wafflytime.board.dto.DeletePostResponse
 import com.wafflytime.board.dto.PostResponse
 import com.wafflytime.board.service.PostService
 import com.wafflytime.config.ExemptEmailVerification
@@ -15,15 +15,6 @@ import org.springframework.web.bind.annotation.*
 class PostController(
     private val postService: PostService
 ) {
-    @ExemptEmailVerification
-    @PostMapping("/api/board/{boardId}/post")
-    fun createPost(
-        @UserIdFromToken userId: Long,
-        @PathVariable boardId: Long,
-        @Valid @RequestBody request: CreatePostRequest
-    ) : ResponseEntity<PostResponse> {
-        return ResponseEntity.ok(postService.createPost(userId, boardId, request))
-    }
 
     @ExemptEmailVerification
     @GetMapping("/api/board/{boardId}/post/{postId}")
@@ -43,4 +34,25 @@ class PostController(
     ) : ResponseEntity<Page<PostResponse>> {
         return ResponseEntity.ok(postService.getPosts(boardId, page, size))
     }
+
+    @ExemptEmailVerification
+    @PostMapping("/api/board/{boardId}/post")
+    fun createPost(
+        @UserIdFromToken userId: Long,
+        @PathVariable boardId: Long,
+        @Valid @RequestBody request: CreatePostRequest
+    ) : ResponseEntity<PostResponse> {
+        return ResponseEntity.ok(postService.createPost(userId, boardId, request))
+    }
+
+    @ExemptEmailVerification
+    @DeleteMapping("/api/board/{boardId}/post/{postId}")
+    fun deletePost(
+        @UserIdFromToken userId: Long,
+        @PathVariable boardId: Long,
+        @PathVariable postId: Long
+    ) : ResponseEntity<DeletePostResponse> {
+        return ResponseEntity.ok(postService.deletePost(userId, boardId, postId))
+    }
+
 }
