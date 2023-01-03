@@ -8,6 +8,7 @@ import com.wafflytime.user.info.api.dto.UpdateUserInfoRequest
 import com.wafflytime.user.info.api.dto.UserInfo
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
 interface UserService {
@@ -19,6 +20,7 @@ interface UserService {
 
 @Service
 class UserServiceImpl (
+    private val passwordEncoder: PasswordEncoder,
     private val userRepository: UserRepository,
 ) : UserService {
 
@@ -38,7 +40,10 @@ class UserServiceImpl (
     override fun updateUserInfo(userId: Long, request: UpdateUserInfoRequest): UserInfo {
         val user = getUserById(userId)
         request.run {
-            user.update(password, nickname)
+            user.update(
+                password?.let { passwordEncoder.encode(it) },
+                nickname,
+            )
         }
         return UserInfo.of(user)
     }
