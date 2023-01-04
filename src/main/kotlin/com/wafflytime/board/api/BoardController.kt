@@ -1,4 +1,4 @@
-package com.wafflytime.board.controller
+package com.wafflytime.board.api
 
 import com.wafflytime.board.dto.BoardResponse
 import com.wafflytime.board.dto.CreateBoardRequest
