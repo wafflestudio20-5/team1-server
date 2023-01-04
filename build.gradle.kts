@@ -8,14 +8,9 @@ plugins {
 	kotlin("plugin.jpa") version "1.7.21"
 	kotlin("plugin.allopen") version "1.3.71"
 	kotlin("plugin.noarg") version "1.3.71"
-	id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
 
 	kotlin("kapt") version "1.7.10"
 
-}
-
-apply {
-	plugin("org.jlleitschuh.gradle.ktlint")
 }
 
 allOpen {
