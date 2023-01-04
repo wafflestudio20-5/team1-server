@@ -5,5 +5,5 @@ data class DeletePostResponse(
     val boardId: Long,
     val boardTitle: String,
     val postId: Long,
-    val postTitle: String
+    val postTitle: String?
 )

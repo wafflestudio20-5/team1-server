@@ -6,7 +6,7 @@ data class PostResponse(
     val postId: Long,
     val writerId: Long,
     val isWriterAnonymous: Boolean,
-    val title: String,
+    val title: String?,
     val contents: String,
 ) {
     companion object {

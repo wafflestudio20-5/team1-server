@@ -30,7 +30,7 @@ class BoardService(
         val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("해당 유저가 존재하지 않습니다")
 
         if (!user.isAdmin) {
-            if (request.boardType  !in arrayOf(BoardType.CUSTOM_BASE, BoardType.CUSTOM_PHOTO)) {
+            if (request.boardType !in arrayOf(BoardType.CUSTOM_BASE, BoardType.CUSTOM_PHOTO)) {
                 throw WafflyTime400("user는 CUSTOM_BASE, CUSTOM_PHOTO 타입의 게시판만 생성 가능합니다")
             }
         } else {
@@ -48,6 +48,7 @@ class BoardService(
         return CreateBoardResponse(
             userId = userId,
             boardId = board.id,
+            boardType = board.type,
             title = board.title,
             description = board.description,
             allowAnonymous = board.allowAnonymous

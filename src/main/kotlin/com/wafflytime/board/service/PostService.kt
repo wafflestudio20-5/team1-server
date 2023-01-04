@@ -7,6 +7,7 @@ import com.wafflytime.board.dto.CreatePostRequest
 import com.wafflytime.board.dto.DeletePostResponse
 import com.wafflytime.board.dto.PostResponse
 import com.wafflytime.board.dto.UpdatePostRequest
+import com.wafflytime.board.type.BoardType
 import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
@@ -30,6 +31,11 @@ class PostService(
     fun createPost(userId: Long, boardId: Long, request: CreatePostRequest): PostResponse {
         val board = boardRepository.findByIdOrNull(boardId) ?: throw WafflyTime404("board id가 존재하지 않습니다")
         val user: UserEntity = userRepository.findByIdOrNull(userId)!!
+
+        if (board.type == BoardType.DEFAULT && request.title == null ) throw WafflyTime400("default 게시판은 title이 반드시 존재해야 됩니다")
+        if (board.type in arrayOf(BoardType.CUSTOM_BASE, BoardType.CUSTOM_PHOTO) && request.title != null ) {
+            throw WafflyTime400("CUSTOM 게시판은 title이 존재하지 않습니다")
+        }
 
         if (!board.allowAnonymous && request.isWriterAnonymous) throw WafflyTime404("이 게시판은 익명으로 게시글을 작성할 수 없습니다")
 

@@ -8,7 +8,7 @@ import jakarta.persistence.*
 @Entity
 @Table(name="post")
 class PostEntity(
-    var title: String,
+    var title: String? = null,
     var contents: String,
 
     // writer 와 board 의 owner 인 유저만 post 를 지울 수 있음
