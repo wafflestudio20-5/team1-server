@@ -1,9 +1,9 @@
 package com.wafflytime.user.info.database
 
 import com.wafflytime.common.BaseTimeEntity
-import com.wafflytime.user.info.type.UserRole
-import jakarta.persistence.*
-import jakarta.validation.constraints.NotNull
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Table
 
 @Entity
 @Table(name="wafflytime_user")
@@ -16,9 +16,7 @@ class UserEntity(
     @field:Column(unique = true)
     var univEmail: String? = null,
     var nickname: String? = null,
-
-    @field:NotNull @Enumerated(EnumType.STRING)
-    val role: UserRole
+    val isAdmin: Boolean = false,
 
     ): BaseTimeEntity() {
 

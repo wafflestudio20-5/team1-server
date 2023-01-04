@@ -12,7 +12,6 @@ import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
-import com.wafflytime.user.info.type.UserRole
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -63,7 +62,7 @@ class PostService(
         val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("user id가 존재하지 않습니다")
 
         // 게시물 작성자, 게시판 주인, admin 만 게시물을 삭제 할 수 있다
-        if (userId == post.writer.id || user.role == UserRole.ROLE_ADMIN || userId == post.board.owner!!.id) {
+        if (userId == post.writer.id || user.isAdmin || userId == post.board.owner!!.id) {
             postRepository.delete(post)
             return DeletePostResponse(
                 boardId = boardId,

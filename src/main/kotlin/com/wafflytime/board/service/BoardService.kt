@@ -13,7 +13,6 @@ import com.wafflytime.exception.WafflyTime404
 import com.wafflytime.exception.WafflyTime409
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
-import com.wafflytime.user.info.type.UserRole
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -30,7 +29,7 @@ class BoardService(
         boardRepository.findByTitle(request.title)?.let { throw WafflyTime409("이미 ${request.title}이 존재합니다") }
         val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("해당 유저가 존재하지 않습니다")
 
-        if (user.role == UserRole.ROLE_USER) {
+        if (!user.isAdmin) {
             if (request.boardType  !in arrayOf(BoardType.CUSTOM_BASE, BoardType.CUSTOM_PHOTO)) {
                 throw WafflyTime400("user는 CUSTOM_BASE, CUSTOM_PHOTO 타입의 게시판만 생성 가능합니다")
             }
@@ -60,7 +59,7 @@ class BoardService(
         val board: BoardEntity = boardRepository.findByIdOrNull(boardId) ?: throw WafflyTime404("board id가 존재하지 않습니다")
         val user: UserEntity = userRepository.findByIdOrNull(userId)!!
 
-        if (user.role == UserRole.ROLE_USER) {
+        if (!user.isAdmin) {
             if (board.type == BoardType.DEFAULT) throw WafflyTime401("일반 유저는 default 게시판을 삭제할 수 없습니다")
             if (board.owner!!.id != userId) throw WafflyTime400("게시판 owner가 아닌 유저는 게시판을 삭제할 수 없습니다")
         }

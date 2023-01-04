@@ -8,7 +8,6 @@ import com.wafflytime.user.auth.api.dto.LoginRequest
 import com.wafflytime.user.auth.api.dto.SignUpRequest
 import com.wafflytime.exception.WafflyTime404
 import com.wafflytime.user.auth.controller.dto.TempAdminSignUpRequest
-import com.wafflytime.user.info.type.UserRole
 import jakarta.transaction.Transactional
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -34,8 +33,7 @@ class LocalAuthServiceImpl(
         val user = userRepository.save(
             UserEntity(
                 request.id,
-                passwordEncoder.encode(request.password),
-                role = UserRole.ROLE_USER // 반드시 ROLE_USER 로 저장하고, ADMIN 계정은 api를 통해서가 아닌 서버관리자가 직접 생성한다
+                passwordEncoder.encode(request.password)
             )
         )
         return authTokenService.buildAuthToken(user, LocalDateTime.now())
@@ -49,7 +47,7 @@ class LocalAuthServiceImpl(
                 loginId = request.id,
                 password = passwordEncoder.encode(request.password),
                 univEmail = request.univEmail,
-                role = UserRole.ROLE_ADMIN
+                isAdmin = true
             )
         )
         return authTokenService.buildAuthToken(user, LocalDateTime.now())
