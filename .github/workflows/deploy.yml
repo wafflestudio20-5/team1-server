@@ -2,7 +2,7 @@ name: CI-CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "staging" ]
 
 permissions:
   id-token: write
@@ -14,6 +14,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Suffix for secrets
+        id: set_suffix
+        shell: bash
+        run: |
+          if [[ ${GITHUB_REF##*/} == 'staging' ]]
+          then echo "suffix=_STAGING" >> $GITHUB_OUTPUT
+          else echo "suffix=" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up AWS configuration
         uses: aws-actions/configure-aws-credentials@v1
@@ -42,22 +51,22 @@ jobs:
 
       - name: Build & Push Docker Image on ECR
         run: |
-          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR }}
-          docker build -t ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }} .
-          docker push ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}
+          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}
+          docker build -t ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }} .
+          docker push ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
 
       - name: Pull image on EC2 & Run
         uses: appleboy/ssh-action@v0.1.6
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ secrets[format('EC2_HOST{0}', steps.set_suffix.outputs.suffix)] }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PEM_KEY }}
           script: |
             docker stop $(docker ps -a -q)
             docker rm $(docker ps -a -q)
             docker image rm $(docker images -a -q)
-            aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR }}
-            docker pull ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}
+            aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
+            docker pull ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
             docker run \
               -dp 80:8080 \
               -e MAIL_USERNAME=${{ secrets.MAIL_USERNAME }} \
@@ -65,10 +74,10 @@ jobs:
               -e JWT_ISSUER=${{ secrets.JWT_ISSUER }} \
               -e JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }} \
               -e JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} \
-              -e SQL_HOST=${{ secrets.SQL_HOST }} \
-              -e SQL_DB=${{ secrets.SQL_DB }} \
-              -e SQL_USERNAME=${{ secrets.SQL_USERNAME }} \
-              -e SQL_PASSWORD=${{ secrets.SQL_PASSWORD }} \
+              -e SQL_HOST=${{ secrets[format('SQL_HOST{0}', steps.set_suffix.outputs.suffix)] }} \
+              -e SQL_DB=${{ secrets[format('SQL_DB{0}', steps.set_suffix.outputs.suffix)] }} \
+              -e SQL_USERNAME=${{ secrets[format('SQL_USERNAME{0}', steps.set_suffix.outputs.suffix)] }} \
+              -e SQL_PASSWORD=${{ secrets[format('SQL_PASSWORD{0}', steps.set_suffix.outputs.suffix)] }} \
               -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
               -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
               -e NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }} \
@@ -76,4 +85,4 @@ jobs:
               -e KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }} \
               -e GIT_CLIENT_ID=${{ secrets.GIT_CLIENT_ID }} \
               -e GIT_CLIENT_SECRET=${{ secrets.GIT_CLIENT_SECRET }} \
-              ${{ secrets.AWS_ECR }}:${{ steps.commit.outputs.short }}
+              ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
