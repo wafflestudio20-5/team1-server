@@ -2,10 +2,9 @@ package com.wafflytime.board.api
 
 import com.wafflytime.board.dto.*
 import com.wafflytime.board.service.PostService
-import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
-import com.wafflytime.s3.service.S3Service
+import com.wafflytime.common.S3Service
 import jakarta.validation.Valid
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
@@ -41,7 +40,7 @@ class PostController(
     fun createPost(
         @UserIdFromToken userId: Long,
         @PathVariable boardId: Long,
-        @Valid @RequestBody request: CreatePostRequest
+        @Valid @RequestBody request: CreatePostRequest,
     ) : ResponseEntity<PostResponse> {
         return ResponseEntity.ok(postService.createPost(userId, boardId, request))
     }
@@ -67,17 +66,6 @@ class PostController(
         return ResponseEntity.ok(postService.deletePost(userId, boardId, postId))
     }
 
-    @ExemptAuthentication
-    @PostMapping("/api/board/{boardId}/post-photo")
-    fun createPostPhoto(
-        @PathVariable boardId: Long,
-        @Valid request: CreatePostVO,
-    ) : ResponseEntity<String> {
-        val fileUrl = s3Service.uploadFile(request.files!![0])
 
-        println("request: ${request}")
-        println("fileUrl: ${fileUrl}")
-        return ResponseEntity.ok("hello")
-    }
 
 }

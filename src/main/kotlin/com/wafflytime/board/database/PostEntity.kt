@@ -10,6 +10,7 @@ import jakarta.persistence.*
 class PostEntity(
     var title: String? = null,
     var contents: String,
+    var images: String? = null,
 
     // writer 와 board 의 owner 인 유저만 post 를 지울 수 있음
     @ManyToOne(fetch = FetchType.EAGER)

@@ -3,14 +3,12 @@ package com.wafflytime.board.service
 import com.wafflytime.board.database.BoardRepository
 import com.wafflytime.board.database.PostEntity
 import com.wafflytime.board.database.PostRepository
-import com.wafflytime.board.dto.CreatePostRequest
-import com.wafflytime.board.dto.DeletePostResponse
-import com.wafflytime.board.dto.PostResponse
-import com.wafflytime.board.dto.UpdatePostRequest
+import com.wafflytime.board.dto.*
 import com.wafflytime.board.type.BoardType
 import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
+import com.wafflytime.common.S3Service
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
 import jakarta.transaction.Transactional
@@ -24,11 +22,12 @@ import org.springframework.stereotype.Service
 class PostService(
     private val boardRepository: BoardRepository,
     private val postRepository: PostRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val s3Service: S3Service
 ) {
 
     @Transactional
-    fun createPost(userId: Long, boardId: Long, request: CreatePostRequest): PostResponse {
+    fun createPost(userId: Long, boardId: Long, request: CreatePostRequest) : PostResponse {
         val board = boardRepository.findByIdOrNull(boardId) ?: throw WafflyTime404("board id가 존재하지 않습니다")
         val user: UserEntity = userRepository.findByIdOrNull(userId)!!
 
@@ -38,16 +37,18 @@ class PostService(
         }
 
         if (!board.allowAnonymous && request.isWriterAnonymous) throw WafflyTime404("이 게시판은 익명으로 게시글을 작성할 수 없습니다")
+        val s3ImageUrlDto = s3Service.getPreSignedUrlAndS3Urls(request.fileNames)
 
         val post: PostEntity = postRepository.save(PostEntity(
             title = request.title,
             contents = request.contents,
+            images = s3ImageUrlDto?.s3Urls?.joinToString(","),
             writer = user,
             board = board,
             isQuestion = request.isQuestion,
-            isWriterAnonymous = request.isWriterAnonymous)
-        )
-        return PostResponse.of(post)
+            isWriterAnonymous = request.isWriterAnonymous
+        ))
+        return PostResponse.of(post, preSignedUrls = s3ImageUrlDto?.preSignedUrls)
     }
 
     fun getPost(boardId: Long, postId: Long): PostResponse {
