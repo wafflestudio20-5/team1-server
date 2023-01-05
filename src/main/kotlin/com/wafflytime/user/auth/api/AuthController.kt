@@ -41,6 +41,7 @@ class AuthController(
     @ExemptAuthentication
     @PostMapping("/api/auth/local/login")
     fun localLogin(@Valid @RequestBody request: LoginRequest) : AuthToken {
+        println("try login")
         return localAuthService.login(request)
     }
 

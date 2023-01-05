@@ -61,3 +61,16 @@ oauth2:
       redirect-uri: http://wafflytime.com/login/oauth2/code/github
       token-uri: https://github.com/login/oauth/access_token
       user-info-uri: https://api.github.com/user
+
+
+
+# S3
+cloud:
+  aws:
+    credentials:
+      accessKey: ${AWS_ACCESS_KEY_ID}
+      accessSecret: ${AWS_SECRET_ACCESS_KEY}
+    s3:
+      bucket: ${BUCKET_NAME}
+    region:
+      static: ap-northeast-2

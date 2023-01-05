@@ -6,6 +6,7 @@ data class PostResponse(
     val postId: Long,
     val writerId: Long,
     val isWriterAnonymous: Boolean,
+    val isQuestion: Boolean,
     val title: String?,
     val contents: String,
 ) {
@@ -15,6 +16,7 @@ data class PostResponse(
                 postEntity.id,
                 postEntity.writer.id,
                 postEntity.isWriterAnonymous,
+                postEntity.isQuestion,
                 postEntity.title,
                 postEntity.contents
             )

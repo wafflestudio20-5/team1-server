@@ -60,6 +60,9 @@ dependencies {
 	//thymeleaf (프론트 붙이기 전 테스트용)
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect")
+
+	// s3
+	implementation("org.springframework.cloud:spring-cloud-starter-aws:2.0.1.RELEASE")
 }
 
 // QueryDSL
