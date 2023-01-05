@@ -7,6 +7,7 @@ import com.wafflytime.board.dto.CreateBoardRequest
 import com.wafflytime.board.dto.CreateBoardResponse
 import com.wafflytime.board.dto.DeleteBoardResponse
 import com.wafflytime.board.type.BoardType
+import com.wafflytime.common.S3Service
 import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
@@ -21,7 +22,8 @@ import org.springframework.stereotype.Service
 @Service
 class BoardService(
     private val boardRepository: BoardRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val s3Service: S3Service
 ) {
 
     @Transactional
@@ -64,6 +66,12 @@ class BoardService(
             if (board.type == BoardType.DEFAULT) throw WafflyTime401("일반 유저는 default 게시판을 삭제할 수 없습니다")
             if (board.owner!!.id != userId) throw WafflyTime400("게시판 owner가 아닌 유저는 게시판을 삭제할 수 없습니다")
         }
+        // TODO: 실제로는 이렇게 hard delete를 잘 안한다고 하는데 나중에 더 알아보자 - S3 사진 삭제 여부는?
+        val posts =  board.posts
+        // 현재는 "," 로 speartor 구분 하고 있어서 flatMap 이 필요 없음
+        val listOfImages = posts.map { it.images }
+        s3Service.deleteListOfFiles(listOfImages)
+
         boardRepository.delete(board)
         return DeleteBoardResponse(boardId = board.id, title = board.title)
     }

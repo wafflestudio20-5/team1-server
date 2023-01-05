@@ -71,6 +71,7 @@ class PostService(
 
         // 게시물 작성자, 게시판 주인, admin 만 게시물을 삭제 할 수 있다
         if (userId == post.writer.id || user.isAdmin || userId == post.board.owner!!.id) {
+            s3Service.deleteFiles(post.images)
             postRepository.delete(post)
             return DeletePostResponse(
                 boardId = boardId,
