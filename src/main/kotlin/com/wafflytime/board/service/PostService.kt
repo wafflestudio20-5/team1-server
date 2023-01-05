@@ -37,7 +37,7 @@ class PostService(
         }
 
         if (!board.allowAnonymous && request.isWriterAnonymous) throw WafflyTime404("이 게시판은 익명으로 게시글을 작성할 수 없습니다")
-        val s3ImageUrlDto = s3Service.getPreSignedUrlAndS3Urls(request.fileNames)
+        val s3ImageUrlDto = s3Service.getPreSignedUrlsAndS3Urls(request.fileNames)
 
         val post: PostEntity = postRepository.save(PostEntity(
             title = request.title,
@@ -53,13 +53,14 @@ class PostService(
 
     fun getPost(boardId: Long, postId: Long): PostResponse {
         val post = validateBoardAndPost(boardId, postId)
-        return PostResponse.of(post)
+        return PostResponse.of(post, s3Service.getPreSignedUrlsFromS3Keys(post.images))
     }
 
     fun getPosts(boardId: Long, page: Int, size:Int): Page<PostResponse> {
         val sort = Sort.by(Sort.Direction.DESC, "createdAt")
         return postRepository.findAll(PageRequest.of(page, size, sort)).map {
-            PostResponse.of(it)
+            PostResponse.of(
+                it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
@@ -84,6 +85,7 @@ class PostService(
 
     @Transactional
     fun updatePost(userId: Long, boardId: Long, postId: Long, request: UpdatePostRequest): PostResponse {
+        // TODO(재웅): 게시물 수정할 때 사진 추가해도 되는지 아직 구현 안됨 - 에타 직접 사용해보자
         val post = validateBoardAndPost(boardId, postId)
         if (userId != post.writer.id) throw WafflyTime401("게시물 작성자가 아닌 유저는 게시물을 수정할 수 없습니다")
         post.update(request)

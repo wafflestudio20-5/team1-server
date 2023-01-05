@@ -29,17 +29,21 @@ class S3Service(
 
     private val expTimeMillis = 1000 * 60 * 2
 
+    private val awsDnsSuffix: String = "amazonaws.com/"
+
+    fun parseS3UrlToKey(s3Url: String) : String {
+        return s3Url.split(awsDnsSuffix)[1]
+    }
     fun getFolder() : String {
         val now = LocalDate.now()
         return "${baseDir}/${now.year}/${now.monthValue}/${now.dayOfYear}/"
     }
 
-    fun getPreSignedURL(s3FileKey: String) : String {
+    fun getPreSignedUrl(s3FileKey: String, method: HttpMethod) : String {
         val expiration = Date()
-
         expiration.time += expTimeMillis
         val generatePresignedUrlRequest = GeneratePresignedUrlRequest(bucket, s3FileKey)
-            .withMethod(HttpMethod.PUT)
+            .withMethod(method)
             .withExpiration(expiration)
         val url = s3Client.generatePresignedUrl(generatePresignedUrlRequest)
         val preSignedUrl = url.toString()
@@ -61,17 +65,28 @@ class S3Service(
         return s3Client.getUrl(bucket, s3FileKey).toString()
     }
 
-    fun getPreSignedUrlAndS3Urls(files: List<String>?) : S3ImageUrlDto? {
+    fun getPreSignedUrlsAndS3Urls(files: List<String>?) : S3ImageUrlDto? {
         if (files == null) return null
         val s3ImageUrlDto = S3ImageUrlDto()
         files.forEach {
             val fileNameWithUUID = UUID.randomUUID().toString() + "-" + it
             val s3FileKey = getFolder() + fileNameWithUUID
-            val preSignedUrl = getPreSignedURL(s3FileKey)
+            val preSignedUrl = getPreSignedUrl(s3FileKey, HttpMethod.PUT)
             val s3Url = s3Client.getUrl(bucket, s3FileKey).toString()
             s3ImageUrlDto.preSignedUrls.add(preSignedUrl)
             s3ImageUrlDto.s3Urls.add(s3Url)
         }
         return s3ImageUrlDto
     }
+
+    fun getPreSignedUrlsFromS3Keys(images: String?) : List<String>? {
+        if (images == null) return null
+
+        val preSignedUrls = mutableListOf<String>()
+        images.split(",").forEach {
+            preSignedUrls.add(getPreSignedUrl(parseS3UrlToKey(it), HttpMethod.GET))
+        }
+        return preSignedUrls
+    }
+
 }
