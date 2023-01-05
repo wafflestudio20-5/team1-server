@@ -13,6 +13,7 @@ import org.springframework.web.method.HandlerMethod
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.method.support.ModelAndViewContainer
 import org.springframework.web.servlet.HandlerInterceptor
+import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
@@ -40,6 +41,13 @@ class WebMvcConfiguration(
 
     override fun addInterceptors(registry: InterceptorRegistry) {
         registry.addInterceptor(localAuthInterceptor)
+    }
+
+    override fun addCorsMappings(registry: CorsRegistry) {
+        registry.addMapping("/**")
+            .allowedOrigins("*")
+            .allowedMethods("*")
+            .maxAge(3000)
     }
 
 }
