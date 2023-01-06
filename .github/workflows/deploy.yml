@@ -2,7 +2,7 @@ name: CI-CD
 
 on:
   push:
-    branches: [ "main", "staging", "feature/photo"]
+    branches: [ "main", "staging", "feature/photo" ]
 
 permissions:
   id-token: write
@@ -19,24 +19,14 @@ jobs:
         id: set_suffix
         shell: bash
         run: |
-#          if [[ ${GITHUB_REF##*/} == 'staging' ]]
-#          then echo "suffix=_STAGING" >> $GITHUB_OUTPUT
-#          else echo "suffix=" >> $GITHUB_OUTPUT
-#          fi
           if [[ ${GITHUB_REF##*/} == 'main' ]]
           then echo "suffix=" >> $GITHUB_OUTPUT
           else echo "suffix=_STAGING" >> $GITHUB_OUTPUT
           fi
-
       - name: Profiles of branch
         id: set_profiles
         shell: bash
         run: |
-#          if [[ ${GITHUB_REF##*/} == 'staging' ]]
-#          then echo "profiles=staging" >> $GITHUB_OUTPUT
-#          else echo "profiles=prod" >> $GITHUB_OUTPUT
-#          fi
-
           if [[ ${GITHUB_REF##*/} == 'main' ]]
           then echo "profiles=prod" >> $GITHUB_OUTPUT
           else echo "profiles=staging" >> $GITHUB_OUTPUT
