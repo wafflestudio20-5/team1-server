@@ -2,7 +2,7 @@ name: CI-CD
 
 on:
   push:
-    branches: [ "main", "staging" ]
+    branches: [ "main", "staging", "feature/photo"]
 
 permissions:
   id-token: write
@@ -19,9 +19,27 @@ jobs:
         id: set_suffix
         shell: bash
         run: |
-          if [[ ${GITHUB_REF##*/} == 'staging' ]]
-          then echo "suffix=_STAGING" >> $GITHUB_OUTPUT
-          else echo "suffix=" >> $GITHUB_OUTPUT
+#          if [[ ${GITHUB_REF##*/} == 'staging' ]]
+#          then echo "suffix=_STAGING" >> $GITHUB_OUTPUT
+#          else echo "suffix=" >> $GITHUB_OUTPUT
+#          fi
+          if [[ ${GITHUB_REF##*/} == 'main' ]]
+          then echo "suffix=" >> $GITHUB_OUTPUT
+          else echo "suffix=_STAGING" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Profiles of branch
+        id: set_profiles
+        shell: bash
+        run: |
+#          if [[ ${GITHUB_REF##*/} == 'staging' ]]
+#          then echo "profiles=staging" >> $GITHUB_OUTPUT
+#          else echo "profiles=prod" >> $GITHUB_OUTPUT
+#          fi
+
+          if [[ ${GITHUB_REF##*/} == 'main' ]]
+          then echo "profiles=prod" >> $GITHUB_OUTPUT
+          else echo "profiles=staging" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up AWS configuration
@@ -52,7 +70,7 @@ jobs:
       - name: Build & Push Docker Image on ECR
         run: |
           aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}
-          docker build -t ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }} .
+          docker build --build-arg PROFILES=${{ steps.set_profiles.outputs.profiles }} -t ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }} .
           docker push ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
 
       - name: Pull image on EC2 & Run
@@ -85,4 +103,7 @@ jobs:
               -e KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }} \
               -e GIT_CLIENT_ID=${{ secrets.GIT_CLIENT_ID }} \
               -e GIT_CLIENT_SECRET=${{ secrets.GIT_CLIENT_SECRET }} \
+              -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+              -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+              -e BUCKET_NAME=${{ secrets.BUCKET_NAME }} \
               ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
