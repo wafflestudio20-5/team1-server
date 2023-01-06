@@ -69,7 +69,7 @@ class BoardService(
         // TODO: 실제로는 이렇게 hard delete를 잘 안한다고 하는데 나중에 더 알아보자 - S3 사진 삭제 여부는?
         val posts =  board.posts
         // 현재는 "," 로 speartor 구분 하고 있어서 flatMap 이 필요 없음
-        val listOfImages = posts.map { it.images }
+        val listOfImages = posts.map { it.imageUrls }
         s3Service.deleteListOfFiles(listOfImages)
 
         boardRepository.delete(board)

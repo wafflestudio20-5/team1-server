@@ -2,6 +2,7 @@ package com.wafflytime.board.database
 
 import com.wafflytime.board.dto.UpdatePostRequest
 import com.wafflytime.common.BaseTimeEntity
+import com.wafflytime.common.JpaJsonRemarkConverter
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
 
@@ -10,7 +11,10 @@ import jakarta.persistence.*
 class PostEntity(
     var title: String? = null,
     var contents: String,
-    var images: String? = null,
+
+    @Column(length = 3000)
+    @Convert(converter = JpaJsonRemarkConverter::class)
+    var imageUrls: MutableList<String>? = null,
 
     // writer 와 board 의 owner 인 유저만 post 를 지울 수 있음
     @ManyToOne(fetch = FetchType.EAGER)

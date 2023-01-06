@@ -80,24 +80,24 @@ class S3Service(
         return s3ImageUrlDto
     }
 
-    fun getPreSignedUrlsFromS3Keys(images: String?) : List<String>? {
+    fun getPreSignedUrlsFromS3Keys(images: List<String>?) : List<String>? {
         if (images == null) return null
 
         val preSignedUrls = mutableListOf<String>()
-        images.split(",").forEach {
+        images.forEach {
             preSignedUrls.add(getPreSignedUrl(parseS3UrlToKey(it), HttpMethod.GET))
         }
         return preSignedUrls
     }
 
-    fun deleteFiles(images: String?) {
-        images?.split(",")?.forEach {
+    fun deleteFiles(images: List<String>?) {
+        images?.forEach {
             s3Client.deleteObject(bucket, parseS3UrlToKey(it))
         }
     }
 
     @Async("deleteS3FileExecutor")
-    fun deleteListOfFiles(listOfImages: List<String?>) {
+    fun deleteListOfFiles(listOfImages: List<List<String>?>) {
         listOfImages.forEach { deleteFiles(it) }
     }
 

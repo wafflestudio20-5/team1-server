@@ -94,12 +94,12 @@ spring:
     password: wafflytime_local_pwd
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-    jpa:
-      properties:
-        hibernate:
-          show_sql: true
+  jpa:
+    properties:
       hibernate:
-        ddl-auto: update
+        show_sql: true
+    hibernate:
+      ddl-auto: update
 
 ---
 spring:

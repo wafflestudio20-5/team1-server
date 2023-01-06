@@ -8,9 +8,9 @@
 ```
 - Set ```-Dspring.profiles.active=local``` in VM options
 - Run application
-- If you want to test local app with docker image, change 'localhost' to 'host.docker.internal' in application-local.yml file and  run below command
+- If you want to test local app with docker image, change 'localhost' to 'host.docker.internal' in application.yml file and  run below command
 ```
-% docker build --build-arg PROFILES=local -t wafflytime-local . -f local.Dockerfile
+% docker build --build-arg PROFILES=local -t wafflytime-local .
 ```
 
 ### 2. Prod Development

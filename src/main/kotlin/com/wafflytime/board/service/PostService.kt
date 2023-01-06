@@ -42,7 +42,7 @@ class PostService(
         val post: PostEntity = postRepository.save(PostEntity(
             title = request.title,
             contents = request.contents,
-            images = s3ImageUrlDto?.s3Urls?.joinToString(","),
+            imageUrls = s3ImageUrlDto?.s3Urls,
             writer = user,
             board = board,
             isQuestion = request.isQuestion,
@@ -53,14 +53,14 @@ class PostService(
 
     fun getPost(boardId: Long, postId: Long): PostResponse {
         val post = validateBoardAndPost(boardId, postId)
-        return PostResponse.of(post, s3Service.getPreSignedUrlsFromS3Keys(post.images))
+        return PostResponse.of(post, s3Service.getPreSignedUrlsFromS3Keys(post.imageUrls))
     }
 
     fun getPosts(boardId: Long, page: Int, size:Int): Page<PostResponse> {
         val sort = Sort.by(Sort.Direction.DESC, "createdAt")
         return postRepository.findAll(PageRequest.of(page, size, sort)).map {
             PostResponse.of(
-                it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
+                it, s3Service.getPreSignedUrlsFromS3Keys(it.imageUrls))
         }
     }
 
@@ -71,7 +71,7 @@ class PostService(
 
         // 게시물 작성자, 게시판 주인, admin 만 게시물을 삭제 할 수 있다
         if (userId == post.writer.id || user.isAdmin || userId == post.board.owner!!.id) {
-            s3Service.deleteFiles(post.images)
+            s3Service.deleteFiles(post.imageUrls)
             postRepository.delete(post)
             return DeletePostResponse(
                 boardId = boardId,
