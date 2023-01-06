@@ -7,6 +7,9 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.util.IOUtils
+import com.wafflytime.board.database.image.ImageColumn
+import com.wafflytime.board.dto.ImageResponse
+import com.wafflytime.board.dto.ImageRequest
 import com.wafflytime.board.dto.S3ImageUrlDto
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
@@ -66,38 +69,41 @@ class S3Service(
         return s3Client.getUrl(bucket, s3FileKey).toString()
     }
 
-    fun getPreSignedUrlsAndS3Urls(files: List<String>?) : S3ImageUrlDto? {
+    fun getPreSignedUrlsAndS3Urls(files: List<ImageRequest>?) : MutableList<S3ImageUrlDto>? {
         if (files == null) return null
-        val s3ImageUrlDto = S3ImageUrlDto()
+
+        val s3ImageUrlDtoList = mutableListOf<S3ImageUrlDto>()
         files.forEach {
-            val fileNameWithUUID = UUID.randomUUID().toString() + "-" + it
+            val fileNameWithUUID = UUID.randomUUID().toString() + "-" + it.fileName
             val s3FileKey = getFolder() + fileNameWithUUID
             val preSignedUrl = getPreSignedUrl(s3FileKey, HttpMethod.PUT)
             val s3Url = s3Client.getUrl(bucket, s3FileKey).toString()
-            s3ImageUrlDto.preSignedUrls.add(preSignedUrl)
-            s3ImageUrlDto.s3Urls.add(s3Url)
+
+            s3ImageUrlDtoList.add(S3ImageUrlDto(s3Url, preSignedUrl, it.description))
         }
-        return s3ImageUrlDto
+        return s3ImageUrlDtoList
     }
 
-    fun getPreSignedUrlsFromS3Keys(images: List<String>?) : List<String>? {
+    fun getPreSignedUrlsFromS3Keys(images: List<ImageColumn>?) : List<ImageResponse>? {
         if (images == null) return null
 
-        val preSignedUrls = mutableListOf<String>()
+        val imageResponseList = mutableListOf<ImageResponse>()
         images.forEach {
-            preSignedUrls.add(getPreSignedUrl(parseS3UrlToKey(it), HttpMethod.GET))
+            imageResponseList.add(
+                ImageResponse(getPreSignedUrl(parseS3UrlToKey(it.s3Urls), HttpMethod.GET), it.description)
+            )
         }
-        return preSignedUrls
+        return imageResponseList
     }
 
-    fun deleteFiles(images: List<String>?) {
+    fun deleteFiles(images: List<ImageColumn>?) {
         images?.forEach {
-            s3Client.deleteObject(bucket, parseS3UrlToKey(it))
+            s3Client.deleteObject(bucket, parseS3UrlToKey(it.s3Urls))
         }
     }
 
     @Async("deleteS3FileExecutor")
-    fun deleteListOfFiles(listOfImages: List<List<String>?>) {
+    fun deleteListOfFiles(listOfImages: List<List<ImageColumn>?>) {
         listOfImages.forEach { deleteFiles(it) }
     }
 

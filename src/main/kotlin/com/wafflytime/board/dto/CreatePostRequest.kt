@@ -8,5 +8,5 @@ data class CreatePostRequest(
     val contents: String,
     val isQuestion: Boolean = false,
     val isWriterAnonymous: Boolean = true,
-    val fileNames: List<String>? = null
+    val images: List<ImageRequest>? = null
 )

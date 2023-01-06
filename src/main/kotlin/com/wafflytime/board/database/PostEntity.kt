@@ -1,8 +1,9 @@
 package com.wafflytime.board.database
 
+import com.wafflytime.board.database.image.ImageColumn
+import com.wafflytime.board.database.image.JpaImageColumnJsonConverter
 import com.wafflytime.board.dto.UpdatePostRequest
 import com.wafflytime.common.BaseTimeEntity
-import com.wafflytime.common.JpaJsonRemarkConverter
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
 
@@ -12,9 +13,9 @@ class PostEntity(
     var title: String? = null,
     var contents: String,
 
-    @Column(length = 3000)
-    @Convert(converter = JpaJsonRemarkConverter::class)
-    var imageUrls: MutableList<String>? = null,
+    @Column(length = 5000)
+    @Convert(converter = JpaImageColumnJsonConverter::class)
+    var images: MutableList<ImageColumn>? = null,
 
     // writer 와 board 의 owner 인 유저만 post 를 지울 수 있음
     @ManyToOne(fetch = FetchType.EAGER)
@@ -33,8 +34,6 @@ class PostEntity(
 
     @OneToMany(mappedBy = "post", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
     val scraps: MutableList<ScrapEntity> = mutableListOf(),
-
-    // TODO(재웅) : 사진 첨부 여부 고려
 
     // TODO : 질문글인 경우 게시판 상위로 보여지게 하는 알고리즘도 적용하면 좋겠지만 시간이 되면 도전
     var isQuestion: Boolean = false,

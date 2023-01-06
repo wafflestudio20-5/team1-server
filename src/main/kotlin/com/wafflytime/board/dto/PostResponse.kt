@@ -9,10 +9,15 @@ data class PostResponse(
     val isQuestion: Boolean,
     val title: String?,
     val contents: String,
-    val imageUrls: List<String>?
+    val images: List<ImageResponse>?
 ) {
     companion object {
-        fun of(postEntity: PostEntity, preSignedUrls: List<String>?) : PostResponse {
+
+        fun of(postEntity: PostEntity) : PostResponse {
+            return of(postEntity, null)
+        }
+
+        fun of(postEntity: PostEntity, images: List<ImageResponse>?) : PostResponse {
             return PostResponse(
                 postEntity.id,
                 postEntity.writer.id,
@@ -20,12 +25,8 @@ data class PostResponse(
                 postEntity.isQuestion,
                 postEntity.title,
                 postEntity.contents,
-                imageUrls = preSignedUrls
+                images = images
             )
-        }
-
-        fun of(postEntity: PostEntity) : PostResponse {
-            return of(postEntity, null)
         }
     }
 }

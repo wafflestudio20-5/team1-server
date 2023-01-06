@@ -5,6 +5,8 @@ import com.wafflytime.board.database.PostEntity
 import com.wafflytime.board.database.PostRepository
 import com.wafflytime.board.dto.*
 import com.wafflytime.board.type.BoardType
+import com.wafflytime.board.database.image.ImageColumn
+import com.wafflytime.board.dto.ImageResponse
 import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
@@ -37,30 +39,31 @@ class PostService(
         }
 
         if (!board.allowAnonymous && request.isWriterAnonymous) throw WafflyTime404("이 게시판은 익명으로 게시글을 작성할 수 없습니다")
-        val s3ImageUrlDto = s3Service.getPreSignedUrlsAndS3Urls(request.fileNames)
+
+        val s3ImageUrlDtoList = s3Service.getPreSignedUrlsAndS3Urls(request.images)
 
         val post: PostEntity = postRepository.save(PostEntity(
             title = request.title,
             contents = request.contents,
-            imageUrls = s3ImageUrlDto?.s3Urls,
+            images = s3ImageUrlDtoList?.map { ImageColumn.of(it) }?.toMutableList(),
             writer = user,
             board = board,
             isQuestion = request.isQuestion,
             isWriterAnonymous = request.isWriterAnonymous
         ))
-        return PostResponse.of(post, preSignedUrls = s3ImageUrlDto?.preSignedUrls)
+        return PostResponse.of(post, s3ImageUrlDtoList?.map { ImageResponse.of(it) })
     }
 
     fun getPost(boardId: Long, postId: Long): PostResponse {
         val post = validateBoardAndPost(boardId, postId)
-        return PostResponse.of(post, s3Service.getPreSignedUrlsFromS3Keys(post.imageUrls))
+        return PostResponse.of(post, s3Service.getPreSignedUrlsFromS3Keys(post.images))
     }
 
     fun getPosts(boardId: Long, page: Int, size:Int): Page<PostResponse> {
         val sort = Sort.by(Sort.Direction.DESC, "createdAt")
         return postRepository.findAll(PageRequest.of(page, size, sort)).map {
             PostResponse.of(
-                it, s3Service.getPreSignedUrlsFromS3Keys(it.imageUrls))
+                it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
@@ -71,7 +74,7 @@ class PostService(
 
         // 게시물 작성자, 게시판 주인, admin 만 게시물을 삭제 할 수 있다
         if (userId == post.writer.id || user.isAdmin || userId == post.board.owner!!.id) {
-            s3Service.deleteFiles(post.imageUrls)
+            s3Service.deleteFiles(post.images)
             postRepository.delete(post)
             return DeletePostResponse(
                 boardId = boardId,
@@ -98,6 +101,4 @@ class PostService(
         if (post.board.id != boardId) throw  WafflyTime400("board id와 post id가 매치되지 않습니다 : 해당 게시판에 속한 게시물이 아닙니다")
         return post
     }
-
-
 }
