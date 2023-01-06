@@ -2,7 +2,7 @@ name: CI-CD
 
 on:
   push:
-    branches: [ "main", "staging", "feature/photo" ]
+    branches: [ "main", "staging" ]
 
 permissions:
   id-token: write
