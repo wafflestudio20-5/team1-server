@@ -70,7 +70,7 @@ jobs:
           aws ec2 start-instances --instance-ids ${{ secrets.EC2_ID_STAGING }}
           aws ec2 wait instance-status-ok --instance-ids ${{ secrets.EC2_ID_STAGING }}
           EC2_IP=$( aws ec2 describe-instances --instance-ids ${{ secrets.EC2_ID_STAGING }} --query Reservations[*].Instances[*].PublicIpAddress --output text | head -n1 )
-          echo $( aws ec2 describe-instances --instance-ids ${{ secrets.EC2_ID_STAGING }} --query Reservations[*].Instances[*].PublicDnsName --output text | head -n1 ) >> $GITHUB_OUTPUT 
+          echo "host=$( aws ec2 describe-instances --instance-ids ${{ secrets.EC2_ID_STAGING }} --query Reservations[*].Instances[*].PublicDnsName --output text | head -n1 )" >> $GITHUB_OUTPUT 
           echo '{
             "Comment": "Updating record from github actions",
             "Changes": [{
@@ -90,7 +90,7 @@ jobs:
           EC2_HOST_STAGING: ${{ steps.set_staging_server.outputs.host }}
         uses: appleboy/ssh-action@v0.1.6
         with:
-          host: env[format('EC2_HOST{0}', steps.set_suffix.outputs.suffix)]
+          host: ${{ env[format('EC2_HOST{0}', steps.set_suffix.outputs.suffix)] }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PEM_KEY }}
           script: |
