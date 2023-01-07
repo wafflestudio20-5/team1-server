@@ -46,4 +46,12 @@ class PostEntity(
         this.isQuestion = request.isQuestion ?: this.isQuestion
         this.isWriterAnonymous = request.isWriterAnonymous ?: this.isWriterAnonymous
     }
+
+    fun update(request: UpdatePostRequest, imageColumnList: MutableList<ImageColumn>?) {
+        this.title = request.title ?: this.title
+        this.contents = request.contents ?: this.contents
+        this.isQuestion = request.isQuestion ?: this.isQuestion
+        this.isWriterAnonymous = request.isWriterAnonymous ?: this.isWriterAnonymous
+        this.images = imageColumnList
+    }
 }

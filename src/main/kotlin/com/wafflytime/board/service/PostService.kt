@@ -89,11 +89,20 @@ class PostService(
 
     @Transactional
     fun updatePost(userId: Long, boardId: Long, postId: Long, request: UpdatePostRequest): PostResponse {
-        // TODO(재웅): 게시물 수정할 때 사진 추가해도 되는지 아직 구현 안됨 - 에타 직접 사용해보자
         val post = validateBoardAndPost(boardId, postId)
         if (userId != post.writer.id) throw WafflyTime401("게시물 작성자가 아닌 유저는 게시물을 수정할 수 없습니다")
-        post.update(request)
-        return PostResponse.of(post)
+
+        // 이미지 수정 로직은 개선이 필요함
+        /** TODO(재웅): 현재 방식은 게시물 수정할 때 그 전에 있던 사진들은 다 삭제 하고 다시 업로드 하는 방식
+        - 현재 방식은 클라이언트가 보통의 update request 처럼 '변화된' 필드에 데이터를 담아서 보내주는 것이 아닌, images 필드는
+        반드시 유저의 게시물 그 상태를 그대로 전달해주어야 한다(사진이 바뀌지 않았더라도 사진 정보를 그대로 UpadateRequesst에 담아서).
+        프론트에서 이걸 어떻게 전달해주는게 좋을지 프론트랑 얘개히보고 수정하면 좋을 듯 하다
+        - 유저가 원래 있던 사진 유지하고 추가하는 작업이라면 과거에 push 했던 사진은 남겨두는 방식이 좋을 것 같은데 더 나은 방식으로 나중에 수정하자
+         **/
+        s3Service.deleteFiles(post.images)
+        val s3ImageUrlDtoList = s3Service.getPreSignedUrlsAndS3Urls(request.images)
+        post.update(request, s3ImageUrlDtoList?.map { ImageColumn.of(it) }?.toMutableList())
+        return PostResponse.of(post, s3ImageUrlDtoList?.map { ImageResponse.of(it) })
     }
 
     fun validateBoardAndPost(boardId: Long, postId: Long) : PostEntity {
