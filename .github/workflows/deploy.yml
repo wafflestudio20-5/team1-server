@@ -67,7 +67,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/change/staging-local-db-workflow' }}
         run: |
           aws ec2 start-instances --instance-ids ${{ secrets.EC2_ID_STAGING }}
-          aws ec2 wait instance-running --instance-ids ${{ secrets.EC2_ID_STAGING }}
+          aws ec2 wait instance-status-ok --instance-ids ${{ secrets.EC2_ID_STAGING }}
 
       - name: Pull image on EC2 & Run
         uses: appleboy/ssh-action@v0.1.6
