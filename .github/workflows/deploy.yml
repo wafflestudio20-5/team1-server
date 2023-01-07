@@ -64,8 +64,7 @@ jobs:
           docker push ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
 
       - name: (Staging case) Restart staging EC2 instace & RDS
-        if: ${{  github.ref == 'change/staging-local-db-workflow' }}
-        continue-on-error: true
+        if: ${{ github.ref == 'refs/heads/change/staging-local-db-workflow' }}
         run: |
           aws ec2 start-instances --instance-ids ${{ secrets.EC2_ID_STAGING }}
           aws ec2 wait instance-running --instance-ids ${{ secrets.EC2_ID_STAGING }}
