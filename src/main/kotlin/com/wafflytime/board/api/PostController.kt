@@ -12,8 +12,7 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 class PostController(
-    private val postService: PostService,
-    private val s3Service: S3Service,
+    private val postService: PostService
 ) {
 
     @ExemptEmailVerification
