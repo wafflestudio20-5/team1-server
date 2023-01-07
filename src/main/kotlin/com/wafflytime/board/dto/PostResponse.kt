@@ -25,7 +25,7 @@ data class PostResponse(
                 postEntity.isQuestion,
                 postEntity.title,
                 postEntity.contents,
-                images = images
+                images = images?.sortedBy { it.imageId }
             )
         }
     }

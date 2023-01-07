@@ -15,7 +15,7 @@ class PostEntity(
 
     @Column(length = 5000)
     @Convert(converter = JpaImageColumnJsonConverter::class)
-    var images: MutableList<ImageColumn>? = null,
+    var images: Map<String, ImageColumn>? = null,
 
     // writer 와 board 의 owner 인 유저만 post 를 지울 수 있음
     @ManyToOne(fetch = FetchType.EAGER)
@@ -47,7 +47,7 @@ class PostEntity(
         this.isWriterAnonymous = request.isWriterAnonymous ?: this.isWriterAnonymous
     }
 
-    fun update(request: UpdatePostRequest, imageColumnList: MutableList<ImageColumn>?) {
+    fun update(request: UpdatePostRequest, imageColumnList: Map<String, ImageColumn>?) {
         this.title = request.title ?: this.title
         this.contents = request.contents ?: this.contents
         this.isQuestion = request.isQuestion ?: this.isQuestion

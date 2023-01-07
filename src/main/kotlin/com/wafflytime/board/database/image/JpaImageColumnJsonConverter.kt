@@ -5,16 +5,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.persistence.AttributeConverter
 
 
-class JpaImageColumnJsonConverter : AttributeConverter<MutableList<ImageColumn>, String> {
+class JpaImageColumnJsonConverter : AttributeConverter<Map<String, ImageColumn>, String> {
     private val mapper: ObjectMapper = ObjectMapper()
 
-    override fun convertToDatabaseColumn(attribute: MutableList<ImageColumn>?): String? {
+    override fun convertToDatabaseColumn(attribute: Map<String, ImageColumn>?): String? {
         if (attribute == null) return null
         return mapper.writeValueAsString(attribute)
     }
 
-    override fun convertToEntityAttribute(dbData: String?): MutableList<ImageColumn>? {
+    override fun convertToEntityAttribute(dbData: String?): Map<String, ImageColumn>? {
         if (dbData == null) return null
-        return mapper.readValue(dbData, object : TypeReference<MutableList<ImageColumn>>(){}).toMutableList()
+        return mapper.readValue(dbData, object : TypeReference<Map<String, ImageColumn>>(){})
     }
 }
