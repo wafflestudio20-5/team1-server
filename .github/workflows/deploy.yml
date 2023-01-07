@@ -68,7 +68,6 @@ jobs:
         continue-on-error: true
         run: |
           aws ec2 start-instances --instance-ids ${{ secrets.EC2_ID_STAGING }}
-          aws rds start-db-instance --db-instance-identifier $ {{ secrets.RDS_ID_STAGING }}
 
       - name: Pull image on EC2 & Run
         uses: appleboy/ssh-action@v0.1.6
@@ -77,9 +76,10 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PEM_KEY }}
           script: |
-            docker stop $(docker ps -a -q)
-            docker rm $(docker ps -a -q)
-            docker image rm $(docker images -a -q)
+            docker stop $(docker ps -a | tail -n +2 | grep -wv mysql | cut -d " " -f1)
+            docker rm $(docker ps -a | tail -n +2 | grep -wv mysql | cut -d " " -f1)
+            docker image rm $(docker images -a | tail -n +2 | grep -wv mysql | cut -d " " -f1)
+            docker start $(docker ps -a | grep mysql | cut -d " " -f1)
             aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
             docker pull ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
             docker run \
@@ -89,10 +89,10 @@ jobs:
               -e JWT_ISSUER=${{ secrets.JWT_ISSUER }} \
               -e JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }} \
               -e JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} \
-              -e SQL_HOST=${{ secrets[format('SQL_HOST{0}', steps.set_suffix.outputs.suffix)] }} \
-              -e SQL_DB=${{ secrets[format('SQL_DB{0}', steps.set_suffix.outputs.suffix)] }} \
-              -e SQL_USERNAME=${{ secrets[format('SQL_USERNAME{0}', steps.set_suffix.outputs.suffix)] }} \
-              -e SQL_PASSWORD=${{ secrets[format('SQL_PASSWORD{0}', steps.set_suffix.outputs.suffix)] }} \
+              -e SQL_HOST=${{ secrets.SQL_HOST }} \
+              -e SQL_DB=${{ secrets.SQL_DB }} \
+              -e SQL_USERNAME=${{ secrets.SQL_USERNAME }} \
+              -e SQL_PASSWORD=${{ secrets.SQL_PASSWORD }} \
               -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
               -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
               -e NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }} \

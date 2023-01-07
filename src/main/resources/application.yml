@@ -2,7 +2,7 @@ spring:
   profiles:
     group:
       "local": "localDb,common"
-      "staging": "remoteDb,common"
+      "staging": "localDb,common"
       "prod": "remoteDb,common"
 
 ---
