@@ -2,7 +2,7 @@ name: CI-CD
 
 on:
   push:
-    branches: [ "main", "staging" ]
+    branches: [ "main", "staging" , "change/staging-local-db-workflow" ]
 
 permissions:
   id-token: write
@@ -68,6 +68,7 @@ jobs:
         continue-on-error: true
         run: |
           aws ec2 start-instances --instance-ids ${{ secrets.EC2_ID_STAGING }}
+          aws ec2 wait instance-running --instance-ids ${{ secrets.EC2_ID_STAGING }}
 
       - name: Pull image on EC2 & Run
         uses: appleboy/ssh-action@v0.1.6
