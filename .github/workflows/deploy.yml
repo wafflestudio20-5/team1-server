@@ -63,6 +63,13 @@ jobs:
           docker build --build-arg PROFILES=${{ steps.set_profiles.outputs.profiles }} -t ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }} .
           docker push ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
 
+      - name: (Staging case) Restart staging EC2 instace & RDS
+        if: ${GITHUB_REF##*/} == 'staging'
+        continue-on-error: true
+        run: |
+          aws ec2 start-instances --instance-ids ${{ secrets.EC2_ID_STAGING }}
+          aws rds start-db-instance --db-instance-identifier $ {{ secrets.RDS_ID_STAGING }}
+
       - name: Pull image on EC2 & Run
         uses: appleboy/ssh-action@v0.1.6
         with:
