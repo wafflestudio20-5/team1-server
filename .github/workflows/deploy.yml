@@ -96,7 +96,7 @@ jobs:
           script: |
             docker stop $(docker ps -a | tail -n +2 | grep -wv mysql | cut -d " " -f1)
             docker rm $(docker ps -a | tail -n +2 | grep -wv mysql | cut -d " " -f1)
-            docker image rm $(docker images -a | tail -n +2 | grep -wv mysql | cut -d " " -f1)
+            docker image rm $(docker images -a | tail -n +2 | grep -wv mysql | cut -d " " -f7)
             docker start $(docker ps -a | grep mysql | cut -d " " -f1)
             aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
             docker pull ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
