@@ -15,7 +15,6 @@ class PostController(
     private val postService: PostService
 ) {
 
-    @ExemptEmailVerification
     @GetMapping("/api/board/{boardId}/post/{postId}")
     fun getPost(
         @PathVariable boardId: Long,
@@ -24,7 +23,6 @@ class PostController(
         return ResponseEntity.ok(postService.getPost(boardId, postId))
     }
 
-    @ExemptEmailVerification
     @GetMapping("/api/board/{boardId}/posts")
     fun getPosts(
         @PathVariable boardId: Long,
@@ -34,7 +32,6 @@ class PostController(
         return ResponseEntity.ok(postService.getPosts(boardId, page, size))
     }
 
-    @ExemptEmailVerification
     @PostMapping("/api/board/{boardId}/post")
     fun createPost(
         @UserIdFromToken userId: Long,
@@ -44,7 +41,6 @@ class PostController(
         return ResponseEntity.ok(postService.createPost(userId, boardId, request))
     }
 
-    @ExemptEmailVerification
     @PutMapping("/api/board/{boardId}/post/{postId}")
     fun updatePost(
         @UserIdFromToken userId: Long,
@@ -55,7 +51,6 @@ class PostController(
         return ResponseEntity.ok(postService.updatePost(userId, boardId, postId, request))
     }
 
-    @ExemptEmailVerification
     @DeleteMapping("/api/board/{boardId}/post/{postId}")
     fun deletePost(
         @UserIdFromToken userId: Long,
