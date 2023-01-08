@@ -2,7 +2,7 @@ name: CI-CD
 
 on:
   push:
-    branches: [ "main", "staging" , "change/staging-local-db-workflow" ]
+    branches: [ "main", "staging" ]
 
 permissions:
   id-token: write
@@ -65,7 +65,7 @@ jobs:
 
       - name: (Staging case) Restart staging EC2 instace & RDS
         id: set_staging_server
-        if: ${{ github.ref == 'refs/heads/change/staging-local-db-workflow' }}
+        if: ${{ github.ref == 'refs/heads/staging' }}
         run: |
           aws ec2 start-instances --instance-ids ${{ secrets.EC2_ID_STAGING }}
           aws ec2 wait instance-status-ok --instance-ids ${{ secrets.EC2_ID_STAGING }}
