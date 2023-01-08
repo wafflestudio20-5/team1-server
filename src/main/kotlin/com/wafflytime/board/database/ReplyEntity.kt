@@ -1,6 +1,7 @@
 package com.wafflytime.board.database
 
 import com.wafflytime.common.BaseTimeEntity
+import com.wafflytime.exception.WafflyTime404
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -47,6 +48,7 @@ class ReplyEntity(
 
     @Transactional
     fun delete() {
-        this.isDeleted = true
+        if (isDeleted) throw WafflyTime404("이미 삭제된 댓글입니다")
+        isDeleted = true
     }
 }
