@@ -2,7 +2,7 @@ spring:
   profiles:
     group:
       "local": "localDb,common"
-      "staging": "remoteDb,common"
+      "staging": "stagingDb,common"
       "prod": "remoteDb,common"
 
 ---
@@ -89,7 +89,7 @@ spring:
       on-profile: "localDb"
 
   datasource:
-    url: jdbc:mysql://localhost:3306/wafflytime_local_db?serverTimezone=UTC
+    url: jdbc:mysql://127.0.0.1:3306/wafflytime_local_db?serverTimezone=UTC
     username: root
     password: wafflytime_local_pwd
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -100,6 +100,26 @@ spring:
         show_sql: true
     hibernate:
       ddl-auto: update
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "stagingDb"
+
+  datasource:
+    url: jdbc:mysql://host.docker.internal:3306/wafflytime_local_db?serverTimezone=UTC
+    username: root
+    password: wafflytime_local_pwd
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    properties:
+      hibernate:
+        show_sql: true
+    hibernate:
+      ddl-auto: update
+
 
 ---
 spring:
