@@ -1,7 +1,16 @@
 spring:
+  profiles:
+    group:
+      "local": "localDb,common"
+      "staging": "stagingDb,common"
+      "prod": "remoteDb,common"
+
+---
+
+spring:
   config:
-    import:
-      - optional:classpath:/application-local.yml
+    activate:
+      on-profile: "common"
 
   mail:
     host: smtp.gmail.com
@@ -61,3 +70,72 @@ oauth2:
       redirect-uri: http://wafflytime.com/login/oauth2/code/github
       token-uri: https://github.com/login/oauth/access_token
       user-info-uri: https://api.github.com/user
+
+# S3
+cloud:
+  aws:
+    credentials:
+      accessKey: ${AWS_ACCESS_KEY_ID}
+      accessSecret: ${AWS_SECRET_ACCESS_KEY}
+    s3:
+      bucket: ${BUCKET_NAME}
+    region:
+      static: ap-northeast-2
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "localDb"
+
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/wafflytime_local_db?serverTimezone=UTC
+    username: root
+    password: wafflytime_local_pwd
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    properties:
+      hibernate:
+        show_sql: true
+    hibernate:
+      ddl-auto: update
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "stagingDb"
+
+  datasource:
+    url: jdbc:mysql://host.docker.internal:3306/wafflytime_local_db?serverTimezone=UTC
+    username: root
+    password: wafflytime_local_pwd
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    properties:
+      hibernate:
+        show_sql: true
+    hibernate:
+      ddl-auto: update
+
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "remoteDb"
+
+  datasource:
+    url: jdbc:mysql://${SQL_HOST}:3306/${SQL_DB}?serverTimezone=UTC
+    username: ${SQL_USERNAME}
+    password: ${SQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    properties:
+      hibernate:
+        show_sql: false
+    hibernate:
+      ddl-auto: update

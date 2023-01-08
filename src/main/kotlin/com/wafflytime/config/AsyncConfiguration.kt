@@ -16,16 +16,24 @@ class AsyncConfig {
 
     private val poolSize: Int = 4
 
-    @Bean
-    fun mailExecutor() : ThreadPoolTaskExecutor {
+    fun getThreadPoolTaskExecutor(prefix: String) : ThreadPoolTaskExecutor {
         val taskExecutor = ThreadPoolTaskExecutor()
-        taskExecutor.setThreadNamePrefix("MailTask-")
+        taskExecutor.setThreadNamePrefix(prefix)
         taskExecutor.corePoolSize = poolSize
         taskExecutor.maxPoolSize = poolSize * 2
         taskExecutor.queueCapacity = poolSize * 5
         taskExecutor.setTaskDecorator(LoggingTaskDecorator())
         taskExecutor.setRejectedExecutionHandler(AsyncRejectedExecutionHandler())
         return taskExecutor
+    }
+    @Bean
+    fun mailExecutor() : ThreadPoolTaskExecutor {
+        return getThreadPoolTaskExecutor("MailTask-")
+    }
+
+    @Bean
+    fun deleteS3FileExecutor() : ThreadPoolTaskExecutor {
+        return getThreadPoolTaskExecutor("S3Task")
     }
 }
 

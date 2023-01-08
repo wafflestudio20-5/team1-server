@@ -38,7 +38,6 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 
 	// db
-//	runtimeOnly("com.h2database:h2")
 	runtimeOnly("mysql:mysql-connector-java")
 
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -60,6 +59,9 @@ dependencies {
 	//thymeleaf (프론트 붙이기 전 테스트용)
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect")
+
+	// s3
+	implementation("org.springframework.cloud:spring-cloud-starter-aws:2.0.1.RELEASE")
 }
 
 // QueryDSL
@@ -82,4 +84,10 @@ tasks.withType<Test> {
 
 tasks.getByName<Jar>("jar") {
 	enabled = false
+}
+
+allOpen {
+	annotation("javax.persistence.Entity")
+	annotation("javax.persistence.MappedSuperclass")
+	annotation("javax.persistence.Embeddable")
 }

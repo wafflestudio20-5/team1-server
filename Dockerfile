@@ -1,4 +1,7 @@
 FROM amazoncorretto:17-alpine
 VOLUME /tmp
 COPY build/libs/*.jar app.jar
-ENTRYPOINT ["java","-jar","/app.jar", "--spring.config.additional-location=optional:classpath:application-prod.yml"]
+ARG PROFILES
+RUN echo $PROFILES
+ENV spring.profiles.active=$PROFILES
+ENTRYPOINT ["java", "-jar", "/app.jar"]
