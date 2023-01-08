@@ -17,7 +17,7 @@ class ReplyRepositorySupport(
     fun countReplies(post: PostEntity): Long {
         val qPost = QPostEntity.postEntity
         return queryFactory.select(
-            replyEntity.commentGroup.max()
+            replyEntity.replyGroup.max()
         )
             .innerJoin(replyEntity.post, qPost)
             .fetchJoin()
@@ -28,12 +28,12 @@ class ReplyRepositorySupport(
     fun countChildReplies(post: PostEntity, commentGroup: Long): Long {
         val qPost = QPostEntity.postEntity
         return queryFactory.select(
-            replyEntity.commentOrder.max()
+            replyEntity.replyOrder.max()
         )
             .innerJoin(replyEntity.post, qPost)
             .fetchJoin()
             .where(qPost.id.eq(post.id))
-            .where(replyEntity.commentGroup.eq(commentGroup))
+            .where(replyEntity.replyGroup.eq(commentGroup))
             .fetchOne() ?: 0
     }
 
@@ -41,7 +41,7 @@ class ReplyRepositorySupport(
         val qPost = QPostEntity.postEntity
         return queryFactory.selectFrom(replyEntity)
             .where(replyEntity.isRoot)
-            .where(replyEntity.commentGroup.eq(commentGroup))
+            .where(replyEntity.replyGroup.eq(commentGroup))
             .innerJoin(replyEntity.post, qPost)
             .fetchJoin()
             .where(qPost.id.eq(post.id))
