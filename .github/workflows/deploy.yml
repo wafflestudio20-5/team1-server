@@ -121,4 +121,5 @@ jobs:
               -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
               -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
               -e BUCKET_NAME=${{ secrets.BUCKET_NAME }} \
+              --add-host=host.docker.internal:host-gateway \
               ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
