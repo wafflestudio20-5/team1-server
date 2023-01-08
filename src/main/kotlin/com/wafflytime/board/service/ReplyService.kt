@@ -26,17 +26,22 @@ class ReplyService(
     fun createReply(userId: Long, boardId: Long, postId: Long, request: CreateReplyRequest): ReplyResponse {
         val post = postService.validateBoardAndPost(boardId, postId)
         val user = userRepository.findByIdOrNull(userId)!!
-        val parent = replyRepository.findByIdOrNull(request.parent)
-
-        val reply = ReplyEntity(
-            contents = request.contents,
-            writer = user,
-            post = post,
-            replyGroup = parent?.replyGroup ?: (commentCount(post) + 1),
-            replyOrder = commentCount(parent) + 1,
-            mention = parent,
-            isRoot = (parent == null),
-            isWriterAnonymous = request.isWriterAnonymous
+        val parent = request.parent?.let {
+            replyRepository.findByIdOrNull(request.parent) ?: throw WafflyTime404("해당하는 부모 댓글이 없습니다")
+        }
+        if (parent != null && parent.post != post) throw WafflyTime400("부모 댓글이 다른 글에 있습니다")
+        
+        val reply = replyRepository.save(
+            ReplyEntity(
+                contents = request.contents,
+                writer = user,
+                post = post,
+                replyGroup = parent?.replyGroup ?: (commentCount(post) + 1),
+                replyOrder = commentCount(parent) + 1,
+                mention = parent,
+                isRoot = (parent == null),
+                isWriterAnonymous = request.isWriterAnonymous
+            )
         )
 
         val anonymousId = replyWriterRepositorySupport.getAnonymousId(post, user)
@@ -57,7 +62,12 @@ class ReplyService(
                 anonymousId = anonymousId,
                 isWriterAnonymous = request.isWriterAnonymous,
             ),
-            parent = replyToReplyWriter(replyRepositorySupport.findParent(post, reply.replyGroup)),
+            parent = if (reply.isRoot) null else replyToReplyWriter(
+                replyRepositorySupport.findParent(
+                    post,
+                    reply.replyGroup
+                )
+            ),
             mention = replyToReplyWriter(reply.mention),
             contents = reply.contents
         )
@@ -121,7 +131,12 @@ class ReplyService(
         return ReplyResponse(
             replyId = reply.id,
             writer = replyToReplyWriter(reply)!!,
-            parent = replyToReplyWriter(replyRepositorySupport.findParent(reply.post, reply.replyGroup)),
+            parent = if (reply.isRoot) null else replyToReplyWriter(
+                replyRepositorySupport.findParent(
+                    reply.post,
+                    reply.replyGroup
+                )
+            ),
             mention = replyToReplyWriter(reply.mention),
             contents = reply.contents
         )
