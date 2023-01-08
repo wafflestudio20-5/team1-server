@@ -1,8 +1,9 @@
 package com.wafflytime.board.api
 
-import com.wafflytime.board.dto.*
+import com.wafflytime.board.dto.CreateReplyRequest
+import com.wafflytime.board.dto.ReplyResponse
+import com.wafflytime.board.dto.UpdateReplyRequest
 import com.wafflytime.board.service.ReplyService
-import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
@@ -13,7 +14,6 @@ class ReplyController(
     val replyService: ReplyService,
 ) {
 
-    @ExemptEmailVerification
     @PostMapping("/api/board/{boardId}/post/{postId}/reply")
     fun createReply(
         @UserIdFromToken userId: Long,
@@ -24,7 +24,6 @@ class ReplyController(
         return ResponseEntity.ok(replyService.createReply(userId, boardId, postId, request))
     }
 
-    @ExemptEmailVerification
     @PutMapping("/api/board/{boardId}/post/{postId}/reply/{replyId}")
     fun updateReply(
         @UserIdFromToken userId: Long,
@@ -36,7 +35,6 @@ class ReplyController(
         return ResponseEntity.ok(replyService.updateReply(userId, boardId, postId, replyId, request))
     }
 
-    @ExemptEmailVerification
     @DeleteMapping("/api/board/{boardId}/post/{postId}/reply/{replyId}")
     fun deleteReply(
         @UserIdFromToken userId: Long,
