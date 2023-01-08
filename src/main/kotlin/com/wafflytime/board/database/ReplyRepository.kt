@@ -15,24 +15,22 @@ class ReplyRepositorySupport(
     private val queryFactory: JPAQueryFactory,
 ) {
     fun countReplies(post: PostEntity): Long {
-        val qPost = QPostEntity.postEntity
         return queryFactory.select(
             replyEntity.replyGroup.max()
         )
-            .innerJoin(replyEntity.post, qPost)
-            .fetchJoin()
-            .where(qPost.id.eq(post.id))
+            .from(replyEntity)
+            .innerJoin(replyEntity.post)
+            .where(replyEntity.post.id.eq(post.id))
             .fetchOne() ?: 0
     }
 
     fun countChildReplies(post: PostEntity, commentGroup: Long): Long {
-        val qPost = QPostEntity.postEntity
         return queryFactory.select(
             replyEntity.replyOrder.max()
         )
-            .innerJoin(replyEntity.post, qPost)
-            .fetchJoin()
-            .where(qPost.id.eq(post.id))
+            .from(replyEntity)
+            .innerJoin(replyEntity.post)
+            .where(replyEntity.post.id.eq(post.id))
             .where(replyEntity.replyGroup.eq(commentGroup))
             .fetchOne() ?: 0
     }
@@ -68,6 +66,7 @@ class ReplyWriterRepositorySupport(
         return queryFactory.select(
             replyWriterEntity.count()
         )
+            .from(replyWriterEntity)
             .where(replyWriterEntity.post.id.eq(post.id))
             .fetchOne() ?: 0
     }
