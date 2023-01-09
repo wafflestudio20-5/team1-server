@@ -10,8 +10,7 @@ data class CreateBoardRequest(
     val title: String,
     @NotNull
     val boardType: BoardType,
-    @NotNull
-    val boardCategory: BoardCategory,
+    val boardCategory: BoardCategory = BoardCategory.OTHER,
     val allowAnonymous: Boolean = true,
     val description: String = ""
 )

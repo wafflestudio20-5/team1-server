@@ -27,10 +27,7 @@ class BoardService(
     @Transactional
     fun createBoard(userId: Long, request: CreateBoardRequest): CreateBoardResponse {
         /**
-         * 현재 우리는 유저가 게시판 생성을 요청했을 때 이걸 사람이 직접 검수하는 프로세스는 없다
-         * 현재는 따라서 유저가 게시판을 만드려고 하면 얼마든지 만드는걸로 가정하고 있다.
-         * 하지만 실제 에타에서는 유저가 게시판을 만들 떄 이 게시판이 basic, career, student, department, other 어느 타입인지 정하는 버튼이 없다
-         * 지금은 일단 프론트에서도 basic, career, student, department, other 버튼을 선택할 수 있게 만든다고 가정
+         * basic, career, student, department 게시판은 admin만 만들 수 있고, 일반 유저는 other 게시판만 만들 수 있다
         **/
         boardRepository.findByTitle(request.title)?.let { throw WafflyTime409("이미 ${request.title}이 존재합니다") }
         val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("해당 유저가 존재하지 않습니다")
@@ -38,6 +35,9 @@ class BoardService(
         if (!user.isAdmin) {
             if (request.boardType !in arrayOf(BoardType.CUSTOM_BASE, BoardType.CUSTOM_PHOTO)) {
                 throw WafflyTime400("user는 CUSTOM_BASE, CUSTOM_PHOTO 타입의 게시판만 생성 가능합니다")
+            }
+            if (request.boardCategory != BoardCategory.OTHER) {
+                throw WafflyTime400("user는 OTHER 카테고리의 게시판만 생성 가능합니다")
             }
         } else {
             if (request.boardType in arrayOf(BoardType.CUSTOM_BASE, BoardType.CUSTOM_PHOTO)) {
