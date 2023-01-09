@@ -1,5 +1,6 @@
 package com.wafflytime.board.dto
 
+import com.wafflytime.board.type.BoardCategory
 import com.wafflytime.board.type.BoardType
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -9,6 +10,8 @@ data class CreateBoardRequest(
     val title: String,
     @NotNull
     val boardType: BoardType,
+    @NotNull
+    val boardCategory: BoardCategory,
     val allowAnonymous: Boolean = true,
     val description: String = ""
 )

@@ -1,9 +1,6 @@
 package com.wafflytime.board.api
 
-import com.wafflytime.board.dto.BoardResponse
-import com.wafflytime.board.dto.CreateBoardRequest
-import com.wafflytime.board.dto.CreateBoardResponse
-import com.wafflytime.board.dto.DeleteBoardResponse
+import com.wafflytime.board.dto.*
 import com.wafflytime.board.service.BoardService
 import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
@@ -22,7 +19,7 @@ class BoardController(
     }
 
     @GetMapping("/api/boards")
-    fun getBoards() : ResponseEntity<List<BoardResponse>> {
+    fun getBoards() : ResponseEntity<List<BoardListResponse>> {
         // boards 는 적어서 pageable 할 필요 없음
         return ResponseEntity.ok().body(boardService.getAllBoards())
     }

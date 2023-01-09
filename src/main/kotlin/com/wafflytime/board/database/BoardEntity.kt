@@ -1,5 +1,6 @@
 package com.wafflytime.board.database
 
+import com.wafflytime.board.type.BoardCategory
 import com.wafflytime.board.type.BoardType
 import com.wafflytime.common.BaseTimeEntity
 import com.wafflytime.user.info.database.UserEntity
@@ -17,6 +18,7 @@ class BoardEntity(
 
     // TODO: 시간이 남는다면 홍보성게시판인지, 새내기게시판인지, 특별한 제한이 없는 게시판인지도 구분해서 저장하면 좋을 듯 하다
     @field:NotNull @Enumerated(EnumType.STRING) val type: BoardType,
+    @field:NotNull @Enumerated(EnumType.STRING) val category: BoardCategory,
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="wafflytime_user_id")
