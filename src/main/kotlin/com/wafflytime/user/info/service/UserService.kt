@@ -1,9 +1,6 @@
 package com.wafflytime.user.info.service
 
 import com.wafflytime.common.S3Service
-import com.wafflytime.exception.WafflyTime401
-import com.wafflytime.exception.WafflyTime404
-import com.wafflytime.exception.WafflyTime409
 import com.wafflytime.post.database.PostRepository
 import com.wafflytime.post.database.ScrapRepository
 import com.wafflytime.post.dto.PostResponse
@@ -13,8 +10,13 @@ import com.wafflytime.user.info.api.dto.UploadProfileImageRequest
 import com.wafflytime.user.info.api.dto.UserInfo
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
+import com.wafflytime.user.info.exception.LoginIdConflict
+import com.wafflytime.user.info.exception.MailConflict
+import com.wafflytime.user.info.exception.NicknameConflict
+import com.wafflytime.user.info.exception.UserNotFound
 import com.wafflytime.user.mail.api.dto.VerifyEmailRequest
 import jakarta.transaction.Transactional
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -25,6 +27,8 @@ import org.springframework.stereotype.Service
 interface UserService {
     fun getUser(userId: Long): UserEntity
     fun getUserInfo(userId: Long): UserInfo
+    fun checkLoginIdConflict(loginId: String)
+    fun checkNicknameConflict(nickname: String)
     fun updateUserInfo(userId: Long, request: UpdateUserInfoRequest): UserInfo
     fun updateUserMailVerified(userId: Long, verifyEmailRequest: VerifyEmailRequest): UserEntity
     fun getMyScraps(userId: Long, page:Int, size:Int): Page<PostResponse>
@@ -56,13 +60,27 @@ class UserServiceImpl (
     }
 
     @Transactional
+    override fun checkLoginIdConflict(loginId: String) {
+        userRepository.findByLoginId(loginId) ?: throw LoginIdConflict
+    }
+
+    @Transactional
+    override fun checkNicknameConflict(nickname: String) {
+        userRepository.findByNickname(nickname) ?: throw NicknameConflict
+    }
+
+    @Transactional
     override fun updateUserInfo(userId: Long, request: UpdateUserInfoRequest): UserInfo {
         val user = getUserById(userId)
         request.run {
-            user.update(
-                password?.let { passwordEncoder.encode(it) },
-                nickname,
-            )
+            try {
+                user.update(
+                    password?.let { passwordEncoder.encode(it) },
+                    nickname,
+                )
+            } catch (e: DataIntegrityViolationException) {
+                throw NicknameConflict
+            }
         }
         // 이 update api는 nickname과 password만 업데이트 하기 때문에 유저가 프로필 사진이 있다고 하더라도, preSignedUrl이 null로 내려감
         // 프론트에게 업데이트 하는 경우에 받은 response는 수정한 내용만 반영하고 presSingedUrl null 인건 무시하고 이미 유저에게 보여주고 있는 사진 그대로 보여주기를 요청
@@ -72,7 +90,7 @@ class UserServiceImpl (
     @Transactional
     override fun updateUserMailVerified(userId: Long, verifyEmailRequest: VerifyEmailRequest): UserEntity {
         val user = getUserById(userId)
-        userRepository.findByUnivEmail(verifyEmailRequest.email)?.let { throw WafflyTime409("이미 이 snu mail로 가입한 계정이 존재합니다") }
+        userRepository.findByUnivEmail(verifyEmailRequest.email)?.let { throw MailConflict }
         user.univEmail = verifyEmailRequest.email
 
         return user
@@ -86,8 +104,8 @@ class UserServiceImpl (
 
     @Transactional
     override fun deleteScrap(userId: Long, postId: Long): DeleteScrapResponse {
-        val scrap = scrapRepository.findByPostIdAndUserId(postId, userId) ?: throw WafflyTime404("존재하지 않는 스크랩 입니다")
-        if (userId != scrap.user.id) throw WafflyTime401("스크랩한 유저만 스크랩을 삭제할 수 있습니다")
+        val scrap = scrapRepository.findByPostIdAndUserId(postId, userId) ?: throw TODO("존재하지 않는 스크랩 입니다")
+        if (userId != scrap.user.id) throw TODO("스크랩한 유저만 스크랩을 삭제할 수 있습니다")
         scrap.post.nScraps--
         scrapRepository.delete(scrap)
 
@@ -126,6 +144,6 @@ class UserServiceImpl (
 
     private fun getUserById(userId: Long): UserEntity {
         return userRepository.findByIdOrNull(userId)
-            ?: throw WafflyTime404("해당 유저 id를 찾을 수 없습니다")
+            ?: throw UserNotFound
     }
 }

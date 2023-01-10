@@ -22,6 +22,18 @@ class UserController(
         return userService.getUserInfo(userId)
     }
 
+    @GetMapping("/api/user/check/id/{id}")
+    fun checkLoginIdConflict(@PathVariable id: String): String {
+        userService.checkLoginIdConflict(id)
+        return "사용 가능한 아이디입니다"
+    }
+
+    @GetMapping("/api/user/check/nickname/{nickname}")
+    fun checkNicknameConflict(@PathVariable nickname: String): String {
+        userService.checkNicknameConflict(nickname)
+        return "사용 가능한 닉네임입니다"
+    }
+
     @PutMapping("/api/user/me")
     fun updateMyInfo(
         @UserIdFromToken userId: Long,
