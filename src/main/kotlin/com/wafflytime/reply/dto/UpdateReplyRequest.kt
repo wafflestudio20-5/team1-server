@@ -1,4 +1,4 @@
-package com.wafflytime.board.dto
+package com.wafflytime.reply.dto
 
 data class UpdateReplyRequest(
     val contents: String?,

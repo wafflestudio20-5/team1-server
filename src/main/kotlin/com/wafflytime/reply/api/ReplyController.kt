@@ -1,9 +1,9 @@
-package com.wafflytime.board.api
+package com.wafflytime.reply.api
 
-import com.wafflytime.board.dto.CreateReplyRequest
-import com.wafflytime.board.dto.ReplyResponse
-import com.wafflytime.board.dto.UpdateReplyRequest
-import com.wafflytime.board.service.ReplyService
+import com.wafflytime.reply.dto.CreateReplyRequest
+import com.wafflytime.reply.dto.ReplyResponse
+import com.wafflytime.reply.dto.UpdateReplyRequest
+import com.wafflytime.reply.service.ReplyService
 import com.wafflytime.config.UserIdFromToken
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity

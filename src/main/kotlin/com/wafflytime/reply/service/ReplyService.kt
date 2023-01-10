@@ -1,13 +1,15 @@
-package com.wafflytime.board.service
+package com.wafflytime.reply.service
 
-import com.wafflytime.board.database.*
-import com.wafflytime.board.dto.CreateReplyRequest
-import com.wafflytime.board.dto.ReplyResponse
-import com.wafflytime.board.dto.ReplyWriterResponse
-import com.wafflytime.board.dto.UpdateReplyRequest
+import com.wafflytime.board.database.PostEntity
+import com.wafflytime.board.service.PostService
 import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
+import com.wafflytime.reply.database.*
+import com.wafflytime.reply.dto.CreateReplyRequest
+import com.wafflytime.reply.dto.ReplyResponse
+import com.wafflytime.reply.dto.ReplyWriterResponse
+import com.wafflytime.reply.dto.UpdateReplyRequest
 import com.wafflytime.user.info.database.UserRepository
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull

@@ -5,6 +5,7 @@ import com.wafflytime.common.BaseTimeEntity
 import com.wafflytime.post.database.image.ImageColumn
 import com.wafflytime.post.database.image.JpaImageColumnJsonConverter
 import com.wafflytime.post.dto.UpdatePostRequest
+import com.wafflytime.reply.database.ReplyEntity
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
 

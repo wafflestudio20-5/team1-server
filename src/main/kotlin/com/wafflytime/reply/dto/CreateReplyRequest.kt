@@ -1,4 +1,4 @@
-package com.wafflytime.board.dto
+package com.wafflytime.reply.dto
 
 import jakarta.validation.constraints.NotEmpty
 
