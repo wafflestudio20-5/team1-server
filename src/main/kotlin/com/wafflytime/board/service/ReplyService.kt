@@ -31,20 +31,7 @@ class ReplyService(
         }
         if (parent != null && parent.post != post) throw WafflyTime400("부모 댓글이 다른 글에 있습니다")
 
-        val reply = replyRepository.save(
-            ReplyEntity(
-                contents = request.contents,
-                writer = user,
-                post = post,
-                replyGroup = parent?.replyGroup ?: (commentCount(post) + 1),
-                replyOrder = commentCount(parent) + 1,
-                mention = parent,
-                isRoot = (parent == null),
-                isWriterAnonymous = request.isWriterAnonymous
-            )
-        )
-
-        replyWriterRepositorySupport.getAnonymousId(post, user)
+        val anonymousId = replyWriterRepositorySupport.getAnonymousId(post, user)
             ?: let {
                 replyWriterRepository.save(
                     ReplyWriterEntity(
@@ -54,6 +41,20 @@ class ReplyService(
                     )
                 ).anonymousId
             }
+
+        val reply = replyRepository.save(
+            ReplyEntity(
+                contents = request.contents,
+                writer = user,
+                post = post,
+                replyGroup = parent?.replyGroup ?: (commentCount(post) + 1),
+                replyOrder = commentCount(parent) + 1,
+                mention = parent,
+                isRoot = (parent == null),
+                isWriterAnonymous = request.isWriterAnonymous,
+                anonymousId = anonymousId,
+            )
+        )
 
         return replyToResponse(reply)
     }
@@ -110,8 +111,7 @@ class ReplyService(
         return reply?.let {
             ReplyWriterResponse(
                 writerId = reply.writer.id,
-                anonymousId = replyWriterRepositorySupport.getAnonymousId(reply.post, reply.writer)
-                    ?: throw WafflyTime404("해당하는 댓글 작성자가 없습니다"),
+                anonymousId = reply.anonymousId,
                 isWriterAnonymous = reply.isWriterAnonymous,
             )
         }
@@ -135,7 +135,8 @@ class ReplyService(
                 )
             ),
             mention = replyToReplyWriter(reply.mention),
-            contents = reply.contents
+            contents = reply.contents,
+            isDeleted = reply.isDeleted
         )
     }
 }

@@ -32,6 +32,8 @@ class ReplyEntity(
 
     val isRoot: Boolean = false, // true : 일반 댓글, false : 대댓글
 
+    val anonymousId: Long,
+
     var isWriterAnonymous: Boolean = true,
     var isDeleted: Boolean = false,
 ) : BaseTimeEntity() {
