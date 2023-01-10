@@ -1,9 +1,10 @@
-package com.wafflytime.board.database
+package com.wafflytime.post.database
 
-import com.wafflytime.board.database.image.ImageColumn
-import com.wafflytime.board.database.image.JpaImageColumnJsonConverter
-import com.wafflytime.board.dto.UpdatePostRequest
+import com.wafflytime.board.database.BoardEntity
 import com.wafflytime.common.BaseTimeEntity
+import com.wafflytime.post.database.image.ImageColumn
+import com.wafflytime.post.database.image.JpaImageColumnJsonConverter
+import com.wafflytime.post.dto.UpdatePostRequest
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
 
@@ -25,12 +26,6 @@ class PostEntity(
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="board_id")
     val board: BoardEntity,
-
-    @OneToMany(mappedBy = "post", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
-    val replies: MutableList<ReplyEntity> = mutableListOf(),
-
-    @OneToMany(mappedBy = "post", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
-    val likes: MutableList<LikesEntity> = mutableListOf(),
 
     @OneToMany(mappedBy = "post", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
     val scraps: MutableList<ScrapEntity> = mutableListOf(),

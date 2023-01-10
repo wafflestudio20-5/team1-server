@@ -1,6 +1,6 @@
-package com.wafflytime.board.database.image
+package com.wafflytime.post.database.image
 
-import com.wafflytime.board.dto.S3ImageUrlDto
+import com.wafflytime.post.dto.S3ImageUrlDto
 
 data class ImageColumn(
     val imageId: Int,

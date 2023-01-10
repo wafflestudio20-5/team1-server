@@ -1,5 +1,4 @@
-package com.wafflytime.board.dto
-
+package com.wafflytime.post.dto
 
 data class ImageRequest (
     val imageId: Int,

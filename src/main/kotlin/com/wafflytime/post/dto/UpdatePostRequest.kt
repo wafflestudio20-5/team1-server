@@ -1,4 +1,5 @@
-package com.wafflytime.board.dto
+package com.wafflytime.post.dto
+
 
 data class UpdatePostRequest(
     val title: String?,

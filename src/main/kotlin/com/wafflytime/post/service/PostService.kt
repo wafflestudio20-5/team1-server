@@ -1,16 +1,15 @@
-package com.wafflytime.board.service
+package com.wafflytime.post.service
 
 import com.wafflytime.board.database.BoardRepository
-import com.wafflytime.board.database.PostEntity
-import com.wafflytime.board.database.PostRepository
-import com.wafflytime.board.dto.*
 import com.wafflytime.board.type.BoardType
-import com.wafflytime.board.database.image.ImageColumn
-import com.wafflytime.board.dto.ImageResponse
+import com.wafflytime.common.S3Service
 import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
-import com.wafflytime.common.S3Service
+import com.wafflytime.post.database.PostEntity
+import com.wafflytime.post.database.PostRepository
+import com.wafflytime.post.database.image.ImageColumn
+import com.wafflytime.post.dto.*
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
 import jakarta.transaction.Transactional
@@ -42,7 +41,8 @@ class PostService(
 
         val s3ImageUrlDtoList = s3Service.getPreSignedUrlsAndS3Urls(request.images)
 
-        val post: PostEntity = postRepository.save(PostEntity(
+        val post: PostEntity = postRepository.save(
+            PostEntity(
             title = request.title,
             contents = request.contents,
             images = getImagesEntityFromS3ImageUrl(s3ImageUrlDtoList),
@@ -50,7 +50,8 @@ class PostService(
             board = board,
             isQuestion = request.isQuestion,
             isWriterAnonymous = request.isWriterAnonymous
-        ))
+        )
+        )
         return PostResponse.of(post, s3ImageUrlDtoList?.map { ImageResponse.of(it) })
     }
 

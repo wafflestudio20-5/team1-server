@@ -3,6 +3,7 @@ package com.wafflytime.board.database
 import com.wafflytime.board.type.BoardCategory
 import com.wafflytime.board.type.BoardType
 import com.wafflytime.common.BaseTimeEntity
+import com.wafflytime.post.database.PostEntity
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotBlank

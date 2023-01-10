@@ -1,6 +1,6 @@
-package com.wafflytime.board.dto
+package com.wafflytime.post.dto
 
-import com.wafflytime.board.database.PostEntity
+import com.wafflytime.post.database.PostEntity
 
 data class PostResponse(
     val postId: Long,
