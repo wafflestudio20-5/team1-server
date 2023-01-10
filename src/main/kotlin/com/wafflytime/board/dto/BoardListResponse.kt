@@ -14,7 +14,7 @@ data class BoardListResponse(
 ) {
 
     data class BoardItem(
-        val id: Int,
+        val boardId: Long,
         val name: String,
     )
 
@@ -25,7 +25,7 @@ data class BoardListResponse(
                 category = category,
                 size = boards?.size ?: 0,
                 defaultDisplayColumnSize = category.defaultDisplayColumnSize,
-                boards = boards?.toMutableList()?.mapIndexed { index, boardEntity ->  BoardItem(id=index, boardEntity.title)}
+                boards = boards?.toMutableList()?.map { BoardItem(it.id, it.title) }
             )
         }
     }
