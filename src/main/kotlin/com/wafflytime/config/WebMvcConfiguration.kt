@@ -1,7 +1,8 @@
 package com.wafflytime.config
 
-import com.wafflytime.exception.WafflyTime401
-import com.wafflytime.exception.WafflyTime500
+import com.wafflytime.user.auth.exception.AuthTokenNotProvided
+import com.wafflytime.user.auth.exception.MailNotVerified
+import com.wafflytime.user.auth.exception.WrongUsageUserIdFromToken
 import com.wafflytime.user.auth.service.AuthTokenService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -67,10 +68,10 @@ class LocalAuthArgumentResolver : HandlerMethodArgumentResolver {
         binderFactory: WebDataBinderFactory?
     ): Any? {
         if (supportsParameter(parameter)) {
-            val httpServletRequest = webRequest.getNativeRequest(HttpServletRequest::class.java) ?: throw WafflyTime500("WebRequest Casting Error")
+            val httpServletRequest = webRequest.getNativeRequest(HttpServletRequest::class.java) ?: throw WrongUsageUserIdFromToken
             return httpServletRequest.getAttribute("UserIdFromToken")
         } else {
-            throw WafflyTime500("Wrong parameter for annotation `UserIdFromToken`")
+            throw WrongUsageUserIdFromToken
         }
     }
 
@@ -88,14 +89,14 @@ class LocalAuthInterceptor(
 
 
             if (!handlerCasted.hasMethodAnnotation(ExemptAuthentication::class.java)) {
-                val accessToken = request.getHeader("Authorization") ?: throw WafflyTime401("로그인 후 이용 가능합니다")
+                val accessToken = request.getHeader("Authorization") ?: throw AuthTokenNotProvided
 
                 val authResult = authTokenService.authenticate(accessToken)
                 request.setAttribute("UserIdFromToken", authTokenService.getUserId(authResult))
 
                 if (!handlerCasted.hasMethodAnnotation(ExemptEmailVerification::class.java)) {
                     if (!authTokenService.isEmailVerified(authResult)) {
-                        throw WafflyTime401("학교 이메일 인증 후 이용 가능합니다")
+                        throw MailNotVerified
                     }
                 }
             }

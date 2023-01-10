@@ -1,12 +1,9 @@
 package com.wafflytime.user.auth.service
 
 import com.wafflytime.config.ExemptAuthentication
-import com.wafflytime.exception.WafflyTime400
-import com.wafflytime.exception.WafflyTime401
-import com.wafflytime.exception.WafflyTime404
-import com.wafflytime.exception.WafflyTime409
 import com.wafflytime.user.auth.api.dto.AuthToken
 import com.wafflytime.user.auth.api.dto.OAuthToken
+import com.wafflytime.user.auth.exception.*
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
 import jakarta.transaction.Transactional
@@ -35,7 +32,7 @@ class OAuthServiceImpl(
     override fun socialLogin(providerName: String, code: String): AuthToken {
         val socialEmail = getSocialEmail(providerName, code)
         val user = userRepository.findBySocialEmail(socialEmail)
-            ?: throw WafflyTime404("존재하지 않는 소셜 이메일입니다.")
+            ?: throw SocialLoginFailure
         return authTokenService.buildAuthToken(user, LocalDateTime.now())
     }
 
@@ -44,7 +41,7 @@ class OAuthServiceImpl(
     override fun socialSignUp(providerName: String, code: String): AuthToken {
         val socialEmail = getSocialEmail(providerName, code)
         if (userRepository.findBySocialEmail(socialEmail) != null) {
-            throw WafflyTime409("이미 이 소셜 이메일로 가입한 계정이 존재합니다")
+            throw SocialEmailConflict
         }
         val user = userRepository.save(UserEntity(socialEmail = socialEmail))
         return authTokenService.buildAuthToken(user, LocalDateTime.now())
@@ -52,7 +49,7 @@ class OAuthServiceImpl(
 
     fun getSocialEmail(providerName: String, code: String): String {
         val provider = oAuthProperties.provider[providerName]
-            ?: throw WafflyTime400("제공하지 않는 OAuth Provider 입니다.")
+            ?: throw OAuthProviderNotSupported
         val accessToken = getAccessToken(provider, code)
         return getSocialEmail(provider, providerName, accessToken)
     }
@@ -66,7 +63,7 @@ class OAuthServiceImpl(
             .retrieve()
             .bodyToMono(OAuthToken::class.java)
             .block()
-            ?: throw WafflyTime401("잘못된 code 입니다.")
+            ?: throw InvalidAuthorizationCode
     }
 
     private fun tokenRequest(
@@ -95,14 +92,14 @@ class OAuthServiceImpl(
             .retrieve()
             .bodyToMono<Map<String, Any>>()
             .block()
-            ?: throw WafflyTime401("잘못된 token 입니다.")
+            ?: throw InvalidOAuthToken
 
         return when (providerName) {
             "google" -> google(attributes)
             "naver" -> naver(attributes)
             "kakao" -> kakao(attributes)
             "github" -> github(attributes)
-            else -> throw WafflyTime400("제공하지 않는 소셜 로그인 서비스입니다.")
+            else -> throw OAuthProviderNotSupported
         }
     }
 

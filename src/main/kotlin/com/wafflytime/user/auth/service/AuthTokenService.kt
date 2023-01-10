@@ -1,10 +1,11 @@
 package com.wafflytime.user.auth.service
 
-import com.wafflytime.exception.WafflyTime401
-import com.wafflytime.exception.WafflyTime409
 import com.wafflytime.user.auth.api.dto.AuthToken
 import com.wafflytime.user.auth.database.RefreshTokenEntity
 import com.wafflytime.user.auth.database.RefreshTokenRepository
+import com.wafflytime.user.auth.exception.AuthTokenExpired
+import com.wafflytime.user.auth.exception.InvalidAuthToken
+import com.wafflytime.user.auth.exception.RefreshTokenTakenOver
 import com.wafflytime.user.info.database.UserEntity
 import io.jsonwebtoken.*
 import io.jsonwebtoken.security.Keys
@@ -60,19 +61,19 @@ class AuthTokenServiceImpl(
         val emailVerified = isEmailVerified(authResult)
 
         val refreshTokenEntity = refreshTokenRepository.findByUserId(userId)
-            ?: throw WafflyTime401("잘못된 인증입니다")
+            ?: throw InvalidAuthToken
 
         if (refreshToken == tokenPrefix + refreshTokenEntity.token) {
             return buildAuthToken(userId, now, emailVerified)
         } else {
-            throw WafflyTime409("Refresh token take over detected")
+            throw RefreshTokenTakenOver
         }
     }
 
     @Transactional
     override fun deleteRefreshToken(userId: Long) {
         val refreshTokenEntity = refreshTokenRepository.findByUserId(userId)
-            ?: throw WafflyTime401("잘못된 인증입니다")
+            ?: throw InvalidAuthToken
 
         refreshTokenEntity.token = null
     }
@@ -85,14 +86,14 @@ class AuthTokenServiceImpl(
         try {
             return authResult.body.subject.toLong()
         } catch(e: java.lang.NumberFormatException) {
-            throw WafflyTime401("잘못된 인증입니다")
+            throw InvalidAuthToken
         }
     }
 
     override fun isEmailVerified(authResult: Jws<Claims>): Boolean {
         return authResult.body.get("email-verified", String::class.java)
             ?.toBoolean()
-            ?: throw WafflyTime401("잘못된 인증입니다")
+            ?: throw InvalidAuthToken
     }
 
     private fun buildAuthToken(userId: Long, now: LocalDateTime, emailVerified: Boolean): AuthToken {
@@ -132,9 +133,9 @@ class AuthTokenServiceImpl(
         try {
             return parse(token, key)
         } catch (ex: ExpiredJwtException) {
-            throw WafflyTime401("만료된 토큰입니다.")
+            throw AuthTokenExpired
         } catch (ex: Exception) {
-            throw WafflyTime401("잘못된 인증입니다.")
+            throw InvalidAuthToken
         }
     }
 
