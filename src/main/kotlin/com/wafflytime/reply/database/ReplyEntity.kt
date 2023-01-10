@@ -4,11 +4,7 @@ import com.wafflytime.common.BaseTimeEntity
 import com.wafflytime.exception.WafflyTime404
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.user.info.database.UserEntity
-import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import jakarta.transaction.Transactional
 
 @Entity
@@ -36,16 +32,20 @@ class ReplyEntity(
     val anonymousId: Long,
 
     var isWriterAnonymous: Boolean = true,
+    var isDisplayed: Boolean = true,
     var isDeleted: Boolean = false,
 ) : BaseTimeEntity() {
 
     @Transactional
-    fun update(contents: String?, isWriterAnonymous: Boolean?) {
+    fun update(contents: String? = null, isWriterAnonymous: Boolean? = null, isDisplayed: Boolean? = null) {
         contents?.let {
             this.contents = contents
         }
         isWriterAnonymous?.let {
             this.isWriterAnonymous = isWriterAnonymous
+        }
+        isDisplayed?.let {
+            this.isDisplayed = isDisplayed
         }
     }
 

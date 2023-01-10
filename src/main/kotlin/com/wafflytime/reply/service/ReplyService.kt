@@ -1,10 +1,10 @@
 package com.wafflytime.reply.service
 
-import com.wafflytime.post.database.PostEntity
-import com.wafflytime.post.service.PostService
 import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
+import com.wafflytime.post.database.PostEntity
+import com.wafflytime.post.service.PostService
 import com.wafflytime.reply.database.*
 import com.wafflytime.reply.dto.CreateReplyRequest
 import com.wafflytime.reply.dto.ReplyResponse
@@ -32,6 +32,7 @@ class ReplyService(
             replyRepository.findByIdOrNull(request.parent) ?: throw WafflyTime404("해당하는 부모 댓글이 없습니다")
         }
         if (parent != null && parent.post != post) throw WafflyTime400("부모 댓글이 다른 글에 있습니다")
+        if (parent?.isDeleted == true) throw WafflyTime404("삭제된 댓글에 답글을 달 수 없습니다")
 
         val anonymousId = replyWriterRepositorySupport.getAnonymousId(post, user)
             ?: let {
@@ -71,17 +72,29 @@ class ReplyService(
     ): ReplyResponse {
         val reply = validateBoardAndPostAndReply(boardId, postId, replyId)
         if (userId != reply.writer.id) throw WafflyTime401("댓글 작성자가 아닌 유저는 댓글을 수정할 수 없습니다")
+        if (reply.isDeleted) throw WafflyTime404("삭제된 댓글을 수정할 수 없습니다")
         reply.update(request.contents, request.isWriterAnonymous)
         return replyToResponse(reply)
     }
 
     @Transactional
     fun deleteReply(userId: Long, boardId: Long, postId: Long, replyId: Long) {
+        val post = postService.validateBoardAndPost(boardId, postId)
         val reply = validateBoardAndPostAndReply(boardId, postId, replyId)
         val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("user id가 존재하지 않습니다")
 
         if (userId == reply.writer.id || user.isAdmin) {
             reply.delete()
+            val countChild = replyRepositorySupport.countChildReplies(post, reply.replyGroup)
+            if (reply.isRoot && countChild == 0L) {
+                reply.update(isDisplayed = false)
+                return
+            }
+            if (!reply.isRoot) {
+                reply.update(isDisplayed = false)
+                val parent = replyRepositorySupport.findParent(post, reply.replyGroup)!!
+                if (countChild == 0L) parent.update(isDisplayed = false)
+            }
         } else {
             throw WafflyTime401("댓글을 삭제할 권한이 없습니다")
         }
@@ -100,12 +113,12 @@ class ReplyService(
     }
 
     private fun commentCount(post: PostEntity): Long {
-        return replyRepositorySupport.countReplies(post)
+        return replyRepositorySupport.getLastReplyGroup(post)
     }
 
     private fun commentCount(reply: ReplyEntity?): Long {
         return reply?.let {
-            replyRepositorySupport.countChildReplies(reply.post, reply.replyGroup)
+            replyRepositorySupport.getLastReplyOrder(reply.post, reply.replyGroup)
         } ?: 0
     }
 
@@ -138,7 +151,8 @@ class ReplyService(
             ),
             mention = replyToReplyWriter(reply.mention),
             contents = reply.contents,
-            isDeleted = reply.isDeleted
+            isDeleted = reply.isDeleted,
+            isDisplayed = reply.isDisplayed
         )
     }
 }

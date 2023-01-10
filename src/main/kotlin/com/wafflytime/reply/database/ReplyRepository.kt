@@ -8,14 +8,13 @@ import com.wafflytime.user.info.database.UserEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Component
 
-
 interface ReplyRepository : JpaRepository<ReplyEntity, Long>
 
 @Component
 class ReplyRepositorySupport(
     private val queryFactory: JPAQueryFactory,
 ) {
-    fun countReplies(post: PostEntity): Long {
+    fun getLastReplyGroup(post: PostEntity): Long {
         return queryFactory.select(
             replyEntity.replyGroup.max()
         )
@@ -25,24 +24,24 @@ class ReplyRepositorySupport(
             .fetchOne() ?: 0
     }
 
-    fun countChildReplies(post: PostEntity, commentGroup: Long): Long {
+    fun getLastReplyOrder(post: PostEntity, replyGroup: Long): Long {
         return queryFactory.select(
             replyEntity.replyOrder.max()
         )
-            .where(replyEntity.replyGroup.eq(commentGroup))
             .from(replyEntity)
             .innerJoin(replyEntity.post)
             .where(replyEntity.post.id.eq(post.id))
+            .where(replyEntity.replyGroup.eq(replyGroup))
             .fetchOne() ?: 0
     }
 
-    fun findParent(post: PostEntity, commentGroup: Long): ReplyEntity? {
+    fun findParent(post: PostEntity, replyGroup: Long): ReplyEntity? {
         return queryFactory.selectFrom(replyEntity)
             .where(replyEntity.isRoot)
-            .where(replyEntity.replyGroup.eq(commentGroup))
             .innerJoin(replyEntity.post)
             .fetchJoin()
             .where(replyEntity.post.id.eq(post.id))
+            .where(replyEntity.replyGroup.eq(replyGroup))
             .fetchOne()
     }
 
@@ -51,10 +50,23 @@ class ReplyRepositorySupport(
             .innerJoin(replyEntity.post)
             .fetchJoin()
             .where(replyEntity.post.id.eq(post.id))
+            .where(replyEntity.isDisplayed.isTrue)
             .orderBy(replyEntity.replyGroup.asc(), replyEntity.replyOrder.asc())
             .offset(page)
             .limit(size)
             .fetch()
+    }
+
+    fun countChildReplies(post: PostEntity, replyGroup: Long): Long {
+        return queryFactory.select(
+            replyEntity.replyOrder.count()
+        )
+            .from(replyEntity)
+            .innerJoin(replyEntity.post)
+            .where(replyEntity.post.id.eq(post.id))
+            .where(replyEntity.replyGroup.eq(replyGroup))
+            .where(replyEntity.isDeleted.isFalse)
+            .fetchOne() ?: 0
     }
 }
 
