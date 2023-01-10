@@ -44,4 +44,23 @@ class ReplyController(
     ) {
         replyService.deleteReply(userId, boardId, postId, replyId)
     }
+
+    @GetMapping("/api/board/{boardId}/post/{postId}/reply/{replyId}")
+    fun getReply(
+        @PathVariable boardId: Long,
+        @PathVariable postId: Long,
+        @PathVariable replyId: Long,
+    ) : ResponseEntity<ReplyResponse>{
+        return ResponseEntity.ok(replyService.getReply(boardId, postId, replyId))
+    }
+
+    @GetMapping("/api/board/{boardId}/post/{postId}/replies")
+    fun getReplies(
+        @PathVariable boardId: Long,
+        @PathVariable postId: Long,
+        @RequestParam(required = false, value = "page", defaultValue = "0") page: Long,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Long,
+    ) : ResponseEntity<List<ReplyResponse>>{
+        return ResponseEntity.ok(replyService.getReplies(boardId, postId, page, size))
+    }
 }

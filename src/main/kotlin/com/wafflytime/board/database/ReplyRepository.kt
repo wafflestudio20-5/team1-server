@@ -28,22 +28,32 @@ class ReplyRepositorySupport(
         return queryFactory.select(
             replyEntity.replyOrder.max()
         )
+            .where(replyEntity.replyGroup.eq(commentGroup))
             .from(replyEntity)
             .innerJoin(replyEntity.post)
             .where(replyEntity.post.id.eq(post.id))
-            .where(replyEntity.replyGroup.eq(commentGroup))
             .fetchOne() ?: 0
     }
 
     fun findParent(post: PostEntity, commentGroup: Long): ReplyEntity? {
-        val qPost = QPostEntity.postEntity
         return queryFactory.selectFrom(replyEntity)
             .where(replyEntity.isRoot)
             .where(replyEntity.replyGroup.eq(commentGroup))
-            .innerJoin(replyEntity.post, qPost)
+            .innerJoin(replyEntity.post)
             .fetchJoin()
-            .where(qPost.id.eq(post.id))
+            .where(replyEntity.post.id.eq(post.id))
             .fetchOne()
+    }
+
+    fun getReplies(post: PostEntity, page: Long, size: Long): List<ReplyEntity> {
+        return queryFactory.selectFrom(replyEntity)
+            .innerJoin(replyEntity.post)
+            .fetchJoin()
+            .where(replyEntity.post.id.eq(post.id))
+            .orderBy(replyEntity.replyGroup.asc(), replyEntity.replyOrder.asc())
+            .offset(page)
+            .limit(size)
+            .fetch()
     }
 }
 
@@ -56,7 +66,11 @@ class ReplyWriterRepositorySupport(
 ) {
     fun getAnonymousId(post: PostEntity, writer: UserEntity): Long? {
         return queryFactory.selectFrom(replyWriterEntity)
+            .innerJoin(replyWriterEntity.post)
+            .fetchJoin()
             .where(replyWriterEntity.post.id.eq(post.id))
+            .innerJoin(replyWriterEntity.writer)
+            .fetchJoin()
             .where(replyWriterEntity.writer.id.eq(writer.id))
             .fetchOne()
             ?.anonymousId
@@ -67,6 +81,8 @@ class ReplyWriterRepositorySupport(
             replyWriterEntity.count()
         )
             .from(replyWriterEntity)
+            .innerJoin(replyWriterEntity.post)
+            .fetchJoin()
             .where(replyWriterEntity.post.id.eq(post.id))
             .fetchOne() ?: 0
     }

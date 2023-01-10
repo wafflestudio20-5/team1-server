@@ -30,7 +30,7 @@ class ReplyService(
             replyRepository.findByIdOrNull(request.parent) ?: throw WafflyTime404("해당하는 부모 댓글이 없습니다")
         }
         if (parent != null && parent.post != post) throw WafflyTime400("부모 댓글이 다른 글에 있습니다")
-        
+
         val reply = replyRepository.save(
             ReplyEntity(
                 contents = request.contents,
@@ -44,7 +44,7 @@ class ReplyService(
             )
         )
 
-        val anonymousId = replyWriterRepositorySupport.getAnonymousId(post, user)
+        replyWriterRepositorySupport.getAnonymousId(post, user)
             ?: let {
                 replyWriterRepository.save(
                     ReplyWriterEntity(
@@ -55,22 +55,7 @@ class ReplyService(
                 ).anonymousId
             }
 
-        return ReplyResponse(
-            replyId = reply.id,
-            writer = ReplyWriterResponse(
-                writerId = user.id,
-                anonymousId = anonymousId,
-                isWriterAnonymous = request.isWriterAnonymous,
-            ),
-            parent = if (reply.isRoot) null else replyToReplyWriter(
-                replyRepositorySupport.findParent(
-                    post,
-                    reply.replyGroup
-                )
-            ),
-            mention = replyToReplyWriter(reply.mention),
-            contents = reply.contents
-        )
+        return replyToResponse(reply)
     }
 
     @Transactional
@@ -96,6 +81,18 @@ class ReplyService(
             reply.delete()
         } else {
             throw WafflyTime401("댓글을 삭제할 권한이 없습니다")
+        }
+    }
+
+    fun getReply(boardId: Long, postId: Long, replyId: Long): ReplyResponse {
+        val reply = validateBoardAndPostAndReply(boardId, postId, replyId)
+        return replyToResponse(reply)
+    }
+
+    fun getReplies(boardId: Long, postId: Long, page: Long, size: Long): List<ReplyResponse> {
+        val post = postService.validateBoardAndPost(boardId, postId)
+        return replyRepositorySupport.getReplies(post, page, size).map {
+            replyToResponse(it)
         }
     }
 
