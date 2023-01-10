@@ -1,7 +1,7 @@
 package com.wafflytime.reply.service
 
-import com.wafflytime.board.database.PostEntity
-import com.wafflytime.board.service.PostService
+import com.wafflytime.post.database.PostEntity
+import com.wafflytime.post.service.PostService
 import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404

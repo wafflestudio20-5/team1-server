@@ -1,8 +1,8 @@
 package com.wafflytime.reply.database
 
-import com.wafflytime.board.database.PostEntity
 import com.wafflytime.common.BaseTimeEntity
 import com.wafflytime.exception.WafflyTime404
+import com.wafflytime.post.database.PostEntity
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType

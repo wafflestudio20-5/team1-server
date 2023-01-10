@@ -1,6 +1,6 @@
 package com.wafflytime.reply.database
 
-import com.wafflytime.board.database.PostEntity
+import com.wafflytime.post.database.PostEntity
 import com.wafflytime.common.BaseTimeEntity
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
