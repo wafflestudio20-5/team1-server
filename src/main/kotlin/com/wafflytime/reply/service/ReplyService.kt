@@ -56,6 +56,7 @@ class ReplyService(
                 isRoot = (parent == null),
                 isWriterAnonymous = request.isWriterAnonymous,
                 anonymousId = anonymousId,
+                isPostWriter = (post.id == user.id)
             )
         )
 
@@ -128,6 +129,7 @@ class ReplyService(
                 writerId = reply.writer.id,
                 anonymousId = reply.anonymousId,
                 isWriterAnonymous = reply.isWriterAnonymous,
+                isPostWriter = reply.isPostWriter,
             )
         }
     }

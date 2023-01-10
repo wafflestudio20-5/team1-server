@@ -28,6 +28,7 @@ class ReplyEntity(
     val replyOrder: Long = 0, // 부모 댓글 내부에서 대댓글 순서
 
     val isRoot: Boolean = false, // true : 일반 댓글, false : 대댓글
+    val isPostWriter: Boolean, // 글쓴이 = 댓글 작성자인지 여부
 
     val anonymousId: Long,
 

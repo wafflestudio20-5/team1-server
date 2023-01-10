@@ -14,4 +14,5 @@ data class ReplyWriterResponse(
     val writerId: Long,
     val anonymousId: Long,
     val isWriterAnonymous: Boolean = true,
+    val isPostWriter: Boolean,
 )
