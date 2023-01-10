@@ -29,6 +29,7 @@ interface UserService {
     fun getUserInfo(userId: Long): UserInfo
     fun checkLoginIdConflict(loginId: String)
     fun checkNicknameConflict(nickname: String)
+    fun checkUnivEmailConflict(univEmail: String)
     fun updateUserInfo(userId: Long, request: UpdateUserInfoRequest): UserInfo
     fun updateUserMailVerified(userId: Long, verifyEmailRequest: VerifyEmailRequest): UserEntity
     fun getMyScraps(userId: Long, page:Int, size:Int): Page<PostResponse>
@@ -67,6 +68,11 @@ class UserServiceImpl (
     @Transactional
     override fun checkNicknameConflict(nickname: String) {
         userRepository.findByNickname(nickname) ?: throw NicknameConflict
+    }
+
+    @Transactional
+    override fun checkUnivEmailConflict(univEmail: String) {
+        userRepository.findByUnivEmail(univEmail) ?: throw MailConflict
     }
 
     @Transactional
