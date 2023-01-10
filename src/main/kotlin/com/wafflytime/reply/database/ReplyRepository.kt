@@ -1,7 +1,7 @@
 package com.wafflytime.reply.database
 
 import com.querydsl.jpa.impl.JPAQueryFactory
-import com.wafflytime.board.database.PostEntity
+import com.wafflytime.post.database.PostEntity
 import com.wafflytime.reply.database.QReplyEntity.replyEntity
 import com.wafflytime.reply.database.QReplyWriterEntity.replyWriterEntity
 import com.wafflytime.user.info.database.UserEntity
