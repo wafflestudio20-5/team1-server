@@ -7,11 +7,11 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.util.IOUtils
-import com.wafflytime.board.database.image.ImageColumn
-import com.wafflytime.board.dto.ImageResponse
-import com.wafflytime.board.dto.ImageRequest
-import com.wafflytime.board.dto.S3ImageUrlDto
-import com.wafflytime.board.dto.UpdatePostRequest
+import com.wafflytime.post.database.image.ImageColumn
+import com.wafflytime.post.dto.ImageResponse
+import com.wafflytime.post.dto.ImageRequest
+import com.wafflytime.post.dto.S3ImageUrlDto
+import com.wafflytime.post.dto.UpdatePostRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service

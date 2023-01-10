@@ -1,4 +1,4 @@
-package com.wafflytime.board.database.image
+package com.wafflytime.post.database.image
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper

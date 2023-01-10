@@ -1,4 +1,4 @@
-package com.wafflytime.board.database
+package com.wafflytime.post.database
 
 import com.wafflytime.common.BaseTimeEntity
 import jakarta.persistence.*

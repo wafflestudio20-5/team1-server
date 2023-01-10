@@ -1,10 +1,12 @@
-package com.wafflytime.board.api
+package com.wafflytime.post.api
 
 import com.wafflytime.board.dto.*
-import com.wafflytime.board.service.PostService
-import com.wafflytime.config.ExemptEmailVerification
+import com.wafflytime.post.service.PostService
 import com.wafflytime.config.UserIdFromToken
-import com.wafflytime.common.S3Service
+import com.wafflytime.post.dto.CreatePostRequest
+import com.wafflytime.post.dto.DeletePostResponse
+import com.wafflytime.post.dto.PostResponse
+import com.wafflytime.post.dto.UpdatePostRequest
 import jakarta.validation.Valid
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
