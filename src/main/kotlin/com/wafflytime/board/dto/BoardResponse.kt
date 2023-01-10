@@ -1,6 +1,7 @@
 package com.wafflytime.board.dto
 
 import com.wafflytime.board.database.BoardEntity
+import com.wafflytime.board.type.BoardCategory
 import com.wafflytime.board.type.BoardType
 
 data class BoardResponse(
@@ -8,7 +9,7 @@ data class BoardResponse(
     val boardType: BoardType,
     val title: String,
     val description: String,
-    val allowAnonymous: Boolean,
+    val allowAnonymous: Boolean
 ) {
     companion object {
         fun of(board: BoardEntity) : BoardResponse {
@@ -17,7 +18,7 @@ data class BoardResponse(
                 board.type,
                 board.title,
                 board.description,
-                board.allowAnonymous
+                board.allowAnonymous,
             )
         }
     }

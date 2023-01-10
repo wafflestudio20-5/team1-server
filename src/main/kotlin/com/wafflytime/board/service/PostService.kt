@@ -61,7 +61,7 @@ class PostService(
 
     fun getPosts(boardId: Long, page: Int, size:Int): Page<PostResponse> {
         val sort = Sort.by(Sort.Direction.DESC, "createdAt")
-        return postRepository.findAll(PageRequest.of(page, size, sort)).map {
+        return postRepository.findAllByBoardId(boardId, PageRequest.of(page, size, sort)).map {
             PostResponse.of(
                 it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }

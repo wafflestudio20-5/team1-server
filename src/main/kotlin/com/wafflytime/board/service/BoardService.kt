@@ -2,10 +2,8 @@ package com.wafflytime.board.service
 
 import com.wafflytime.board.database.BoardEntity
 import com.wafflytime.board.database.BoardRepository
-import com.wafflytime.board.dto.BoardResponse
-import com.wafflytime.board.dto.CreateBoardRequest
-import com.wafflytime.board.dto.CreateBoardResponse
-import com.wafflytime.board.dto.DeleteBoardResponse
+import com.wafflytime.board.dto.*
+import com.wafflytime.board.type.BoardCategory
 import com.wafflytime.board.type.BoardType
 import com.wafflytime.common.S3Service
 import com.wafflytime.exception.WafflyTime400
@@ -28,12 +26,18 @@ class BoardService(
 
     @Transactional
     fun createBoard(userId: Long, request: CreateBoardRequest): CreateBoardResponse {
+        /**
+         * basic, career, student, department 게시판은 admin만 만들 수 있고, 일반 유저는 other 게시판만 만들 수 있다
+        **/
         boardRepository.findByTitle(request.title)?.let { throw WafflyTime409("이미 ${request.title}이 존재합니다") }
         val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("해당 유저가 존재하지 않습니다")
 
         if (!user.isAdmin) {
             if (request.boardType !in arrayOf(BoardType.CUSTOM_BASE, BoardType.CUSTOM_PHOTO)) {
                 throw WafflyTime400("user는 CUSTOM_BASE, CUSTOM_PHOTO 타입의 게시판만 생성 가능합니다")
+            }
+            if (request.boardCategory != BoardCategory.OTHER) {
+                throw WafflyTime400("user는 OTHER 카테고리의 게시판만 생성 가능합니다")
             }
         } else {
             if (request.boardType in arrayOf(BoardType.CUSTOM_BASE, BoardType.CUSTOM_PHOTO)) {
@@ -45,12 +49,14 @@ class BoardService(
             description = request.description,
             owner = user,
             type = request.boardType,
+            category = request.boardCategory,
             allowAnonymous = request.allowAnonymous
         ))
         return CreateBoardResponse(
             userId = userId,
             boardId = board.id,
             boardType = board.type,
+            category = board.category,
             title = board.title,
             description = board.description,
             allowAnonymous = board.allowAnonymous
@@ -74,8 +80,14 @@ class BoardService(
         return DeleteBoardResponse(boardId = board.id, title = board.title)
     }
 
-    fun getAllBoards(): List<BoardResponse> {
-        return boardRepository.findAll().map { BoardResponse.of(it) }
+    fun getAllBoards(): List<BoardListResponse> {
+        val boardsGrouped = boardRepository.findAll().groupBy { it.category }
+        val boardGroupedListResponse: MutableList<BoardListResponse> = mutableListOf()
+        BoardCategory.values().forEach {
+            boardGroupedListResponse.add(BoardListResponse.of(it, boardsGrouped[it]))
+
+        }
+        return boardGroupedListResponse
     }
 
     fun getBoard(boardId: Long): BoardResponse {
