@@ -5,10 +5,11 @@ import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.post.service.PostService
-import com.wafflytime.reply.database.*
+import com.wafflytime.reply.database.ReplyEntity
+import com.wafflytime.reply.database.ReplyRepository
+import com.wafflytime.reply.database.ReplyRepositorySupport
 import com.wafflytime.reply.dto.CreateReplyRequest
 import com.wafflytime.reply.dto.ReplyResponse
-import com.wafflytime.reply.dto.ReplyWriterResponse
 import com.wafflytime.reply.dto.UpdateReplyRequest
 import com.wafflytime.user.info.database.UserRepository
 import jakarta.transaction.Transactional
@@ -21,44 +22,32 @@ class ReplyService(
     private val postService: PostService,
     private val replyRepository: ReplyRepository,
     private val replyRepositorySupport: ReplyRepositorySupport,
-    private val replyWriterRepository: ReplyWriterRepository,
-    private val replyWriterRepositorySupport: ReplyWriterRepositorySupport,
 ) {
     @Transactional
     fun createReply(userId: Long, boardId: Long, postId: Long, request: CreateReplyRequest): ReplyResponse {
         val post = postService.validateBoardAndPost(boardId, postId)
         val user = userRepository.findByIdOrNull(userId)!!
-        val parent = request.parent?.let {
-            replyRepository.findByIdOrNull(request.parent) ?: throw WafflyTime404("해당하는 부모 댓글이 없습니다")
+        val mention = request.mention?.let {
+            replyRepository.findByIdOrNull(request.mention) ?: throw WafflyTime404("해당하는 부모 댓글이 없습니다")
         }
-        if (parent != null && parent.post != post) throw WafflyTime400("부모 댓글이 다른 글에 있습니다")
-        if (parent?.isDeleted == true) throw WafflyTime404("삭제된 댓글에 답글을 달 수 없습니다")
-
-        val anonymousId = replyWriterRepositorySupport.getAnonymousId(post, user)
-            ?: let {
-                replyWriterRepository.save(
-                    ReplyWriterEntity(
-                        post = post,
-                        writer = user,
-                        anonymousId = replyWriterRepositorySupport.countReplyIds(post) + 1,
-                    )
-                ).anonymousId
-            }
+        if (mention != null && mention.post != post) throw WafflyTime400("부모 댓글이 다른 글에 있습니다")
+        if (mention?.isDeleted == true) throw WafflyTime404("삭제된 댓글에 답글을 달 수 없습니다")
 
         val reply = replyRepository.save(
             ReplyEntity(
                 contents = request.contents,
                 writer = user,
                 post = post,
-                replyGroup = parent?.replyGroup ?: (commentCount(post) + 1),
-                replyOrder = commentCount(parent) + 1,
-                mention = parent,
-                isRoot = (parent == null),
+                replyGroup = mention?.replyGroup ?: (commentCount(post) + 1),
+                mention = mention,
+                isRoot = (mention == null),
                 isWriterAnonymous = request.isWriterAnonymous,
-                anonymousId = anonymousId,
+                anonymousId = replyRepositorySupport.getAnonymousId(post, user),
                 isPostWriter = (post.id == user.id)
             )
         )
+
+        post.replies++
 
         return replyToResponse(reply)
     }
@@ -71,7 +60,8 @@ class ReplyService(
         replyId: Long,
         request: UpdateReplyRequest
     ): ReplyResponse {
-        val reply = validateBoardAndPostAndReply(boardId, postId, replyId)
+        postService.validateBoardAndPost(boardId, postId)
+        val reply = validatePostAndReply(postId, replyId)
         if (userId != reply.writer.id) throw WafflyTime401("댓글 작성자가 아닌 유저는 댓글을 수정할 수 없습니다")
         if (reply.isDeleted) throw WafflyTime404("삭제된 댓글을 수정할 수 없습니다")
         reply.update(request.contents, request.isWriterAnonymous)
@@ -81,11 +71,13 @@ class ReplyService(
     @Transactional
     fun deleteReply(userId: Long, boardId: Long, postId: Long, replyId: Long) {
         val post = postService.validateBoardAndPost(boardId, postId)
-        val reply = validateBoardAndPostAndReply(boardId, postId, replyId)
+        val reply = validatePostAndReply(postId, replyId)
         val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("user id가 존재하지 않습니다")
 
         if (userId == reply.writer.id || user.isAdmin) {
             reply.delete()
+            post.replies--
+
             val countChild = replyRepositorySupport.countChildReplies(post, reply.replyGroup)
             if (reply.isRoot && countChild == 0L) {
                 reply.update(isDisplayed = false)
@@ -102,7 +94,8 @@ class ReplyService(
     }
 
     fun getReply(boardId: Long, postId: Long, replyId: Long): ReplyResponse {
-        val reply = validateBoardAndPostAndReply(boardId, postId, replyId)
+        postService.validateBoardAndPost(boardId, postId)
+        val reply = validatePostAndReply(postId, replyId)
         return replyToResponse(reply)
     }
 
@@ -117,44 +110,23 @@ class ReplyService(
         return replyRepositorySupport.getLastReplyGroup(post)
     }
 
-    private fun commentCount(reply: ReplyEntity?): Long {
-        return reply?.let {
-            replyRepositorySupport.getLastReplyOrder(reply.post, reply.replyGroup)
-        } ?: 0
-    }
-
-    private fun replyToReplyWriter(reply: ReplyEntity?): ReplyWriterResponse? {
-        return reply?.let {
-            ReplyWriterResponse(
-                writerId = reply.writer.id,
-                anonymousId = reply.anonymousId,
-                isWriterAnonymous = reply.isWriterAnonymous,
-                isPostWriter = reply.isPostWriter,
-            )
-        }
-    }
-
-    private fun validateBoardAndPostAndReply(boardId: Long, postId: Long, replyId: Long): ReplyEntity {
-        postService.validateBoardAndPost(boardId, postId)
+    private fun validatePostAndReply(postId: Long, replyId: Long): ReplyEntity {
         val reply = replyRepository.findByIdOrNull(replyId) ?: throw WafflyTime404("reply id가 존재하지 않습니다")
         if (reply.post.id != postId) throw WafflyTime400("post id와 reply id가 매치되지 않습니다 : 해당 게시글에 속한 댓글이 아닙니다")
         return reply
     }
 
     private fun replyToResponse(reply: ReplyEntity): ReplyResponse {
+        val mention = reply.mention
         return ReplyResponse(
             replyId = reply.id,
-            writer = replyToReplyWriter(reply)!!,
-            parent = if (reply.isRoot) null else replyToReplyWriter(
-                replyRepositorySupport.findParent(
-                    reply.post,
-                    reply.replyGroup
-                )
-            ),
-            mention = replyToReplyWriter(reply.mention),
+            writerId = reply.writer.id,
+            nickname = if (reply.isWriterAnonymous) "익명${reply.anonymousId}" else reply.writer.nickname!!,
+            mention = mention ?.let {
+                if (mention.isWriterAnonymous) "익명${mention.anonymousId}" else mention.writer.nickname!!
+            },
             contents = reply.contents,
             isDeleted = reply.isDeleted,
-            isDisplayed = reply.isDisplayed
         )
     }
 }

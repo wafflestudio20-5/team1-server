@@ -5,6 +5,6 @@ import jakarta.validation.constraints.NotEmpty
 data class CreateReplyRequest(
     @NotEmpty
     val contents: String,
-    val parent: Long? = null,
+    val mention: Long? = null,
     val isWriterAnonymous: Boolean = true,
 )

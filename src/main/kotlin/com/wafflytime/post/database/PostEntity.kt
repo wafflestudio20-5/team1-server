@@ -5,7 +5,6 @@ import com.wafflytime.common.BaseTimeEntity
 import com.wafflytime.post.database.image.ImageColumn
 import com.wafflytime.post.database.image.JpaImageColumnJsonConverter
 import com.wafflytime.post.dto.UpdatePostRequest
-import com.wafflytime.reply.database.ReplyEntity
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
 
@@ -34,6 +33,9 @@ class PostEntity(
     // TODO : 질문글인 경우 게시판 상위로 보여지게 하는 알고리즘도 적용하면 좋겠지만 시간이 되면 도전
     var isQuestion: Boolean = false,
     var isWriterAnonymous: Boolean = true,
+
+    var replies: Long = 0, // 전체 댓글 개수
+    var anonymousIds: Long = 0, // 익명 댓글 개수
 ) : BaseTimeEntity() {
 
     fun update(request: UpdatePostRequest) {
