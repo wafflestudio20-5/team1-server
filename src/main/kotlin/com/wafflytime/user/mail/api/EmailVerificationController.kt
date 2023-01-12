@@ -2,9 +2,9 @@ package com.wafflytime.user.mail.api
 
 import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
-import com.wafflytime.user.auth.api.dto.AuthToken
-import com.wafflytime.user.mail.api.dto.VerifyEmailCode
-import com.wafflytime.user.mail.api.dto.VerifyEmailRequest
+import com.wafflytime.user.auth.dto.AuthToken
+import com.wafflytime.user.mail.dto.VerifyEmailCode
+import com.wafflytime.user.mail.dto.VerifyEmailRequest
 import com.wafflytime.user.auth.service.AuthTokenService
 import com.wafflytime.user.mail.service.EmailService
 import com.wafflytime.user.info.service.UserService

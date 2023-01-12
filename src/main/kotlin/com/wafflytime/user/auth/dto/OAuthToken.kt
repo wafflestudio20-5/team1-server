@@ -1,4 +1,4 @@
-package com.wafflytime.user.auth.api.dto
+package com.wafflytime.user.auth.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

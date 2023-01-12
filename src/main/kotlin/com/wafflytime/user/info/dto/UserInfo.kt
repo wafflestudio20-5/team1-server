@@ -1,4 +1,4 @@
-package com.wafflytime.user.info.api.dto
+package com.wafflytime.user.info.dto
 
 import com.wafflytime.user.info.database.UserEntity
 

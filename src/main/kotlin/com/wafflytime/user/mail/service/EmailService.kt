@@ -1,7 +1,7 @@
 package com.wafflytime.user.mail.service
 
-import com.wafflytime.user.mail.api.dto.VerifyEmailCode
-import com.wafflytime.user.mail.api.dto.VerifyEmailRequest
+import com.wafflytime.user.mail.dto.VerifyEmailCode
+import com.wafflytime.user.mail.dto.VerifyEmailRequest
 import com.wafflytime.user.info.service.UserService
 import com.wafflytime.user.mail.exception.InvalidMailSuffix
 import org.springframework.stereotype.Service

@@ -1,8 +1,8 @@
 package com.wafflytime.user.auth.api
 
 import com.wafflytime.config.ExemptAuthentication
-import com.wafflytime.user.auth.api.dto.AuthToken
-import com.wafflytime.user.auth.api.dto.SocialSignUpRequest
+import com.wafflytime.user.auth.dto.AuthToken
+import com.wafflytime.user.auth.dto.SocialSignUpRequest
 import com.wafflytime.user.auth.service.OAuthService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.*

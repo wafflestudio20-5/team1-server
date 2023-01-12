@@ -3,9 +3,9 @@ package com.wafflytime.user.auth.service
 import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
-import com.wafflytime.user.auth.api.dto.AuthToken
-import com.wafflytime.user.auth.api.dto.LoginRequest
-import com.wafflytime.user.auth.api.dto.SignUpRequest
+import com.wafflytime.user.auth.dto.AuthToken
+import com.wafflytime.user.auth.dto.LoginRequest
+import com.wafflytime.user.auth.dto.SignUpRequest
 import com.wafflytime.user.auth.controller.dto.TempAdminSignUpRequest
 import com.wafflytime.user.auth.exception.LoginFailure
 import com.wafflytime.user.auth.exception.SignUpConflict

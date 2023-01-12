@@ -1,6 +1,6 @@
 package com.wafflytime.user.auth.service
 
-import com.wafflytime.user.auth.api.dto.AuthToken
+import com.wafflytime.user.auth.dto.AuthToken
 import com.wafflytime.user.auth.database.RefreshTokenEntity
 import com.wafflytime.user.auth.database.RefreshTokenRepository
 import com.wafflytime.user.auth.exception.AuthTokenExpired

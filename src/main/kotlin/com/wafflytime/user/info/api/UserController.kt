@@ -3,9 +3,9 @@ package com.wafflytime.user.info.api
 import com.wafflytime.config.UserIdFromToken
 import com.wafflytime.post.dto.PostResponse
 import com.wafflytime.user.info.api.dto.DeleteScrapResponse
-import com.wafflytime.user.info.api.dto.UpdateUserInfoRequest
 import com.wafflytime.user.info.api.dto.UploadProfileImageRequest
-import com.wafflytime.user.info.api.dto.UserInfo
+import com.wafflytime.user.info.dto.UpdateUserInfoRequest
+import com.wafflytime.user.info.dto.UserInfo
 import com.wafflytime.user.info.service.UserService
 import jakarta.validation.Valid
 import org.springframework.data.domain.Page

@@ -1,9 +1,9 @@
 package com.wafflytime.user.auth.service
 
 import com.wafflytime.config.ExemptAuthentication
-import com.wafflytime.user.auth.api.dto.AuthToken
-import com.wafflytime.user.auth.api.dto.OAuthToken
-import com.wafflytime.user.auth.api.dto.SocialSignUpRequest
+import com.wafflytime.user.auth.dto.AuthToken
+import com.wafflytime.user.auth.dto.OAuthToken
+import com.wafflytime.user.auth.dto.SocialSignUpRequest
 import com.wafflytime.user.auth.exception.*
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
