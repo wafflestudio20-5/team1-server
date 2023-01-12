@@ -43,7 +43,7 @@ class ReplyService(
                 isRoot = (mention == null),
                 isWriterAnonymous = request.isWriterAnonymous,
                 anonymousId = replyRepositorySupport.getAnonymousId(post, user),
-                isPostWriter = (post.id == user.id)
+                isPostWriter = (post.writer.id == user.id)
             )
         )
 
@@ -127,6 +127,7 @@ class ReplyService(
             },
             contents = reply.contents,
             isDeleted = reply.isDeleted,
+            isPostWriter = reply.isPostWriter,
         )
     }
 }

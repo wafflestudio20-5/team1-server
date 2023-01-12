@@ -7,4 +7,5 @@ data class ReplyResponse(
     val mention: String?,
     val contents: String,
     val isDeleted: Boolean,
+    val isPostWriter: Boolean,
 )
