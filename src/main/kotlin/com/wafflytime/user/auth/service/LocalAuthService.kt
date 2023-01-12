@@ -34,8 +34,9 @@ class LocalAuthServiceImpl(
         val user = try {
             userRepository.save(
                 UserEntity(
-                    request.id,
-                    passwordEncoder.encode(request.password)
+                    loginId = request.id,
+                    password = passwordEncoder.encode(request.password),
+                    nickname = request.nickname,
                 )
             )
         } catch (e: DataIntegrityViolationException) {
@@ -54,6 +55,7 @@ class LocalAuthServiceImpl(
                     loginId = request.id,
                     password = passwordEncoder.encode(request.password),
                     univEmail = request.univEmail,
+                    nickname = request.nickname,
                     isAdmin = true
                 )
             )

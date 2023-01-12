@@ -3,10 +3,13 @@ package com.wafflytime.user.auth.service
 import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.user.auth.api.dto.AuthToken
 import com.wafflytime.user.auth.api.dto.OAuthToken
+import com.wafflytime.user.auth.api.dto.SocialSignUpRequest
 import com.wafflytime.user.auth.exception.*
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
+import com.wafflytime.user.info.exception.NicknameConflict
 import jakarta.transaction.Transactional
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
@@ -17,7 +20,7 @@ import java.time.LocalDateTime
 
 interface OAuthService {
     fun socialLogin(providerName: String, code: String): AuthToken
-    fun socialSignUp(providerName: String, code: String): AuthToken
+    fun socialSignUp(providerName: String, code: String, request: SocialSignUpRequest): AuthToken
 }
 
 @Service
@@ -38,12 +41,16 @@ class OAuthServiceImpl(
 
     @ExemptAuthentication
     @Transactional
-    override fun socialSignUp(providerName: String, code: String): AuthToken {
+    override fun socialSignUp(providerName: String, code: String, request: SocialSignUpRequest): AuthToken {
         val socialEmail = getSocialEmail(providerName, code)
         if (userRepository.findBySocialEmail(socialEmail) != null) {
             throw SocialEmailConflict
         }
-        val user = userRepository.save(UserEntity(socialEmail = socialEmail))
+        val user = try {
+            userRepository.save(UserEntity(socialEmail = socialEmail, nickname = request.nickname))
+        } catch (e: DataIntegrityViolationException) {
+            throw NicknameConflict
+        }
         return authTokenService.buildAuthToken(user, LocalDateTime.now())
     }
 

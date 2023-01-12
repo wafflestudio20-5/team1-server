@@ -2,7 +2,9 @@ package com.wafflytime.user.auth.api
 
 import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.user.auth.api.dto.AuthToken
+import com.wafflytime.user.auth.api.dto.SocialSignUpRequest
 import com.wafflytime.user.auth.service.OAuthService
+import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -17,7 +19,7 @@ class OAuthController(
 
     @ExemptAuthentication
     @PostMapping("/api/auth/social/signup/{provider}")
-    fun socialSignUp(@PathVariable provider: String, @RequestParam code: String) : AuthToken {
-        return oAuthService.socialSignUp(provider, code)
+    fun socialSignUp(@PathVariable provider: String, @RequestParam code: String, @Valid @RequestBody request: SocialSignUpRequest) : AuthToken {
+        return oAuthService.socialSignUp(provider, code, request)
     }
 }

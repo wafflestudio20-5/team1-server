@@ -8,5 +8,7 @@ data class TempAdminSignUpRequest(
     @field:NotBlank
     val password: String,
     @field:NotBlank
-    val univEmail: String
+    val univEmail: String,
+    @field:NotBlank
+    val nickname: String,
 )
