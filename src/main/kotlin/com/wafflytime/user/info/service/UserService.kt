@@ -3,6 +3,7 @@ package com.wafflytime.user.info.service
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
 import com.wafflytime.exception.WafflyTime409
+import com.wafflytime.post.database.PostRepository
 import com.wafflytime.post.database.ScrapRepository
 import com.wafflytime.post.dto.PostResponse
 import com.wafflytime.user.info.api.dto.DeleteScrapResponse
@@ -13,6 +14,7 @@ import com.wafflytime.user.info.database.UserRepository
 import com.wafflytime.user.mail.api.dto.VerifyEmailRequest
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -24,13 +26,15 @@ interface UserService {
     fun updateUserMailVerified(userId: Long, verifyEmailRequest: VerifyEmailRequest): UserEntity
     fun getMyScraps(userId: Long, page:Int, size:Int): List<PostResponse>
     fun deleteScrap(userId: Long, postId: Long): DeleteScrapResponse
+    fun getMyPosts(userId: Long, page: Int, size: Int): List<PostResponse>
 }
 
 @Service
 class UserServiceImpl (
     private val passwordEncoder: PasswordEncoder,
     private val userRepository: UserRepository,
-    private val scrapRepository: ScrapRepository
+    private val scrapRepository: ScrapRepository,
+    private val postRepository: PostRepository
 ) : UserService {
 
     @Transactional
@@ -82,6 +86,14 @@ class UserServiceImpl (
         // 삭제하면 프론트에서 알아서 삭제한 포스트는 보여주지 않는다고 가정(프론트가 구현)
         // 프론트에서 요청하면 DeleteScrapResponse가 아닌 getMyScraps의 리턴값처럼 삭제된 포스트를 반영해 다시 리턴해줘도 됨
         return DeleteScrapResponse(scrap.post.id)
+    }
+
+    override fun getMyPosts(userId: Long, page: Int, size: Int): List<PostResponse> {
+        return postRepository.findAllByWriterId(
+            userId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
+        ).content.map {
+            PostResponse.of(it)
+        }
     }
 
     private fun getUserById(userId: Long): UserEntity {
