@@ -1,14 +1,13 @@
 package com.wafflytime.post.api
 
 import com.wafflytime.board.dto.*
-import com.wafflytime.post.service.PostService
 import com.wafflytime.config.UserIdFromToken
 import com.wafflytime.post.dto.CreatePostRequest
 import com.wafflytime.post.dto.DeletePostResponse
 import com.wafflytime.post.dto.PostResponse
 import com.wafflytime.post.dto.UpdatePostRequest
+import com.wafflytime.post.service.PostService
 import jakarta.validation.Valid
-import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -30,7 +29,7 @@ class PostController(
         @PathVariable boardId: Long,
         @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
-    ) : ResponseEntity<Page<PostResponse>> {
+    ) : ResponseEntity<List<PostResponse>> {
         return ResponseEntity.ok(postService.getPosts(boardId, page, size))
     }
 

@@ -13,7 +13,6 @@ import com.wafflytime.post.dto.*
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
 import jakarta.transaction.Transactional
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
@@ -62,9 +61,9 @@ class PostService(
         return PostResponse.of(post, s3Service.getPreSignedUrlsFromS3Keys(post.images))
     }
 
-    fun getPosts(boardId: Long, page: Int, size:Int): Page<PostResponse> {
+    fun getPosts(boardId: Long, page: Int, size:Int): List<PostResponse> {
         val sort = Sort.by(Sort.Direction.DESC, "createdAt")
-        return postRepository.findAllByBoardId(boardId, PageRequest.of(page, size, sort)).map {
+        return postRepository.findAllByBoardId(boardId, PageRequest.of(page, size, sort)).content.map {
             PostResponse.of(
                 it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
