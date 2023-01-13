@@ -8,6 +8,7 @@ import com.wafflytime.post.dto.UpdatePostRequest
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
 
+
 @Entity
 @Table(name="post")
 class PostEntity(
@@ -36,6 +37,9 @@ class PostEntity(
 
     var replies: Long = 0, // 전체 댓글 개수
     var anonymousIds: Long = 0, // 익명 댓글 개수
+
+    var nLikes: Int = 0
+
 ) : BaseTimeEntity() {
 
     fun update(request: UpdatePostRequest) {

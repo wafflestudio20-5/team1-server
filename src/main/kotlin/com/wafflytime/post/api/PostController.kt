@@ -62,6 +62,14 @@ class PostController(
         return ResponseEntity.ok(postService.deletePost(userId, boardId, postId))
     }
 
+    @PostMapping("/api/board/{boardId}/post/{postId}/like")
+    fun likePost(
+        @UserIdFromToken userId: Long,
+        @PathVariable boardId: Long,
+        @PathVariable postId: Long
+    ) : ResponseEntity<PostResponse> {
+        return ResponseEntity.ok(postService.likePost(userId, boardId, postId))
+    }
 
 
 }

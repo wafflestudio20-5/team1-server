@@ -6,7 +6,10 @@ import com.wafflytime.common.S3Service
 import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
+import com.wafflytime.exception.WafflyTime409
 import com.wafflytime.post.database.PostEntity
+import com.wafflytime.post.database.PostLikeEntity
+import com.wafflytime.post.database.PostLikeRepository
 import com.wafflytime.post.database.PostRepository
 import com.wafflytime.post.database.image.ImageColumn
 import com.wafflytime.post.dto.*
@@ -24,6 +27,7 @@ class PostService(
     private val boardRepository: BoardRepository,
     private val postRepository: PostRepository,
     private val userRepository: UserRepository,
+    private val postLikeRepository: PostLikeRepository,
     private val s3Service: S3Service
 ) {
 
@@ -106,5 +110,24 @@ class PostService(
 
     fun getImagesEntityFromS3ImageUrl(s3ImageUrlDtoList: MutableList<S3ImageUrlDto>?) : Map<String, ImageColumn>? {
         return s3ImageUrlDtoList?.map { it.fileName to ImageColumn.of(it) }?.toMap()
+    }
+
+    @Transactional
+    fun likePost(userId: Long, boardId: Long, postId: Long): PostResponse {
+        val post = validateBoardAndPost(boardId, postId)
+        val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("user id가 존재하지 않습니다")
+
+        // 에타는 좋아요 취소가 안됨
+        postLikeRepository.findByPostIdAndUserId(postId, userId)?.let {
+            throw WafflyTime409("이미 공감한 댓글입니다")
+        }
+
+        postLikeRepository.save(PostLikeEntity(
+            user = user,
+            post = post
+        ))
+        post.nLikes++
+
+        return PostResponse.of(post)
     }
 }
