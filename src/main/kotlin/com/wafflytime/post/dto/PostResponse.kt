@@ -10,7 +10,8 @@ data class PostResponse(
     val isQuestion: Boolean,
     val title: String?,
     val contents: String,
-    val images: List<ImageResponse>?
+    val images: List<ImageResponse>?,
+    val nLikes: Int
 ) {
     companion object {
 
@@ -27,7 +28,8 @@ data class PostResponse(
                 isQuestion = postEntity.isQuestion,
                 title = postEntity.title,
                 contents = postEntity.contents,
-                images = images?.sortedBy { it.imageId }
+                images = images?.sortedBy { it.imageId },
+                nLikes = postEntity.nLikes
             )
         }
     }
