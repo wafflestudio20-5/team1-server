@@ -42,7 +42,8 @@ class PostEntity(
     var nReplies: Long = 0, // 전체 댓글 개수
     var anonymousIds: Long = 0, // 익명 댓글 개수
 
-    var nLikes: Int = 0
+    var nLikes: Int = 0,
+    var nScraps: Int = 0
 
 ) : BaseTimeEntity() {
 

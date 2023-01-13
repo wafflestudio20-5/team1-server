@@ -62,6 +62,7 @@ class PostController(
         return ResponseEntity.ok(postService.deletePost(userId, boardId, postId))
     }
 
+    // 에타에 좋아요 취소는 없음
     @PostMapping("/api/board/{boardId}/post/{postId}/like")
     fun likePost(
         @UserIdFromToken userId: Long,
@@ -71,5 +72,12 @@ class PostController(
         return ResponseEntity.ok(postService.likePost(userId, boardId, postId))
     }
 
-
+    @PostMapping("/api/board/{boardId}/post/{postId}/scrap")
+    fun scrapPost(
+        @UserIdFromToken userId: Long,
+        @PathVariable boardId: Long,
+        @PathVariable postId: Long
+    ) : ResponseEntity<PostResponse> {
+        return ResponseEntity.ok(postService.scrapPost(userId, boardId, postId))
+    }
 }

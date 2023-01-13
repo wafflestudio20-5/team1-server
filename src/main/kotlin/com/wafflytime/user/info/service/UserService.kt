@@ -1,13 +1,18 @@
 package com.wafflytime.user.info.service
 
+import com.wafflytime.exception.WafflyTime401
+import com.wafflytime.exception.WafflyTime404
+import com.wafflytime.exception.WafflyTime409
+import com.wafflytime.post.database.ScrapRepository
+import com.wafflytime.post.dto.PostResponse
+import com.wafflytime.user.info.api.dto.DeleteScrapResponse
+import com.wafflytime.user.info.api.dto.UpdateUserInfoRequest
+import com.wafflytime.user.info.api.dto.UserInfo
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
 import com.wafflytime.user.mail.api.dto.VerifyEmailRequest
-import com.wafflytime.exception.WafflyTime404
-import com.wafflytime.user.info.api.dto.UpdateUserInfoRequest
-import com.wafflytime.user.info.api.dto.UserInfo
-import com.wafflytime.exception.WafflyTime409
 import jakarta.transaction.Transactional
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -17,12 +22,15 @@ interface UserService {
     fun getUserInfo(userId: Long): UserInfo
     fun updateUserInfo(userId: Long, request: UpdateUserInfoRequest): UserInfo
     fun updateUserMailVerified(userId: Long, verifyEmailRequest: VerifyEmailRequest): UserEntity
+    fun getMyScraps(userId: Long, page:Int, size:Int): List<PostResponse>
+    fun deleteScrap(userId: Long, postId: Long): DeleteScrapResponse
 }
 
 @Service
 class UserServiceImpl (
     private val passwordEncoder: PasswordEncoder,
     private val userRepository: UserRepository,
+    private val scrapRepository: ScrapRepository
 ) : UserService {
 
     @Transactional
@@ -56,6 +64,20 @@ class UserServiceImpl (
         user.univEmail = verifyEmailRequest.email
 
         return user
+    }
+
+    override fun getMyScraps(userId: Long, page:Int, size:Int): List<PostResponse> {
+        return scrapRepository.findScrapsByUserId(userId, PageRequest.of(page, size)).map {
+            PostResponse.of(it.post)
+        }
+    }
+
+    @Transactional
+    override fun deleteScrap(userId: Long, postId: Long): DeleteScrapResponse {
+        val scrap = scrapRepository.findByPostIdAndUserId(postId, userId) ?: throw WafflyTime404("존재하지 않는 스크랩 입니다")
+        if (userId != scrap.user.id) throw WafflyTime401("스크랩한 유저만 스크랩을 삭제할 수 있습니다")
+        scrapRepository.delete(scrap)
+        return DeleteScrapResponse(scrap.post.id)
     }
 
     private fun getUserById(userId: Long): UserEntity {
