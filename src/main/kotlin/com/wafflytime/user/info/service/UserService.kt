@@ -76,7 +76,11 @@ class UserServiceImpl (
     override fun deleteScrap(userId: Long, postId: Long): DeleteScrapResponse {
         val scrap = scrapRepository.findByPostIdAndUserId(postId, userId) ?: throw WafflyTime404("존재하지 않는 스크랩 입니다")
         if (userId != scrap.user.id) throw WafflyTime401("스크랩한 유저만 스크랩을 삭제할 수 있습니다")
+        scrap.post.nScraps--
         scrapRepository.delete(scrap)
+
+        // 삭제하면 프론트에서 알아서 삭제한 포스트는 보여주지 않는다고 가정(프론트가 구현)
+        // 프론트에서 요청하면 DeleteScrapResponse가 아닌 getMyScraps의 리턴값처럼 삭제된 포스트를 반영해 다시 리턴해줘도 됨
         return DeleteScrapResponse(scrap.post.id)
     }
 
