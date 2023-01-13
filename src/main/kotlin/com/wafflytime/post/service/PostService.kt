@@ -111,8 +111,7 @@ class PostService(
 
     @Transactional
     fun likePost(userId: Long, boardId: Long, postId: Long): PostResponse {
-        val post = validateBoardAndPost(boardId, postId)
-        val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("user id가 존재하지 않습니다")
+        val (post, user) = validateLikeScrapPost(userId, boardId, postId, "게시물 작성자는 공감할 수 없습니다")
 
         // 에타는 좋아요 취소가 안됨
         postLikeRepository.findByPostIdAndUserId(postId, userId)?.let {
@@ -126,14 +125,19 @@ class PostService(
 
     @Transactional
     fun scrapPost(userId: Long, boardId: Long, postId: Long): PostResponse {
-        val post = validateBoardAndPost(boardId, postId)
-        val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("user id가 존재하지 않습니다")
-
+        val (post, user) = validateLikeScrapPost(userId, boardId, postId, "게시물 작성자는 스크랩 할 수 없습니다")
         scrapRepository.findByPostIdAndUserId(postId, userId)?.let {
             throw WafflyTime409("이미 스크랩한 게시물입니다")
         }
         scrapRepository.save(ScrapEntity(user = user, post = post))
         post.nScraps++
         return PostResponse.of(post)
+    }
+
+    fun validateLikeScrapPost(userId: Long, boardId: Long, postId: Long, writerUnauthorizedMsg: String): Pair<PostEntity, UserEntity> {
+        val post = validateBoardAndPost(boardId, postId)
+        val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("user id가 존재하지 않습니다")
+        if (post.writer.id == userId) throw WafflyTime401(writerUnauthorizedMsg)
+        return Pair(post, user)
     }
 }
