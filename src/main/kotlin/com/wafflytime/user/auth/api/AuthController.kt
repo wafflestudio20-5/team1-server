@@ -1,12 +1,14 @@
-package com.wafflytime.user.auth.controller
+package com.wafflytime.user.auth.api
 
 import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
-import com.wafflytime.user.auth.controller.dto.AuthToken
+import com.wafflytime.user.auth.api.dto.AuthToken
 import com.wafflytime.user.auth.service.AuthTokenService
-import com.wafflytime.user.auth.controller.dto.LoginRequest
-import com.wafflytime.user.auth.controller.dto.SignUpRequest
+import com.wafflytime.user.auth.api.dto.LoginRequest
+import com.wafflytime.user.auth.api.dto.SignUpRequest
+
+import com.wafflytime.user.auth.controller.dto.TempAdminSignUpRequest
 import com.wafflytime.user.auth.service.LocalAuthService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -26,6 +28,14 @@ class AuthController(
     @PostMapping("/api/auth/local/signup")
     fun localSignUp(@Valid @RequestBody request: SignUpRequest) : AuthToken {
         return localAuthService.signUp(request)
+    }
+
+
+    // TODO(재웅) : 서버 관리자만 이 api를 호출할 수 있게 변경해야 한다
+    @ExemptAuthentication
+    @PostMapping("/api/auth/admin/signup")
+    fun adminSignUp(@Valid @RequestBody request: TempAdminSignUpRequest) : AuthToken {
+        return localAuthService.adminSignUp(request)
     }
 
     @ExemptAuthentication

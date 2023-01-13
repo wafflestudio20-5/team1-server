@@ -16,7 +16,14 @@ class UserEntity(
     @field:Column(unique = true)
     var univEmail: String? = null,
     var nickname: String? = null,
-): BaseTimeEntity() {
+    val isAdmin: Boolean = false,
+
+    ): BaseTimeEntity() {
+
+    fun update(password: String?, nickname: String?) {
+        if (loginId != null && password != null) this.password = password
+        if (nickname != null) this.nickname = nickname
+    }
 
     /**
      * TODO:
@@ -26,5 +33,4 @@ class UserEntity(
      *  쪽지 관련
      *  etc
      */
-
 }

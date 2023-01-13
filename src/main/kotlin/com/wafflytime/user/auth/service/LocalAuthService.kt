@@ -3,10 +3,11 @@ package com.wafflytime.user.auth.service
 import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
-import com.wafflytime.user.auth.controller.dto.AuthToken
-import com.wafflytime.user.auth.controller.dto.LoginRequest
-import com.wafflytime.user.auth.controller.dto.SignUpRequest
+import com.wafflytime.user.auth.api.dto.AuthToken
+import com.wafflytime.user.auth.api.dto.LoginRequest
+import com.wafflytime.user.auth.api.dto.SignUpRequest
 import com.wafflytime.exception.WafflyTime404
+import com.wafflytime.user.auth.controller.dto.TempAdminSignUpRequest
 import jakarta.transaction.Transactional
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -15,6 +16,7 @@ import java.time.LocalDateTime
 interface LocalAuthService {
     fun signUp(request: SignUpRequest): AuthToken
     fun login(request: LoginRequest): AuthToken
+    fun adminSignUp(request: TempAdminSignUpRequest): AuthToken
 }
 
 @Service
@@ -27,15 +29,30 @@ class LocalAuthServiceImpl(
     @ExemptAuthentication
     @Transactional
     override fun signUp(request: SignUpRequest): AuthToken {
+        // TODO 중복된 loginId가 없는지 exception 처리해줘야 함
         val user = userRepository.save(
             UserEntity(
                 request.id,
-                passwordEncoder.encode(request.password),
+                passwordEncoder.encode(request.password)
             )
         )
-
         return authTokenService.buildAuthToken(user, LocalDateTime.now())
     }
+
+    @ExemptAuthentication
+    @Transactional
+    override fun adminSignUp(request: TempAdminSignUpRequest): AuthToken {
+        val user = userRepository.save(
+            UserEntity(
+                loginId = request.id,
+                password = passwordEncoder.encode(request.password),
+                univEmail = request.univEmail,
+                isAdmin = true
+            )
+        )
+        return authTokenService.buildAuthToken(user, LocalDateTime.now())
+    }
+
 
     @ExemptAuthentication
     @Transactional

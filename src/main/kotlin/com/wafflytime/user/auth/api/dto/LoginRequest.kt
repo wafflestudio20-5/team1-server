@@ -1,4 +1,4 @@
-package com.wafflytime.user.auth.controller.dto
+package com.wafflytime.user.auth.api.dto
 
 import jakarta.validation.constraints.NotBlank
 
