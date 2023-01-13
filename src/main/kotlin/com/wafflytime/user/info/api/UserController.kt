@@ -45,4 +45,13 @@ class UserController(
         return ResponseEntity.ok(userService.deleteScrap(userId, postId))
     }
 
+    @GetMapping("/api/user/mypost")
+    fun getMyPosts(
+        @UserIdFromToken userId: Long,
+        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
+    ) : ResponseEntity<List<PostResponse>> {
+        return ResponseEntity.ok(userService.getMyPosts(userId, page, size))
+    }
+
 }

@@ -7,5 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface PostRepository : JpaRepository<PostEntity, Long> {
     fun findAllByBoardId(boardId: Long, pageable: Pageable) : Page<PostEntity>
-}
+    fun findAllByWriterId(writerId: Long, pageable: Pageable): Page<PostEntity>
 
+}
