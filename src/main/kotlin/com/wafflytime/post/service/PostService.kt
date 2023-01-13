@@ -1,17 +1,16 @@
 package com.wafflytime.post.service
 
-import com.wafflytime.board.database.BoardRepository
+import com.wafflytime.board.service.BoardService
 import com.wafflytime.board.type.BoardType
 import com.wafflytime.common.S3Service
-import com.wafflytime.exception.WafflyTime400
-import com.wafflytime.exception.WafflyTime401
-import com.wafflytime.exception.WafflyTime404
-import com.wafflytime.exception.WafflyTime409
 import com.wafflytime.post.database.*
+import com.wafflytime.post.database.PostEntity
+import com.wafflytime.post.database.PostRepository
 import com.wafflytime.post.database.image.ImageColumn
 import com.wafflytime.post.dto.*
+import com.wafflytime.post.exception.*
 import com.wafflytime.user.info.database.UserEntity
-import com.wafflytime.user.info.database.UserRepository
+import com.wafflytime.user.info.service.UserService
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -21,25 +20,25 @@ import org.springframework.stereotype.Service
 
 @Service
 class PostService(
-    private val boardRepository: BoardRepository,
     private val postRepository: PostRepository,
-    private val userRepository: UserRepository,
     private val postLikeRepository: PostLikeRepository,
     private val scrapRepository: ScrapRepository,
+    private val boardService: BoardService,
+    private val userService: UserService,
     private val s3Service: S3Service
 ) {
 
     @Transactional
     fun createPost(userId: Long, boardId: Long, request: CreatePostRequest) : PostResponse {
-        val board = boardRepository.findByIdOrNull(boardId) ?: throw WafflyTime404("board id가 존재하지 않습니다")
-        val user: UserEntity = userRepository.findByIdOrNull(userId)!!
+        val board = boardService.getBoardEntity(boardId)
+        val user = userService.getUser(userId)
 
-        if (board.type == BoardType.DEFAULT && request.title == null ) throw WafflyTime400("default 게시판은 title이 반드시 존재해야 됩니다")
-        if (board.type in arrayOf(BoardType.CUSTOM_BASE, BoardType.CUSTOM_PHOTO) && request.title != null ) {
-            throw WafflyTime400("CUSTOM 게시판은 title이 존재하지 않습니다")
+        if (board.type == BoardType.DEFAULT && request.title == null) throw TitleRequired
+        if (board.type in arrayOf(BoardType.CUSTOM_BASE, BoardType.CUSTOM_PHOTO) && request.title != null) {
+            throw TitleNotRequired
         }
 
-        if (!board.allowAnonymous && request.isWriterAnonymous) throw WafflyTime404("이 게시판은 익명으로 게시글을 작성할 수 없습니다")
+        if (!board.allowAnonymous && request.isWriterAnonymous) throw AnonymousNotAllowed
 
         val s3ImageUrlDtoList = s3Service.getPreSignedUrlsAndS3Urls(request.images)
 
@@ -73,7 +72,7 @@ class PostService(
     @Transactional
     fun deletePost(userId: Long, boardId: Long, postId: Long): DeletePostResponse {
         val post = validateBoardAndPost(boardId, postId)
-        val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("user id가 존재하지 않습니다")
+        val user = userService.getUser(userId)
 
         // 게시물 작성자, 게시판 주인, admin 만 게시물을 삭제 할 수 있다
         if (userId == post.writer.id || user.isAdmin || userId == post.board.owner!!.id) {
@@ -86,14 +85,14 @@ class PostService(
                 postTitle = post.title
             )
         } else {
-            throw WafflyTime401("게시물을 삭제할 권한이 없습니다")
+            throw ForbiddenPostRemoval
         }
     }
 
     @Transactional
     fun updatePost(userId: Long, boardId: Long, postId: Long, request: UpdatePostRequest): PostResponse {
         val post = validateBoardAndPost(boardId, postId)
-        if (userId != post.writer.id) throw WafflyTime401("게시물 작성자가 아닌 유저는 게시물을 수정할 수 없습니다")
+        if (userId != post.writer.id) throw ForbiddenPostUpdate
 
         val updatedS3ImageUrlDtoList = s3Service.updateImageRequest(post.images, request)
         post.update(request, getImagesEntityFromS3ImageUrl(updatedS3ImageUrlDtoList))
@@ -101,8 +100,8 @@ class PostService(
     }
 
     fun validateBoardAndPost(boardId: Long, postId: Long) : PostEntity {
-        val post: PostEntity = postRepository.findByIdOrNull(postId) ?: throw WafflyTime404("post id가 존재하지 않습니다")
-        if (post.board.id != boardId) throw  WafflyTime400("board id와 post id가 매치되지 않습니다 : 해당 게시판에 속한 게시물이 아닙니다")
+        val post: PostEntity = postRepository.findByIdOrNull(postId) ?: throw PostNotFound
+        if (post.board.id != boardId) throw BoardPostMismatch
         return post
     }
 
@@ -116,7 +115,7 @@ class PostService(
 
         // 에타는 좋아요 취소가 안됨
         postLikeRepository.findByPostIdAndUserId(postId, userId)?.let {
-            throw WafflyTime409("이미 공감한 댓글입니다")
+            throw TODO("이미 공감한 댓글입니다")
         }
 
         postLikeRepository.save(PostLikeEntity(user = user, post = post))
@@ -128,7 +127,7 @@ class PostService(
     fun scrapPost(userId: Long, boardId: Long, postId: Long): PostResponse {
         val (post, user) = validateLikeScrapPost(userId, boardId, postId, "게시물 작성자는 스크랩 할 수 없습니다")
         scrapRepository.findByPostIdAndUserId(postId, userId)?.let {
-            throw WafflyTime409("이미 스크랩한 게시물입니다")
+            throw TODO("이미 스크랩한 게시물입니다")
         }
         scrapRepository.save(ScrapEntity(user = user, post = post))
         post.nScraps++
@@ -137,8 +136,8 @@ class PostService(
 
     fun validateLikeScrapPost(userId: Long, boardId: Long, postId: Long, writerUnauthorizedMsg: String): Pair<PostEntity, UserEntity> {
         val post = validateBoardAndPost(boardId, postId)
-        val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("user id가 존재하지 않습니다")
-        if (post.writer.id == userId) throw WafflyTime401(writerUnauthorizedMsg)
+        val user = userService.getUser(userId)
+        if (post.writer.id == userId) throw TODO(writerUnauthorizedMsg)
         return Pair(post, user)
     }
 
