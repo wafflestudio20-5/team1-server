@@ -35,6 +35,10 @@ class ReplyService(
         if (parent != null && parent.post != post) throw WafflyTime400("부모 댓글이 다른 글에 있습니다")
         if (parent?.isDeleted == true) throw WafflyTime404("삭제된 댓글에 답글을 달 수 없습니다")
 
+        if (post.writer.id == user.id && post.isWriterAnonymous != request.isWriterAnonymous) {
+            throw WafflyTime400("글 작성자는 익명 여부를 바꿀 수 없습니다")
+        }
+
         val reply = replyRepository.save(
             ReplyEntity(
                 contents = request.contents,
