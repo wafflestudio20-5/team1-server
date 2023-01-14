@@ -10,10 +10,7 @@ import com.wafflytime.user.info.dto.DeleteScrapResponse
 import com.wafflytime.user.info.dto.UpdateUserInfoRequest
 import com.wafflytime.user.info.dto.UploadProfileImageRequest
 import com.wafflytime.user.info.dto.UserInfo
-import com.wafflytime.user.info.exception.LoginIdConflict
-import com.wafflytime.user.info.exception.MailConflict
-import com.wafflytime.user.info.exception.NicknameConflict
-import com.wafflytime.user.info.exception.UserNotFound
+import com.wafflytime.user.info.exception.*
 import com.wafflytime.user.mail.dto.VerifyEmailRequest
 import jakarta.transaction.Transactional
 import org.springframework.dao.DataIntegrityViolationException
@@ -110,8 +107,7 @@ class UserServiceImpl (
 
     @Transactional
     override fun deleteScrap(userId: Long, postId: Long): DeleteScrapResponse {
-        val scrap = scrapRepository.findByPostIdAndUserId(postId, userId) ?: throw TODO("존재하지 않는 스크랩 입니다")
-        if (userId != scrap.user.id) throw TODO("스크랩한 유저만 스크랩을 삭제할 수 있습니다")
+        val scrap = scrapRepository.findByPostIdAndUserId(postId, userId) ?: throw NotScrapped
         scrap.post.nScraps--
         scrapRepository.delete(scrap)
 

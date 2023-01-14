@@ -111,11 +111,11 @@ class PostService(
 
     @Transactional
     fun likePost(userId: Long, boardId: Long, postId: Long): PostResponse {
-        val (post, user) = validateLikeScrapPost(userId, boardId, postId, "게시물 작성자는 공감할 수 없습니다")
+        val (post, user) = validateLikeScrapPost(userId, boardId, postId)
 
         // 에타는 좋아요 취소가 안됨
         postLikeRepository.findByPostIdAndUserId(postId, userId)?.let {
-            throw TODO("이미 공감한 댓글입니다")
+            throw AlreadyLiked
         }
 
         postLikeRepository.save(PostLikeEntity(user = user, post = post))
@@ -125,19 +125,19 @@ class PostService(
 
     @Transactional
     fun scrapPost(userId: Long, boardId: Long, postId: Long): PostResponse {
-        val (post, user) = validateLikeScrapPost(userId, boardId, postId, "게시물 작성자는 스크랩 할 수 없습니다")
+        val (post, user) = validateLikeScrapPost(userId, boardId, postId)
         scrapRepository.findByPostIdAndUserId(postId, userId)?.let {
-            throw TODO("이미 스크랩한 게시물입니다")
+            throw AlreadyScrapped
         }
         scrapRepository.save(ScrapEntity(user = user, post = post))
         post.nScraps++
         return PostResponse.of(post)
     }
 
-    fun validateLikeScrapPost(userId: Long, boardId: Long, postId: Long, writerUnauthorizedMsg: String): Pair<PostEntity, UserEntity> {
+    fun validateLikeScrapPost(userId: Long, boardId: Long, postId: Long): Pair<PostEntity, UserEntity> {
         val post = validateBoardAndPost(boardId, postId)
         val user = userService.getUser(userId)
-        if (post.writer.id == userId) throw TODO(writerUnauthorizedMsg)
+        if (post.writer.id == userId) throw ForbiddenLikeScrap
         return Pair(post, user)
     }
 
