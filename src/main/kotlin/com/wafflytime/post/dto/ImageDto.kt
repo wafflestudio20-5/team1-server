@@ -13,16 +13,21 @@ data class ImageResponse(
     val description: String?
 ) {
     companion object {
-        fun of(s3ImageUrlDto: S3ImageUrlDto) : ImageResponse {
-            return ImageResponse(s3ImageUrlDto.imageId, s3ImageUrlDto.preSignedUrl, s3ImageUrlDto.description)
+        fun of(s3PostImageUrlDto: S3PostImageUrlDto) : ImageResponse {
+            return ImageResponse(s3PostImageUrlDto.imageId, s3PostImageUrlDto.preSignedUrl, s3PostImageUrlDto.description)
         }
     }
 }
 
-data class S3ImageUrlDto(
+data class S3PostImageUrlDto(
     val imageId: Int,
     val fileName: String,
     val s3Url: String,
     val preSignedUrl: String?,
     val description: String?
+)
+
+data class S3ImageUrlDto(
+    val s3Url: String,
+    val preSignedUrl: String?
 )

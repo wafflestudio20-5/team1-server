@@ -2,7 +2,6 @@ package com.wafflytime.board.api
 
 import com.wafflytime.board.dto.*
 import com.wafflytime.board.service.BoardService
-import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity

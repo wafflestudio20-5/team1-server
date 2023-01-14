@@ -6,8 +6,8 @@ import com.wafflytime.common.S3Service
 import com.wafflytime.exception.WafflyTime400
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
-import com.wafflytime.post.database.PostEntity
-import com.wafflytime.post.database.PostRepository
+import com.wafflytime.exception.WafflyTime409
+import com.wafflytime.post.database.*
 import com.wafflytime.post.database.image.ImageColumn
 import com.wafflytime.post.dto.*
 import com.wafflytime.user.info.database.UserEntity
@@ -24,6 +24,8 @@ class PostService(
     private val boardRepository: BoardRepository,
     private val postRepository: PostRepository,
     private val userRepository: UserRepository,
+    private val postLikeRepository: PostLikeRepository,
+    private val scrapRepository: ScrapRepository,
     private val s3Service: S3Service
 ) {
 
@@ -104,7 +106,51 @@ class PostService(
         return post
     }
 
-    fun getImagesEntityFromS3ImageUrl(s3ImageUrlDtoList: MutableList<S3ImageUrlDto>?) : Map<String, ImageColumn>? {
-        return s3ImageUrlDtoList?.map { it.fileName to ImageColumn.of(it) }?.toMap()
+    fun getImagesEntityFromS3ImageUrl(s3PostImageUrlDtoList: MutableList<S3PostImageUrlDto>?) : Map<String, ImageColumn>? {
+        return s3PostImageUrlDtoList?.map { it.fileName to ImageColumn.of(it) }?.toMap()
+    }
+
+    @Transactional
+    fun likePost(userId: Long, boardId: Long, postId: Long): PostResponse {
+        val (post, user) = validateLikeScrapPost(userId, boardId, postId, "게시물 작성자는 공감할 수 없습니다")
+
+        // 에타는 좋아요 취소가 안됨
+        postLikeRepository.findByPostIdAndUserId(postId, userId)?.let {
+            throw WafflyTime409("이미 공감한 댓글입니다")
+        }
+
+        postLikeRepository.save(PostLikeEntity(user = user, post = post))
+        post.nLikes++
+        return PostResponse.of(post)
+    }
+
+    @Transactional
+    fun scrapPost(userId: Long, boardId: Long, postId: Long): PostResponse {
+        val (post, user) = validateLikeScrapPost(userId, boardId, postId, "게시물 작성자는 스크랩 할 수 없습니다")
+        scrapRepository.findByPostIdAndUserId(postId, userId)?.let {
+            throw WafflyTime409("이미 스크랩한 게시물입니다")
+        }
+        scrapRepository.save(ScrapEntity(user = user, post = post))
+        post.nScraps++
+        return PostResponse.of(post)
+    }
+
+    fun validateLikeScrapPost(userId: Long, boardId: Long, postId: Long, writerUnauthorizedMsg: String): Pair<PostEntity, UserEntity> {
+        val post = validateBoardAndPost(boardId, postId)
+        val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("user id가 존재하지 않습니다")
+        if (post.writer.id == userId) throw WafflyTime401(writerUnauthorizedMsg)
+        return Pair(post, user)
+    }
+
+    fun getHostPosts(page:Int, size:Int): Page<PostResponse> {
+        return postRepository.getHotPosts(PageRequest.of(page, size)).map {
+            PostResponse.of(it)
+        }
+    }
+
+    fun getBestPosts(page: Int, size: Int): Page<PostResponse> {
+        return postRepository.getBestPosts(PageRequest.of(page, size)).map {
+            PostResponse.of(it)
+        }
     }
 }

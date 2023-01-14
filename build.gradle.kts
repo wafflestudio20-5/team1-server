@@ -56,12 +56,15 @@ dependencies {
 	// OAuth
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 
-	//thymeleaf (프론트 붙이기 전 테스트용)
-	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-	implementation("nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect")
-
 	// s3
 	implementation("org.springframework.cloud:spring-cloud-starter-aws:2.0.1.RELEASE")
+
+	// QueryDSL
+	val querydslVersion = "5.0.0"
+	implementation("com.querydsl:querydsl-jpa:$querydslVersion:jakarta")
+	implementation("com.querydsl:querydsl-core:$querydslVersion")
+	kapt("com.querydsl:querydsl-apt:$querydslVersion:jakarta")
+	kapt(group = "com.querydsl", name = "querydsl-apt", classifier = "jpa")
 }
 
 // QueryDSL
