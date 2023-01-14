@@ -80,4 +80,20 @@ class PostController(
     ) : ResponseEntity<PostResponse> {
         return ResponseEntity.ok(postService.scrapPost(userId, boardId, postId))
     }
+
+    @GetMapping("/api/hotpost")
+    fun getHotPost(
+        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
+    ) : ResponseEntity<Page<PostResponse>> {
+        return ResponseEntity.ok(postService.getHostPosts(page, size))
+    }
+
+    @GetMapping("/api/bestpost")
+    fun getBestPost(
+        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
+    ) : ResponseEntity<Page<PostResponse>> {
+        return ResponseEntity.ok(postService.getBestPosts(page, size))
+    }
 }
