@@ -147,4 +147,10 @@ class PostService(
             PostResponse.of(it)
         }
     }
+
+    fun getBestPosts(page: Int, size: Int): Page<PostResponse> {
+        return postRepository.getBestPosts(PageRequest.of(page, size)).map {
+            PostResponse.of(it)
+        }
+    }
 }
