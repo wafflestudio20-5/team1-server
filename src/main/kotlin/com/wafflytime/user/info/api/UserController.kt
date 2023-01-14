@@ -4,6 +4,7 @@ import com.wafflytime.config.UserIdFromToken
 import com.wafflytime.post.dto.PostResponse
 import com.wafflytime.user.info.api.dto.DeleteScrapResponse
 import com.wafflytime.user.info.api.dto.UpdateUserInfoRequest
+import com.wafflytime.user.info.api.dto.UploadProfileImageRequest
 import com.wafflytime.user.info.api.dto.UserInfo
 import com.wafflytime.user.info.service.UserService
 import jakarta.validation.Valid
@@ -27,6 +28,21 @@ class UserController(
         @Valid @RequestBody request: UpdateUserInfoRequest,
     ): UserInfo {
         return userService.updateUserInfo(userId, request)
+    }
+
+    @PutMapping("/api/user/me/profile")
+    fun updateProfileImage(
+        @UserIdFromToken userId: Long,
+        @Valid @RequestBody request: UploadProfileImageRequest,
+    ) : ResponseEntity<UserInfo> {
+        return ResponseEntity.ok(userService.updateProfileImage(userId, request))
+    }
+
+    @DeleteMapping("/api/user/me/profile")
+    fun updateProfileImage(
+        @UserIdFromToken userId: Long
+    ) : ResponseEntity<UserInfo> {
+        return ResponseEntity.ok(userService.deleteProfileImage(userId))
     }
 
     @GetMapping("/api/user/myscrap")
@@ -54,5 +70,4 @@ class UserController(
     ) : ResponseEntity<Page<PostResponse>> {
         return ResponseEntity.ok(userService.getMyPosts(userId, page, size))
     }
-
 }

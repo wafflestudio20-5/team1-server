@@ -106,8 +106,8 @@ class PostService(
         return post
     }
 
-    fun getImagesEntityFromS3ImageUrl(s3ImageUrlDtoList: MutableList<S3ImageUrlDto>?) : Map<String, ImageColumn>? {
-        return s3ImageUrlDtoList?.map { it.fileName to ImageColumn.of(it) }?.toMap()
+    fun getImagesEntityFromS3ImageUrl(s3PostImageUrlDtoList: MutableList<S3PostImageUrlDto>?) : Map<String, ImageColumn>? {
+        return s3PostImageUrlDtoList?.map { it.fileName to ImageColumn.of(it) }?.toMap()
     }
 
     @Transactional
