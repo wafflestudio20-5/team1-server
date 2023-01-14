@@ -37,10 +37,11 @@ class ReplyRepositorySupport(
             .innerJoin(replyEntity.post)
             .where(replyEntity.post.id.eq(post.id))
             .where(replyEntity.isDisplayed.isTrue)
-            .orderBy(replyEntity.replyGroup.asc(), replyEntity.createdAt.asc())
+            .orderBy(replyEntity.replyGroup.desc(), replyEntity.createdAt.desc())
             .offset(page)
             .limit(size)
             .fetch()
+            .reversed()
     }
 
     fun countChildReplies(post: PostEntity, replyGroup: Long): Long {
