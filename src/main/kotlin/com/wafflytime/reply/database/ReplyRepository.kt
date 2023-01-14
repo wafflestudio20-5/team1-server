@@ -36,14 +36,19 @@ class ReplyRepositorySupport(
     }
 
     fun getReplies(post: PostEntity, pageable: Pageable): Page<ReplyEntity> {
-        val result = queryFactory.selectFrom(replyEntity)
+        val query = queryFactory.selectFrom(replyEntity)
             .innerJoin(replyEntity.post)
             .where(replyEntity.post.id.eq(post.id))
             .where(replyEntity.isDisplayed.isTrue)
-            .orderBy(replyEntity.replyGroup.desc(), replyEntity.createdAt.desc())
+
+        val count = query.fetch().size.toLong()
+        val result = query.orderBy(replyEntity.replyGroup.desc(), replyEntity.createdAt.desc())
+            .offset(pageable.offset)
+            .limit(pageable.pageSize.toLong())
             .fetch()
             .reversed()
-        return PageImpl(result, pageable, result.size.toLong())
+
+        return PageImpl(result, pageable, count)
     }
 
     fun countChildReplies(post: PostEntity, replyGroup: Long): Long {
