@@ -1,12 +1,12 @@
 package com.wafflytime.post.api
 
 import com.wafflytime.board.dto.*
-import com.wafflytime.post.service.PostService
 import com.wafflytime.config.UserIdFromToken
 import com.wafflytime.post.dto.CreatePostRequest
 import com.wafflytime.post.dto.DeletePostResponse
 import com.wafflytime.post.dto.PostResponse
 import com.wafflytime.post.dto.UpdatePostRequest
+import com.wafflytime.post.service.PostService
 import jakarta.validation.Valid
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
@@ -62,6 +62,38 @@ class PostController(
         return ResponseEntity.ok(postService.deletePost(userId, boardId, postId))
     }
 
+    // 에타에 좋아요 취소는 없음
+    @PostMapping("/api/board/{boardId}/post/{postId}/like")
+    fun likePost(
+        @UserIdFromToken userId: Long,
+        @PathVariable boardId: Long,
+        @PathVariable postId: Long
+    ) : ResponseEntity<PostResponse> {
+        return ResponseEntity.ok(postService.likePost(userId, boardId, postId))
+    }
 
+    @PostMapping("/api/board/{boardId}/post/{postId}/scrap")
+    fun scrapPost(
+        @UserIdFromToken userId: Long,
+        @PathVariable boardId: Long,
+        @PathVariable postId: Long
+    ) : ResponseEntity<PostResponse> {
+        return ResponseEntity.ok(postService.scrapPost(userId, boardId, postId))
+    }
 
+    @GetMapping("/api/hotpost")
+    fun getHotPost(
+        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
+    ) : ResponseEntity<Page<PostResponse>> {
+        return ResponseEntity.ok(postService.getHostPosts(page, size))
+    }
+
+    @GetMapping("/api/bestpost")
+    fun getBestPost(
+        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
+    ) : ResponseEntity<Page<PostResponse>> {
+        return ResponseEntity.ok(postService.getBestPosts(page, size))
+    }
 }

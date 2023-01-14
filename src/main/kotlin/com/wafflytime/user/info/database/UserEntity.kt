@@ -18,6 +18,8 @@ class UserEntity(
     var nickname: String? = null,
     val isAdmin: Boolean = false,
 
+    var profileImage: String? = null
+
     ): BaseTimeEntity() {
 
     fun update(password: String?, nickname: String?) {
