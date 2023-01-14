@@ -16,7 +16,8 @@ data class PostResponse(
     val contents: String,
     val images: List<ImageResponse>?,
     val nLikes: Int,
-    val nScraps: Int
+    val nScraps: Int,
+    val nReplies: Int
 ) {
     companion object {
 
@@ -38,7 +39,8 @@ data class PostResponse(
                 contents = postEntity.contents,
                 images = images?.sortedBy { it.imageId },
                 nLikes = postEntity.nLikes,
-                nScraps = postEntity.nScraps
+                nScraps = postEntity.nScraps,
+                nReplies = postEntity.nReplies.toInt()
             )
         }
     }
