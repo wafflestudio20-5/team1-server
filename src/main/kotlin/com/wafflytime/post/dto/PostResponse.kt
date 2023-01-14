@@ -1,11 +1,14 @@
 package com.wafflytime.post.dto
 
 import com.wafflytime.post.database.PostEntity
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 data class PostResponse(
     val boardId: Long,
     val boardTitle: String,
     val postId: Long,
+    val createdAt: String,
     val writerId: Long,
     val nickname: String?,
     val isWriterAnonymous: Boolean,
@@ -27,6 +30,7 @@ data class PostResponse(
                 boardId = postEntity.board.id,
                 boardTitle = postEntity.board.title,
                 postId = postEntity.id,
+                createdAt = postEntity.createdAt!!.format(DateTimeFormatter.ofPattern("yy/MM/dd HH:mm")),
                 writerId = postEntity.writer.id,
                 nickname = if (postEntity.isWriterAnonymous) null else postEntity.writer.nickname,
                 isWriterAnonymous = postEntity.isWriterAnonymous,
