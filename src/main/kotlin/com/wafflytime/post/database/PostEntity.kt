@@ -49,8 +49,8 @@ class PostEntity(
     @OneToMany(mappedBy = "post", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
     val replies: MutableList<ReplyEntity> = mutableListOf(),
 
-    var nReplies: Long = 0, // 전체 댓글 개수
-    var anonymousIds: Long = 0, // 익명 댓글 개수
+    var nReplies: Int = 0, // 전체 댓글 개수
+    var anonymousIds: Int = 0, // 익명 댓글 개수
 
 
 ) : BaseTimeEntity() {

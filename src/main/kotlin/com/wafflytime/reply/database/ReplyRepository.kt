@@ -63,7 +63,7 @@ class ReplyRepositorySupport(
             .fetchOne() ?: 0
     }
 
-    fun getAnonymousId(post: PostEntity, user: UserEntity): Long {
+    fun getAnonymousId(post: PostEntity, user: UserEntity): Int {
         return queryFactory.selectFrom(replyEntity)
             .innerJoin(replyEntity.writer)
             .where(replyEntity.writer.id.eq(user.id))
