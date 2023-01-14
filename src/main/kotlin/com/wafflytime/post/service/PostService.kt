@@ -141,4 +141,10 @@ class PostService(
         if (post.writer.id == userId) throw WafflyTime401(writerUnauthorizedMsg)
         return Pair(post, user)
     }
+
+    fun getHostPosts(page:Int, size:Int): Page<PostResponse> {
+        return postRepository.getHotPosts(PageRequest.of(page, size)).map {
+            PostResponse.of(it)
+        }
+    }
 }
