@@ -38,7 +38,7 @@ class ReplyRepositorySupport(
             .where(replyEntity.post.id.eq(post.id))
             .where(replyEntity.isDisplayed.isTrue)
             .orderBy(replyEntity.replyGroup.desc(), replyEntity.createdAt.desc())
-            .offset(page)
+            .offset(page * size)
             .limit(size)
             .fetch()
             .reversed()
