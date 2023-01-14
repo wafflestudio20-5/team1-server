@@ -27,20 +27,20 @@ class ReplyService(
     fun createReply(userId: Long, boardId: Long, postId: Long, request: CreateReplyRequest): ReplyResponse {
         val post = postService.validateBoardAndPost(boardId, postId)
         val user = userRepository.findByIdOrNull(userId)!!
-        val mention = request.mention?.let {
-            replyRepository.findByIdOrNull(request.mention) ?: throw WafflyTime404("해당하는 부모 댓글이 없습니다")
+        val parent = request.parent?.let {
+            replyRepository.findByIdOrNull(request.parent) ?: throw WafflyTime404("해당하는 부모 댓글이 없습니다")
         }
-        if (mention != null && mention.post != post) throw WafflyTime400("부모 댓글이 다른 글에 있습니다")
-        if (mention?.isDeleted == true) throw WafflyTime404("삭제된 댓글에 답글을 달 수 없습니다")
+        if (parent != null && parent.post != post) throw WafflyTime400("부모 댓글이 다른 글에 있습니다")
+        if (parent?.isDeleted == true) throw WafflyTime404("삭제된 댓글에 답글을 달 수 없습니다")
 
         val reply = replyRepository.save(
             ReplyEntity(
                 contents = request.contents,
                 writer = user,
                 post = post,
-                replyGroup = mention?.replyGroup ?: (commentCount(post) + 1),
-                mention = mention,
-                isRoot = (mention == null),
+                replyGroup = parent?.replyGroup ?: (commentCount(post) + 1),
+                parent = parent,
+                isRoot = (parent == null),
                 isWriterAnonymous = request.isWriterAnonymous,
                 anonymousId = replyRepositorySupport.getAnonymousId(post, user),
                 isPostWriter = (post.writer.id == user.id)
@@ -117,14 +117,11 @@ class ReplyService(
     }
 
     private fun replyToResponse(reply: ReplyEntity): ReplyResponse {
-        val mention = reply.mention
         return ReplyResponse(
             replyId = reply.id,
             writerId = reply.writer.id,
             nickname = if (reply.isWriterAnonymous) "익명${reply.anonymousId}" else reply.writer.nickname!!,
-            mention = mention ?.let {
-                if (mention.isWriterAnonymous) "익명${mention.anonymousId}" else mention.writer.nickname!!
-            },
+            isRoot = reply.isRoot,
             contents = reply.contents,
             isDeleted = reply.isDeleted,
             isPostWriter = reply.isPostWriter,

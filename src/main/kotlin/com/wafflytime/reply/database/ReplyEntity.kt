@@ -22,7 +22,7 @@ class ReplyEntity(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mention_id")
-    val mention: ReplyEntity? = null, // 멘션한 댓글
+    val parent: ReplyEntity? = null, // 부모 댓글
 
     val replyGroup: Long, // 부모 댓글 인덱스
 
