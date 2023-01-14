@@ -123,7 +123,10 @@ class ReplyService(
         return ReplyResponse(
             replyId = reply.id,
             writerId = reply.writer.id,
-            nickname = if (reply.isWriterAnonymous) "익명${reply.anonymousId}" else reply.writer.nickname!!,
+            nickname = if (reply.isWriterAnonymous) {
+                if (reply.isPostWriter) "익명(작성자)"
+                else "익명${reply.anonymousId}"
+            } else reply.writer.nickname!!,
             isRoot = reply.isRoot,
             contents = reply.contents,
             isDeleted = reply.isDeleted,
