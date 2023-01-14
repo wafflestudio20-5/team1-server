@@ -1,5 +1,6 @@
 package com.wafflytime.user.info.service
 
+import com.wafflytime.common.S3Service
 import com.wafflytime.exception.WafflyTime401
 import com.wafflytime.exception.WafflyTime404
 import com.wafflytime.exception.WafflyTime409
@@ -8,6 +9,7 @@ import com.wafflytime.post.database.ScrapRepository
 import com.wafflytime.post.dto.PostResponse
 import com.wafflytime.user.info.api.dto.DeleteScrapResponse
 import com.wafflytime.user.info.api.dto.UpdateUserInfoRequest
+import com.wafflytime.user.info.api.dto.UploadProfileImageRequest
 import com.wafflytime.user.info.api.dto.UserInfo
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
@@ -28,6 +30,8 @@ interface UserService {
     fun getMyScraps(userId: Long, page:Int, size:Int): Page<PostResponse>
     fun deleteScrap(userId: Long, postId: Long): DeleteScrapResponse
     fun getMyPosts(userId: Long, page: Int, size: Int): Page<PostResponse>
+    fun updateProfileImage(userId: Long, request: UploadProfileImageRequest): UserInfo
+    fun deleteProfileImage(userId: Long): UserInfo
 }
 
 @Service
@@ -35,7 +39,8 @@ class UserServiceImpl (
     private val passwordEncoder: PasswordEncoder,
     private val userRepository: UserRepository,
     private val scrapRepository: ScrapRepository,
-    private val postRepository: PostRepository
+    private val postRepository: PostRepository,
+    private val s3Service: S3Service
 ) : UserService {
 
     @Transactional
@@ -47,7 +52,7 @@ class UserServiceImpl (
     @Transactional
     override fun getUserInfo(userId: Long): UserInfo {
         val user = getUserById(userId)
-        return UserInfo.of(user)
+        return UserInfo.of(user, preSignedUrl = s3Service.getPreSignedUrlFromS3Key(user.profileImage))
     }
 
     @Transactional
@@ -59,6 +64,8 @@ class UserServiceImpl (
                 nickname,
             )
         }
+        // 이 update api는 nickname과 password만 업데이트 하기 때문에 유저가 프로필 사진이 있다고 하더라도, preSignedUrl이 null로 내려감
+        // 프론트에게 업데이트 하는 경우에 받은 response는 수정한 내용만 반영하고 presSingedUrl null 인건 무시하고 이미 유저에게 보여주고 있는 사진 그대로 보여주기를 요청
         return UserInfo.of(user)
     }
 
@@ -95,6 +102,26 @@ class UserServiceImpl (
         ).map {
             PostResponse.of(it)
         }
+    }
+
+    @Transactional
+    override fun updateProfileImage(userId: Long, request: UploadProfileImageRequest): UserInfo {
+        val user = getUserById(userId)
+        // 기존에 저장된 이미지가 존재할 경우 삭제
+        user.profileImage?.let { s3Service.deleteFile(it) }
+
+        val s3ImageUrlDto = s3Service.gerPreSignedUrlAndS3Url(request.fileName)
+        user.profileImage = s3ImageUrlDto.s3Url
+        return UserInfo.of(user, s3ImageUrlDto.preSignedUrl)
+    }
+
+    @Transactional
+    override fun deleteProfileImage(userId: Long): UserInfo {
+        val user = getUserById(userId)
+        val s3FileKey = user.profileImage
+        s3Service.deleteFile(s3FileKey)
+        user.profileImage = null
+        return UserInfo.of(user)
     }
 
     private fun getUserById(userId: Long): UserEntity {
