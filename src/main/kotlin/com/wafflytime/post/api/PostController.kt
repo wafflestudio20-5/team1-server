@@ -8,6 +8,7 @@ import com.wafflytime.post.dto.PostResponse
 import com.wafflytime.post.dto.UpdatePostRequest
 import com.wafflytime.post.service.PostService
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -29,7 +30,7 @@ class PostController(
         @PathVariable boardId: Long,
         @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
-    ) : ResponseEntity<List<PostResponse>> {
+    ) : ResponseEntity<Page<PostResponse>> {
         return ResponseEntity.ok(postService.getPosts(boardId, page, size))
     }
 
