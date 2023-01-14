@@ -40,7 +40,7 @@ data class PostResponse(
                 images = images?.sortedBy { it.imageId },
                 nLikes = postEntity.nLikes,
                 nScraps = postEntity.nScraps,
-                nReplies = postEntity.nReplies.toInt()
+                nReplies = postEntity.nReplies
             )
         }
     }

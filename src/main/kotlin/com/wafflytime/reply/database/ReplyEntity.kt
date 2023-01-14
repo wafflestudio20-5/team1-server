@@ -27,7 +27,7 @@ class ReplyEntity(
     val isRoot: Boolean = false, // true : 일반 댓글, false : 대댓글
     val isPostWriter: Boolean, // 글쓴이 = 댓글 작성자인지 여부
 
-    val anonymousId: Long,
+    val anonymousId: Int,
 
     var isWriterAnonymous: Boolean = true,
     var isDisplayed: Boolean = true,
