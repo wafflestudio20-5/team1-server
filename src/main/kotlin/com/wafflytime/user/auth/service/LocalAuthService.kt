@@ -6,7 +6,7 @@ import com.wafflytime.user.info.database.UserRepository
 import com.wafflytime.user.auth.dto.AuthToken
 import com.wafflytime.user.auth.dto.LoginRequest
 import com.wafflytime.user.auth.dto.SignUpRequest
-import com.wafflytime.user.auth.controller.dto.TempAdminSignUpRequest
+import com.wafflytime.user.auth.dto.TempAdminSignUpRequest
 import com.wafflytime.user.auth.exception.LoginFailure
 import com.wafflytime.user.auth.exception.SignUpConflict
 import jakarta.transaction.Transactional
