@@ -41,7 +41,7 @@ class ReplyService(
                 writer = user,
                 post = post,
                 replyGroup = parent?.replyGroup ?: (commentCount(post) + 1),
-                parent = parent,
+                parentId = parent?.id,
                 isRoot = (parent == null),
                 isWriterAnonymous = request.isWriterAnonymous,
                 anonymousId = replyRepositorySupport.getAnonymousId(post, user),
@@ -49,7 +49,7 @@ class ReplyService(
             )
         )
 
-        post.replies++
+        post.nReplies++
 
         return replyToResponse(reply)
     }
@@ -78,7 +78,7 @@ class ReplyService(
 
         if (userId == reply.writer.id || user.isAdmin) {
             reply.delete()
-            post.replies--
+            post.nReplies--
 
             val countChild = replyRepositorySupport.countChildReplies(post, reply.replyGroup)
             if (reply.isRoot && countChild == 0L) {

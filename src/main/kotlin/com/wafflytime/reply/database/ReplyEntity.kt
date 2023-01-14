@@ -20,9 +20,7 @@ class ReplyEntity(
     @JoinColumn(name = "post_id")
     val post: PostEntity,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mention_id")
-    val parent: ReplyEntity? = null, // 부모 댓글
+    val parentId: Long? = null, // 부모 댓글
 
     val replyGroup: Long, // 부모 댓글 인덱스
 

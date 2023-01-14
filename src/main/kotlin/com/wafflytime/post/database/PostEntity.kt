@@ -5,6 +5,7 @@ import com.wafflytime.common.BaseTimeEntity
 import com.wafflytime.post.database.image.ImageColumn
 import com.wafflytime.post.database.image.JpaImageColumnJsonConverter
 import com.wafflytime.post.dto.UpdatePostRequest
+import com.wafflytime.reply.database.ReplyEntity
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
 
@@ -34,7 +35,10 @@ class PostEntity(
     var isQuestion: Boolean = false,
     var isWriterAnonymous: Boolean = true,
 
-    var replies: Long = 0, // 전체 댓글 개수
+    @OneToMany(mappedBy = "post", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
+    val replies: MutableList<ReplyEntity> = mutableListOf(),
+
+    var nReplies: Long = 0, // 전체 댓글 개수
     var anonymousIds: Long = 0, // 익명 댓글 개수
 ) : BaseTimeEntity() {
 
