@@ -13,6 +13,8 @@ import com.wafflytime.reply.dto.ReplyResponse
 import com.wafflytime.reply.dto.UpdateReplyRequest
 import com.wafflytime.user.info.database.UserRepository
 import jakarta.transaction.Transactional
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
@@ -99,9 +101,10 @@ class ReplyService(
         return replyToResponse(reply)
     }
 
-    fun getReplies(boardId: Long, postId: Long, page: Long, size: Long): List<ReplyResponse> {
+    fun getReplies(boardId: Long, postId: Long, page: Int, size: Int): Page<ReplyResponse> {
         val post = postService.validateBoardAndPost(boardId, postId)
-        return replyRepositorySupport.getReplies(post, page, size).map {
+        val pageRequest = PageRequest.of(page, size)
+        return replyRepositorySupport.getReplies(post, pageRequest).map {
             replyToResponse(it)
         }
     }

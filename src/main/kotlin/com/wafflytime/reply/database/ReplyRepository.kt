@@ -4,6 +4,9 @@ import com.querydsl.jpa.impl.JPAQueryFactory
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.reply.database.QReplyEntity.replyEntity
 import com.wafflytime.user.info.database.UserEntity
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Component
 
@@ -32,16 +35,15 @@ class ReplyRepositorySupport(
             .fetchOne()
     }
 
-    fun getReplies(post: PostEntity, page: Long, size: Long): List<ReplyEntity> {
-        return queryFactory.selectFrom(replyEntity)
+    fun getReplies(post: PostEntity, pageable: Pageable): Page<ReplyEntity> {
+        val result = queryFactory.selectFrom(replyEntity)
             .innerJoin(replyEntity.post)
             .where(replyEntity.post.id.eq(post.id))
             .where(replyEntity.isDisplayed.isTrue)
             .orderBy(replyEntity.replyGroup.desc(), replyEntity.createdAt.desc())
-            .offset(page * size)
-            .limit(size)
             .fetch()
             .reversed()
+        return PageImpl(result, pageable, result.size.toLong())
     }
 
     fun countChildReplies(post: PostEntity, replyGroup: Long): Long {
