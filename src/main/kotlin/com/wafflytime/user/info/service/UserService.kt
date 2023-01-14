@@ -13,6 +13,7 @@ import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
 import com.wafflytime.user.mail.api.dto.VerifyEmailRequest
 import jakarta.transaction.Transactional
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
@@ -24,9 +25,9 @@ interface UserService {
     fun getUserInfo(userId: Long): UserInfo
     fun updateUserInfo(userId: Long, request: UpdateUserInfoRequest): UserInfo
     fun updateUserMailVerified(userId: Long, verifyEmailRequest: VerifyEmailRequest): UserEntity
-    fun getMyScraps(userId: Long, page:Int, size:Int): List<PostResponse>
+    fun getMyScraps(userId: Long, page:Int, size:Int): Page<PostResponse>
     fun deleteScrap(userId: Long, postId: Long): DeleteScrapResponse
-    fun getMyPosts(userId: Long, page: Int, size: Int): List<PostResponse>
+    fun getMyPosts(userId: Long, page: Int, size: Int): Page<PostResponse>
 }
 
 @Service
@@ -70,7 +71,7 @@ class UserServiceImpl (
         return user
     }
 
-    override fun getMyScraps(userId: Long, page:Int, size:Int): List<PostResponse> {
+    override fun getMyScraps(userId: Long, page:Int, size:Int): Page<PostResponse> {
         return scrapRepository.findScrapsByUserId(userId, PageRequest.of(page, size)).map {
             PostResponse.of(it.post)
         }
@@ -88,10 +89,10 @@ class UserServiceImpl (
         return DeleteScrapResponse(scrap.post.id)
     }
 
-    override fun getMyPosts(userId: Long, page: Int, size: Int): List<PostResponse> {
+    override fun getMyPosts(userId: Long, page: Int, size: Int): Page<PostResponse> {
         return postRepository.findAllByWriterId(
             userId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
-        ).content.map {
+        ).map {
             PostResponse.of(it)
         }
     }

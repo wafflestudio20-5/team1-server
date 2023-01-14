@@ -7,6 +7,7 @@ import com.wafflytime.user.info.api.dto.UpdateUserInfoRequest
 import com.wafflytime.user.info.api.dto.UserInfo
 import com.wafflytime.user.info.service.UserService
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -33,7 +34,7 @@ class UserController(
         @UserIdFromToken userId: Long,
         @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
-    ): ResponseEntity<List<PostResponse>> {
+    ): ResponseEntity<Page<PostResponse>> {
         return ResponseEntity.ok(userService.getMyScraps(userId, page, size))
     }
 
@@ -50,7 +51,7 @@ class UserController(
         @UserIdFromToken userId: Long,
         @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
-    ) : ResponseEntity<List<PostResponse>> {
+    ) : ResponseEntity<Page<PostResponse>> {
         return ResponseEntity.ok(userService.getMyPosts(userId, page, size))
     }
 
