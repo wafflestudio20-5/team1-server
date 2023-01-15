@@ -1,6 +1,6 @@
 package com.wafflytime.user.mail.service
 
-import com.wafflytime.user.mail.api.dto.VerifyEmailCode
+import com.wafflytime.user.mail.dto.VerifyEmailCode
 import jakarta.mail.internet.MimeMessage
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper

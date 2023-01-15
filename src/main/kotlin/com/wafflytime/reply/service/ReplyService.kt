@@ -1,8 +1,5 @@
 package com.wafflytime.reply.service
 
-import com.wafflytime.exception.WafflyTime400
-import com.wafflytime.exception.WafflyTime401
-import com.wafflytime.exception.WafflyTime404
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.post.service.PostService
 import com.wafflytime.reply.database.ReplyEntity
@@ -11,7 +8,8 @@ import com.wafflytime.reply.database.ReplyRepositorySupport
 import com.wafflytime.reply.dto.CreateReplyRequest
 import com.wafflytime.reply.dto.ReplyResponse
 import com.wafflytime.reply.dto.UpdateReplyRequest
-import com.wafflytime.user.info.database.UserRepository
+import com.wafflytime.reply.exception.*
+import com.wafflytime.user.info.service.UserService
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -20,7 +18,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class ReplyService(
-    private val userRepository: UserRepository,
+    private val userService: UserService,
     private val postService: PostService,
     private val replyRepository: ReplyRepository,
     private val replyRepositorySupport: ReplyRepositorySupport,
@@ -28,15 +26,11 @@ class ReplyService(
     @Transactional
     fun createReply(userId: Long, boardId: Long, postId: Long, request: CreateReplyRequest): ReplyResponse {
         val post = postService.validateBoardAndPost(boardId, postId)
-        val user = userRepository.findByIdOrNull(userId)!!
-        val parent = request.parent?.let {
-            replyRepository.findByIdOrNull(request.parent) ?: throw WafflyTime404("해당하는 부모 댓글이 없습니다")
-        }
-        if (parent != null && parent.post != post) throw WafflyTime400("부모 댓글이 다른 글에 있습니다")
-        if (parent?.isDeleted == true) throw WafflyTime404("삭제된 댓글에 답글을 달 수 없습니다")
+        val user = userService.getUser(userId)
+        val parent = request.parent?.let { validatePostAndReply(postId, it) }
 
-        if (post.writer.id == user.id && post.isWriterAnonymous != request.isWriterAnonymous) {
-            throw WafflyTime400("글 작성자는 익명 여부를 바꿀 수 없습니다")
+        if ((post.writer.id == user.id) && (post.isWriterAnonymous != request.isWriterAnonymous)) {
+            throw WriterAnonymousFixed
         }
 
         val reply = replyRepository.save(
@@ -68,8 +62,7 @@ class ReplyService(
     ): ReplyResponse {
         postService.validateBoardAndPost(boardId, postId)
         val reply = validatePostAndReply(postId, replyId)
-        if (userId != reply.writer.id) throw WafflyTime401("댓글 작성자가 아닌 유저는 댓글을 수정할 수 없습니다")
-        if (reply.isDeleted) throw WafflyTime404("삭제된 댓글을 수정할 수 없습니다")
+        if (userId != reply.writer.id) throw ForbiddenReplyUpdate
         reply.update(request.contents, request.isWriterAnonymous)
         return replyToResponse(reply)
     }
@@ -78,8 +71,9 @@ class ReplyService(
     fun deleteReply(userId: Long, boardId: Long, postId: Long, replyId: Long) {
         val post = postService.validateBoardAndPost(boardId, postId)
         val reply = validatePostAndReply(postId, replyId)
-        val user = userRepository.findByIdOrNull(userId) ?: throw WafflyTime404("user id가 존재하지 않습니다")
+        val user = userService.getUser(userId)
 
+        // TODO: board 관리자도 추가 필요?
         if (userId == reply.writer.id || user.isAdmin) {
             reply.delete()
             post.nReplies--
@@ -95,7 +89,7 @@ class ReplyService(
                 if (countChild == 0L) parent.update(isDisplayed = false)
             }
         } else {
-            throw WafflyTime401("댓글을 삭제할 권한이 없습니다")
+            throw ForbiddenReplyRemoval
         }
     }
 
@@ -118,8 +112,9 @@ class ReplyService(
     }
 
     private fun validatePostAndReply(postId: Long, replyId: Long): ReplyEntity {
-        val reply = replyRepository.findByIdOrNull(replyId) ?: throw WafflyTime404("reply id가 존재하지 않습니다")
-        if (reply.post.id != postId) throw WafflyTime400("post id와 reply id가 매치되지 않습니다 : 해당 게시글에 속한 댓글이 아닙니다")
+        val reply = replyRepository.findByIdOrNull(replyId) ?: throw ReplyNotFound
+        if (reply.post.id != postId) throw PostReplyMismatch
+        if (reply.isDeleted) throw ReplyDeleted
         return reply
     }
 

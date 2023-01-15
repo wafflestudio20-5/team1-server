@@ -3,12 +3,12 @@ package com.wafflytime.user.auth.api
 import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
-import com.wafflytime.user.auth.api.dto.AuthToken
+import com.wafflytime.user.auth.dto.AuthToken
 import com.wafflytime.user.auth.service.AuthTokenService
-import com.wafflytime.user.auth.api.dto.LoginRequest
-import com.wafflytime.user.auth.api.dto.SignUpRequest
+import com.wafflytime.user.auth.dto.LoginRequest
+import com.wafflytime.user.auth.dto.SignUpRequest
 
-import com.wafflytime.user.auth.controller.dto.TempAdminSignUpRequest
+import com.wafflytime.user.auth.dto.TempAdminSignUpRequest
 import com.wafflytime.user.auth.service.LocalAuthService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.DeleteMapping

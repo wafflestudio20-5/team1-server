@@ -1,17 +1,16 @@
 package com.wafflytime.user.mail.service
 
-import com.wafflytime.user.info.database.UserRepository
-import com.wafflytime.user.mail.api.dto.VerifyEmailCode
-import com.wafflytime.user.mail.api.dto.VerifyEmailRequest
-import com.wafflytime.exception.WafflyTime400
-import com.wafflytime.exception.WafflyTime409
+import com.wafflytime.user.mail.dto.VerifyEmailCode
+import com.wafflytime.user.mail.dto.VerifyEmailRequest
+import com.wafflytime.user.info.service.UserService
+import com.wafflytime.user.mail.exception.InvalidMailSuffix
 import org.springframework.stereotype.Service
 import kotlin.random.Random
 
 @Service
 class EmailService(
     private val asyncEmailService: AsyncEmailService,
-    private val userRepository: UserRepository,
+    private val userService: UserService,
 ) {
     private val SNU_MAIL_SUFFIX = "@snu.ac.kr"
     private val CharPool : List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
@@ -27,10 +26,10 @@ class EmailService(
     fun verifyEmail(verifyEmailRequest: VerifyEmailRequest) : VerifyEmailCode {
         val email = verifyEmailRequest.email
         if (!email.endsWith(SNU_MAIL_SUFFIX)) {
-            throw WafflyTime400("SNU 메일을 입력해주세요")
+            throw InvalidMailSuffix
         }
 
-        userRepository.findByUnivEmail(email)?.let { throw WafflyTime409("이미 이 snu mail로 가입한 계정이 존재합니다") }
+        userService.checkUnivEmailConflict(email)
 
         val verifyEmailCode = createCode()
         asyncEmailService.sendEmail(verifyEmailRequest.email, verifyEmailCode)

@@ -2,10 +2,10 @@ package com.wafflytime.user.info.api
 
 import com.wafflytime.config.UserIdFromToken
 import com.wafflytime.post.dto.PostResponse
-import com.wafflytime.user.info.api.dto.DeleteScrapResponse
-import com.wafflytime.user.info.api.dto.UpdateUserInfoRequest
-import com.wafflytime.user.info.api.dto.UploadProfileImageRequest
-import com.wafflytime.user.info.api.dto.UserInfo
+import com.wafflytime.user.info.dto.DeleteScrapResponse
+import com.wafflytime.user.info.dto.UpdateUserInfoRequest
+import com.wafflytime.user.info.dto.UploadProfileImageRequest
+import com.wafflytime.user.info.dto.UserInfo
 import com.wafflytime.user.info.service.UserService
 import jakarta.validation.Valid
 import org.springframework.data.domain.Page
@@ -20,6 +20,18 @@ class UserController(
     @GetMapping("/api/user/me")
     fun getMyInfo(@UserIdFromToken userId: Long): UserInfo {
         return userService.getUserInfo(userId)
+    }
+
+    @GetMapping("/api/user/check/id/{id}")
+    fun checkLoginIdConflict(@PathVariable id: String): String {
+        userService.checkLoginIdConflict(id)
+        return "사용 가능한 아이디입니다"
+    }
+
+    @GetMapping("/api/user/check/nickname/{nickname}")
+    fun checkNicknameConflict(@PathVariable nickname: String): String {
+        userService.checkNicknameConflict(nickname)
+        return "사용 가능한 닉네임입니다"
     }
 
     @PutMapping("/api/user/me")
