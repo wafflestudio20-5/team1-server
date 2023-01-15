@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface UserRepository : JpaRepository<UserEntity, Long> {
     fun findByLoginId(loginId: String) : UserEntity?
+    fun findByNickname(nickname: String) : UserEntity?
     fun findByUnivEmail(univEmail: String) : UserEntity?
     fun findBySocialEmail(socialEmail: String) : UserEntity?
 }

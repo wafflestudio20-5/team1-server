@@ -1,4 +1,4 @@
-package com.wafflytime.user.info.api.dto
+package com.wafflytime.user.info.dto
 
 import com.wafflytime.user.info.database.UserEntity
 
@@ -7,6 +7,7 @@ data class UserInfo(
     val socialEmail: String?,
     val univEmail: String?,
     val nickname: String?,
+    var profilePreSignedUrl: String? = null
 ) {
 
     companion object {
@@ -16,6 +17,16 @@ data class UserInfo(
                 socialEmail,
                 univEmail,
                 nickname,
+            )
+        }
+
+        fun of(entity: UserEntity, preSignedUrl: String?): UserInfo = entity.run {
+            UserInfo(
+                loginId,
+                socialEmail,
+                univEmail,
+                nickname,
+                preSignedUrl
             )
         }
     }

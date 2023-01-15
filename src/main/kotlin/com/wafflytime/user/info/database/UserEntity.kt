@@ -15,8 +15,10 @@ class UserEntity(
     val socialEmail: String? = null,
     @field:Column(unique = true)
     var univEmail: String? = null,
-    var nickname: String? = null,
+    var nickname: String,
     val isAdmin: Boolean = false,
+
+    var profileImage: String? = null
 
     ): BaseTimeEntity() {
 
