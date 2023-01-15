@@ -6,6 +6,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException
 import java.time.LocalDateTime
 
 @RestControllerAdvice
@@ -18,6 +19,11 @@ class WafflyTimeExceptionHandler {
             0,
             e.message!!
         )
+    }
+
+    @ExceptionHandler(value = [AsyncRequestTimeoutException::class])
+    fun handle(e: AsyncRequestTimeoutException) {
+        // SseEmitter 가 timeout 될 때 나는 exception 으로 아무것도 리턴하지 않고 무시하면 된다
     }
 
     @ExceptionHandler(value = [MethodArgumentNotValidException::class])

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 @RestController
 class NotificationController(
@@ -17,8 +18,7 @@ class NotificationController(
     fun connect(
         @PathVariable id: Long,
         @RequestHeader(value = "Last-Event-ID", required = false, defaultValue = "") lastEventId: String
-    ) : String {
-        println("hello connect!")
-        return "Hello connection"
+    ) : SseEmitter {
+        return notificationService.connect(id, lastEventId)
     }
 }
