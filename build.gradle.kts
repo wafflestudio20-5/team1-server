@@ -65,6 +65,12 @@ dependencies {
 	implementation("com.querydsl:querydsl-core:$querydslVersion")
 	kapt("com.querydsl:querydsl-apt:$querydslVersion:jakarta")
 	kapt(group = "com.querydsl", name = "querydsl-apt", classifier = "jpa")
+
+	// json
+//	implementation("com.squareup.retrofit2:converter-gson:2.7.1")
+	implementation("org.json:json:20211205")
+
+
 }
 
 // QueryDSL

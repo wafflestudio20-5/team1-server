@@ -3,10 +3,13 @@ package com.wafflytime.notification.service
 import com.wafflytime.notification.database.EmitterRepository
 import com.wafflytime.notification.database.NotificationEntity
 import com.wafflytime.notification.database.NotificationRepository
+import com.wafflytime.notification.dto.CheckNotificationResponse
 import com.wafflytime.notification.dto.NotificationDto
 import com.wafflytime.notification.dto.NotificationResponse
+import com.wafflytime.notification.exception.NotificationNotFound
 import jakarta.transaction.Transactional
 import org.apache.catalina.connector.ClientAbortException
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
@@ -37,7 +40,6 @@ class NotificationService(
         val eventId = getTimeIncludedId(userId)
         sendNotification(emitter, eventId, emitterId, "EventStream Created. [userId=${userId}]")
 
-
         // 클라이언트가 미수신한 Event 목록이 존재할 경우 전송하여 Event 유실 예방
         if (lastEventId.isNotEmpty()) {
             emitterRepository.findAllEventCacheStartWithByUserId(userId)
@@ -50,10 +52,9 @@ class NotificationService(
 
     @Transactional
     fun send(notificationDto: NotificationDto) {
-
         val notification = notificationRepository.save(
             NotificationEntity(
-                notificationRedirectInfo = notificationDto.notificationRedirectInfo,
+                redirectInfo =  notificationDto.notificationRedirectInfo,
                 receiver = notificationDto.receiver,
                 content = notificationDto.content,
                 notificationType = notificationDto.notificationType,
@@ -83,5 +84,12 @@ class NotificationService(
         } catch (exception: ClientAbortException) {
             emitterRepository.deleteByEmitterId(emitterId)
         }
+    }
+
+    @Transactional
+    fun checkNotification(notificationId: Long): CheckNotificationResponse {
+        val notification = notificationRepository.findByIdOrNull(notificationId) ?: throw NotificationNotFound
+        notification.updateIsRead()
+        return CheckNotificationResponse(notificationId)
     }
 }

@@ -10,8 +10,11 @@ import com.wafflytime.user.info.database.UserEntity
 data class ReplyNotificationRedirectInfo (
     val boardId: Long,
     val boardTitle: String,
-    val postId: Long
-) : NotificationRedirectInfo {}
+    val postId: Long,
+    override val notificationType: NotificationType = NotificationType.REPLY
+) : NotificationRedirectInfo {
+    constructor() : this(-1, "", -1)
+}
 
 
 data class ReplyNotificationDto (
