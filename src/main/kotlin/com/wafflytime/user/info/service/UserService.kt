@@ -59,17 +59,17 @@ class UserServiceImpl (
 
     @Transactional
     override fun checkLoginIdConflict(loginId: String) {
-        userRepository.findByLoginId(loginId) ?: throw LoginIdConflict
+        userRepository.findByLoginId(loginId)?.let { throw LoginIdConflict }
     }
 
     @Transactional
     override fun checkNicknameConflict(nickname: String) {
-        userRepository.findByNickname(nickname) ?: throw NicknameConflict
+        userRepository.findByNickname(nickname)?.let { throw NicknameConflict }
     }
 
     @Transactional
     override fun checkUnivEmailConflict(univEmail: String) {
-        userRepository.findByUnivEmail(univEmail) ?: throw MailConflict
+        userRepository.findByUnivEmail(univEmail)?.let { throw MailConflict }
     }
 
     @Transactional
