@@ -23,18 +23,26 @@
             (async () => {
                 // 브라우저 알림
                 const showNotification = () => {
+                        if (data.notificationType === 'REPLY') {
+                          alert("댓글: " + data.content + "\n" + "게시판 id: " + data.redirectInfo.boardId + "\n" +
+                                "게시판: " + data.redirectInfo.boardTitle + "\n" + "게시물 id: " + data.redirectInfo.postId);
+                        } else {
+                          alert(data.content);
+                        }
 
-                    const notification = new Notification('코드 봐줘', {
-                        body: data.content
-                    });
 
-                    setTimeout(() => {
-                        notification.close();
-                    }, 10 * 1000);
 
-                    notification.addEventListener('click', () => {
-                        window.open(data.url, '_blank');
-                    });
+<!--                    const notification = new Notification('알림!', {-->
+<!--                        body: data.content-->
+<!--                    });-->
+
+<!--                    setTimeout(() => {-->
+<!--                        notification.close();-->
+<!--                    }, 10 * 1000);-->
+
+<!--                    notification.addEventListener('click', () => {-->
+<!--                        window.open(data.url, '_blank');-->
+<!--                    });-->
                 }
 
                 // 브라우저 알림 허용 권한
@@ -43,12 +51,15 @@
                 if (Notification.permission === 'granted') {
                     granted = true;
                 } else if (Notification.permission !== 'denied') {
-                    let permission = await Notification.requestPermission();
+                    let permission = await Notification.requestPermission().then(function (permission) {
+                      console.log(permission)
+                       });
                     granted = permission === 'granted';
                 }
 
                 // 알림 보여주기
                 if (granted) {
+                    console.log("알람 보여줘!");
                     showNotification();
                 }
             })();

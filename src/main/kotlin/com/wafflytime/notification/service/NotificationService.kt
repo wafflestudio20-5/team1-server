@@ -1,11 +1,14 @@
 package com.wafflytime.notification.service
 
 import com.wafflytime.notification.database.EmitterRepository
+import com.wafflytime.notification.database.NotificationEntity
 import com.wafflytime.notification.database.NotificationRepository
-import io.jsonwebtoken.io.IOException
+import com.wafflytime.notification.dto.NotificationDto
+import com.wafflytime.notification.dto.NotificationResponse
+import jakarta.transaction.Transactional
+import org.apache.catalina.connector.ClientAbortException
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
-import kotlin.system.exitProcess
 
 @Service
 class NotificationService(
@@ -45,12 +48,39 @@ class NotificationService(
         return emitter
     }
 
+    @Transactional
+    fun send(notificationDto: NotificationDto) {
+
+        val notification = notificationRepository.save(
+            NotificationEntity(
+                notificationRedirectInfo = notificationDto.notificationRedirectInfo,
+                receiver = notificationDto.receiver,
+                content = notificationDto.content,
+                notificationType = notificationDto.notificationType,
+                isRead = false
+            )
+        )
+
+        val eventId = getTimeIncludedId(notificationDto.receiver.id)
+        val emittersMap = emitterRepository.findAllEmitterStartWithByUserId(userId = notificationDto.receiver.id)
+        emittersMap.forEach {
+            emitterRepository.saveEventCache(it.key, notification)
+            sendNotification(
+                emitter = it.value,
+                eventId = eventId,
+                emitterId = it.key,
+                data = NotificationResponse.of(notification)
+            )
+        }
+
+    }
+
     private fun sendNotification(emitter: SseEmitter, eventId: String, emitterId: String, data: Any) {
         try {
             emitter.send(
                 SseEmitter.event().id(eventId).name("sse").data(data)
             )
-        } catch (exception:IOException) {
+        } catch (exception: ClientAbortException) {
             emitterRepository.deleteByEmitterId(emitterId)
         }
     }
