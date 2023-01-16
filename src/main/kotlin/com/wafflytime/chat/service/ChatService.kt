@@ -8,6 +8,9 @@ import com.wafflytime.chat.dto.ChatSimpleInfo
 import com.wafflytime.chat.dto.CreateChatRequest
 import com.wafflytime.chat.dto.MessageInfo
 import com.wafflytime.chat.dto.SendMessageRequest
+import com.wafflytime.chat.exception.ChatNotFound
+import com.wafflytime.chat.exception.NoMoreUnreadMessages
+import com.wafflytime.chat.exception.UserChatMismatch
 import com.wafflytime.post.service.PostService
 import com.wafflytime.reply.service.ReplyService
 import com.wafflytime.user.info.database.UserEntity
@@ -112,12 +115,12 @@ class ChatServiceImpl(
                     defaultSize = unread2
                     unread2 = 0
                 }
-                else -> throw TODO()
+                else -> throw UserChatMismatch
             }
         }
 
         val size = size ?: defaultSize
-        if (size == 0) throw TODO()
+        if (size == 0) throw NoMoreUnreadMessages
 
         val pageRequest = PageRequest.of(page, size)
         return messageRepository.findByChatIdPageable(chatId, pageRequest)
@@ -126,12 +129,12 @@ class ChatServiceImpl(
 
     private fun getChatEntity(chatId: Long): ChatEntity {
         return chatRepository.findByIdOrNull(chatId)
-            ?: throw TODO()
+            ?: throw ChatNotFound
     }
 
     private fun validateChatParticipant(user: UserEntity, chat: ChatEntity) {
         if (chat.participant1 != user && chat.participant2 != user)
-            throw TODO()
+            throw UserChatMismatch
     }
 
 }

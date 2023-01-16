@@ -1,6 +1,7 @@
 package com.wafflytime.chat.dto
 
 import com.wafflytime.chat.database.ChatEntity
+import com.wafflytime.chat.exception.UserChatMismatch
 
 data class ChatSimpleInfo(
     val id: Long,
@@ -29,7 +30,7 @@ data class ChatSimpleInfo(
                     recentMessage.content,
                     unread2,
                 )
-                else -> throw TODO()
+                else -> throw UserChatMismatch
             }
         }
 

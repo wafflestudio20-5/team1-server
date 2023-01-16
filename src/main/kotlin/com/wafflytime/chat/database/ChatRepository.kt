@@ -19,8 +19,6 @@ class ChatRepositorySupportImpl(
     private val jpaQueryFactory: JPAQueryFactory
 ) : QuerydslRepositorySupport(ChatEntity::class.java), ChatRepositorySupport {
 
-
-
     override fun findByParticipantIdWithLastMessage(userId: Long): List<ChatEntity> {
         val userEntity1 = QUserEntity("userEntity1")
         val userEntity2 = QUserEntity("userEntity2")
