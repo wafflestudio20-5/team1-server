@@ -3,6 +3,8 @@ package com.wafflytime.user.info.api
 import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
+import com.wafflytime.notification.dto.NotificationResponse
+import com.wafflytime.notification.service.NotificationService
 import com.wafflytime.post.dto.PostResponse
 import com.wafflytime.user.info.dto.DeleteScrapResponse
 import com.wafflytime.user.info.dto.UpdateUserInfoRequest
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 class UserController(
     private val userService: UserService,
+    private val notificationService: NotificationService
 ) {
 
     @ExemptEmailVerification
@@ -86,5 +89,14 @@ class UserController(
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
     ) : ResponseEntity<Page<PostResponse>> {
         return ResponseEntity.ok(userService.getMyPosts(userId, page, size))
+    }
+
+    @GetMapping("/api/user/notifications")
+    fun getNotifications(
+        @UserIdFromToken userId: Long,
+        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
+    ) : ResponseEntity<Page<NotificationResponse>> {
+        return ResponseEntity.ok(notificationService.getNotifications(userId, page, size))
     }
 }

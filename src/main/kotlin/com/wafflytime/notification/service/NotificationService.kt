@@ -9,6 +9,9 @@ import com.wafflytime.notification.dto.NotificationResponse
 import com.wafflytime.notification.exception.NotificationNotFound
 import jakarta.transaction.Transactional
 import org.apache.catalina.connector.ClientAbortException
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
@@ -92,5 +95,11 @@ class NotificationService(
         val notification = notificationRepository.findByIdOrNull(notificationId) ?: throw NotificationNotFound
         notification.updateIsRead()
         return CheckNotificationResponse(notificationId)
+    }
+
+    fun getNotifications(userId: Long, page: Int, size: Int): Page<NotificationResponse> {
+        return notificationRepository.findAllByReceiverId(
+            userId, PageRequest.of(page, size,  Sort.by(Sort.Direction.DESC, "createdAt"))
+        ).map { NotificationResponse.of(it) }
     }
 }
