@@ -57,6 +57,7 @@ class NotificationService(
                 info =  notificationDto.notificationInfo,
                 receiver = notificationDto.receiver,
                 content = notificationDto.content,
+                contentCreatedAt = notificationDto.contentCreatedAt,
                 notificationType = notificationDto.notificationInfo.notificationType,
                 isRead = false
             )

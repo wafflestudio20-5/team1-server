@@ -6,6 +6,8 @@ import com.wafflytime.notification.type.NotificationType
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotNull
+import org.springframework.data.annotation.LastModifiedDate
+import java.time.LocalDateTime
 
 @Entity
 @Table(name="notification")
@@ -30,6 +32,8 @@ class NotificationEntity(
     val receiver: UserEntity,
 
     var content: String,
+    @Column(columnDefinition = "datetime(6) default '1999-01-01'")
+    var contentCreatedAt: LocalDateTime? = null,
 
     @field:NotNull @Enumerated(EnumType.STRING)
     val notificationType: NotificationType,

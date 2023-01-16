@@ -56,6 +56,7 @@ class ReplyService(
             NotificationDto(
                 receiver = parent?.writer ?: post.writer,
                 content = request.contents,
+                contentCreatedAt = reply.createdAt,
                 notificationInfo = ReplyNotificationInfo.of(post)
             )
         )
