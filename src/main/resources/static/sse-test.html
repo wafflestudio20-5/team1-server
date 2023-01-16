@@ -7,6 +7,9 @@
 <body>
 <input type="text" id="id"/>
 <button type="button" onclick="login()">로그인</button>
+<input type="text" id="notificationId"/>
+<button type="button" onclick="check()">알림확인버튼(notification id 입력)</button>
+
 </body>
 </html>
 <script type="text/javaScript">
@@ -24,7 +27,7 @@
                 // 브라우저 알림
                 const showNotification = () => {
                         if (data.info.notificationType === 'REPLY') {
-                          alert("댓글: " + data.content + "\n" + "게시판 id: " + data.info.boardId + "\n" +
+                          alert("notificationId: " + data.notificationId + "\n" + "댓글: " + data.content + "\n" + "게시판 id: " + data.info.boardId + "\n" +
                                 "게시판: " + data.info.boardTitle + "\n" + "게시물 id: " + data.info.postId);
                         } else {
                           alert(data.content);
@@ -65,4 +68,15 @@
             })();
         })
     }
+
+    function check() {
+      const notificationId = document.getElementById('notificationId').value;
+
+      fetch('/api/notification-check/' + notificationId, {
+        method: "PUT"
+      })
+        .then((response) => response.json())
+        .then((data) => console.log(data));
+    }
+
 </script>
