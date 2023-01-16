@@ -27,10 +27,8 @@ class ReplyService(
     fun createReply(userId: Long, boardId: Long, postId: Long, request: CreateReplyRequest): ReplyResponse {
         val post = postService.validateBoardAndPost(boardId, postId)
         val user = userService.getUser(userId)
-        val parent = request.parent?.let { validatePostAndReply(postId, it) }
-
-        if ((post.writer.id == user.id) && (post.isWriterAnonymous != request.isWriterAnonymous)) {
-            throw WriterAnonymousFixed
+        val parent = request.parent?.let {
+            validatePostAndReply(postId, it)
         }
 
         val reply = replyRepository.save(
@@ -63,9 +61,7 @@ class ReplyService(
         postService.validateBoardAndPost(boardId, postId)
         val reply = validatePostAndReply(postId, replyId)
         if (userId != reply.writer.id) throw ForbiddenReplyUpdate
-        if (reply.isPostWriter && request.isWriterAnonymous != null) {
-            throw WriterAnonymousFixed
-        }
+
         reply.update(request.contents, request.isWriterAnonymous)
         return replyToResponse(reply)
     }
