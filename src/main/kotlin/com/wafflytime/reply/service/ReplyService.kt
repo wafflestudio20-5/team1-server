@@ -62,7 +62,7 @@ class ReplyService(
         val reply = validatePostAndReply(postId, replyId)
         if (userId != reply.writer.id) throw ForbiddenReplyUpdate
 
-        reply.update(request.contents, request.isWriterAnonymous)
+        reply.update(request.contents)
         return replyToResponse(reply)
     }
 
