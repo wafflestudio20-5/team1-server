@@ -54,10 +54,10 @@ class NotificationService(
     fun send(notificationDto: NotificationDto) {
         val notification = notificationRepository.save(
             NotificationEntity(
-                redirectInfo =  notificationDto.notificationRedirectInfo,
+                info =  notificationDto.notificationInfo,
                 receiver = notificationDto.receiver,
                 content = notificationDto.content,
-                notificationType = notificationDto.notificationType,
+                notificationType = notificationDto.notificationInfo.notificationType,
                 isRead = false
             )
         )

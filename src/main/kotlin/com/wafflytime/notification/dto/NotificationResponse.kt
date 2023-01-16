@@ -7,7 +7,7 @@ data class NotificationResponse(
     val notificationId: Long,
     val notificationType: NotificationType,
     val content: String,
-    val redirectInfo: NotificationRedirectInfo? = null,
+    val info: NotificationInfo? = null,
     val isRead: Boolean
 ) {
 
@@ -17,7 +17,7 @@ data class NotificationResponse(
                 notificationId = notificationEntity.id,
                 notificationType = notificationEntity.notificationType,
                 content = notificationEntity.content,
-                redirectInfo = notificationEntity.redirectInfo,
+                info = notificationEntity.info,
                 isRead = notificationEntity.isRead
             )
         }

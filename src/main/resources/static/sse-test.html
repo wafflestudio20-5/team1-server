@@ -23,9 +23,9 @@
             (async () => {
                 // 브라우저 알림
                 const showNotification = () => {
-                        if (data.notificationType === 'REPLY') {
-                          alert("댓글: " + data.content + "\n" + "게시판 id: " + data.redirectInfo.boardId + "\n" +
-                                "게시판: " + data.redirectInfo.boardTitle + "\n" + "게시물 id: " + data.redirectInfo.postId);
+                        if (data.info.notificationType === 'REPLY') {
+                          alert("댓글: " + data.content + "\n" + "게시판 id: " + data.info.boardId + "\n" +
+                                "게시판: " + data.info.boardTitle + "\n" + "게시물 id: " + data.info.postId);
                         } else {
                           alert(data.content);
                         }

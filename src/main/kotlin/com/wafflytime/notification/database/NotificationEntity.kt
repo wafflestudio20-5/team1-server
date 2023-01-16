@@ -1,7 +1,7 @@
 package com.wafflytime.notification.database
 
 import com.wafflytime.common.BaseTimeEntity
-import com.wafflytime.notification.dto.NotificationRedirectInfo
+import com.wafflytime.notification.dto.NotificationInfo
 import com.wafflytime.notification.type.NotificationType
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
@@ -13,7 +13,7 @@ class NotificationEntity(
 
     @Column(length = 100, columnDefinition = "json")
     @Convert(converter = JpaNotificationRedirectInfoConverter::class)
-    var redirectInfo: NotificationRedirectInfo? = null,
+    var info: NotificationInfo? = null,
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="wafflytime_user_id")
