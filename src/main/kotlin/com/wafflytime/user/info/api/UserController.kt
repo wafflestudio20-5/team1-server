@@ -1,5 +1,7 @@
 package com.wafflytime.user.info.api
 
+import com.wafflytime.config.ExemptAuthentication
+import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
 import com.wafflytime.post.dto.PostResponse
 import com.wafflytime.user.info.dto.DeleteScrapResponse
@@ -17,17 +19,20 @@ class UserController(
     private val userService: UserService,
 ) {
 
+    @ExemptEmailVerification
     @GetMapping("/api/user/me")
     fun getMyInfo(@UserIdFromToken userId: Long): UserInfo {
         return userService.getUserInfo(userId)
     }
 
+    @ExemptAuthentication
     @GetMapping("/api/user/check/id/{id}")
     fun checkLoginIdConflict(@PathVariable id: String): String {
         userService.checkLoginIdConflict(id)
         return "사용 가능한 아이디입니다"
     }
 
+    @ExemptAuthentication
     @GetMapping("/api/user/check/nickname/{nickname}")
     fun checkNicknameConflict(@PathVariable nickname: String): String {
         userService.checkNicknameConflict(nickname)
