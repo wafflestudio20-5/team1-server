@@ -7,9 +7,9 @@ interface NotificationRedirectInfo {
     val notificationType: NotificationType
 }
 
-interface NotificationDto {
-    val receiver: UserEntity
-    val content: String
-    val notificationType: NotificationType
+data class NotificationDto (
+    val receiver: UserEntity,
+    val content: String,
+    val notificationType: NotificationType,
     val notificationRedirectInfo: NotificationRedirectInfo
-}
+)

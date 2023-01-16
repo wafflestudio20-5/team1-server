@@ -1,9 +1,7 @@
 package com.wafflytime.board.dto
 
-import com.wafflytime.notification.dto.NotificationDto
 import com.wafflytime.notification.dto.NotificationRedirectInfo
 import com.wafflytime.notification.type.NotificationType
-import com.wafflytime.user.info.database.UserEntity
 
 
 // 즐겨찾기를 한 게시판에 대해 Notification 까지 할 시간은 없을 수도 있을 것 같습니다.
@@ -18,10 +16,3 @@ data class BoardNotificationRedirectInfo(
 ) : NotificationRedirectInfo {
     constructor() : this(-1, "", -1)
 }
-
-data class BoardNotification(
-    override val receiver: UserEntity,
-    override val content: String,
-    override val notificationType: NotificationType = NotificationType.BOARD,
-    override val notificationRedirectInfo: NotificationRedirectInfo
-) : NotificationDto {}
