@@ -63,6 +63,9 @@ class ReplyService(
         postService.validateBoardAndPost(boardId, postId)
         val reply = validatePostAndReply(postId, replyId)
         if (userId != reply.writer.id) throw ForbiddenReplyUpdate
+        if (reply.isPostWriter && request.isWriterAnonymous != null) {
+            throw WriterAnonymousFixed
+        }
         reply.update(request.contents, request.isWriterAnonymous)
         return replyToResponse(reply)
     }
@@ -125,7 +128,7 @@ class ReplyService(
             nickname = if (reply.isWriterAnonymous) {
                 if (reply.isPostWriter) "익명(작성자)"
                 else "익명${reply.anonymousId}"
-            } else reply.writer.nickname!!,
+            } else reply.writer.nickname,
             isRoot = reply.isRoot,
             contents = reply.contents,
             isDeleted = reply.isDeleted,
