@@ -2,14 +2,12 @@ package com.wafflytime.reply.service
 
 import com.wafflytime.notification.dto.NotificationDto
 import com.wafflytime.notification.service.NotificationService
-import com.wafflytime.notification.type.NotificationType
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.post.service.PostService
 import com.wafflytime.reply.database.ReplyEntity
 import com.wafflytime.reply.database.ReplyRepository
 import com.wafflytime.reply.database.ReplyRepositorySupport
 import com.wafflytime.reply.dto.CreateReplyRequest
-import com.wafflytime.reply.dto.ReplyNotificationInfo
 import com.wafflytime.reply.dto.ReplyResponse
 import com.wafflytime.reply.dto.UpdateReplyRequest
 import com.wafflytime.reply.exception.*
@@ -53,14 +51,8 @@ class ReplyService(
         post.nReplies++
 
         // 일반 댓글이 달리면 게시물 작성자에게 알림 & 대댓글이 달리면 parent 댓글 작성자에게 알림
-        notificationService.send(
-            NotificationDto(
-                receiver = parent?.writer ?: post.writer,
-                content = NotificationType.REPLY.prefix + request.contents,
-                contentCreatedAt = reply.createdAt,
-                notificationInfo = ReplyNotificationInfo.of(post)
-            )
-        )
+        notificationService.send(NotificationDto.fromReply(receiver = parent?.writer ?: post.writer, reply=reply))
+
         return replyToResponse(reply)
     }
 

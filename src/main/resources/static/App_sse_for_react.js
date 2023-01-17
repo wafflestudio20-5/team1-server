@@ -28,8 +28,8 @@ function login() {
               (async () => {
                   // 브라우저 알림
                   const showNotification = () => {
-                          if (data.info.notificationType === 'REPLY') {
-                            alert("notificationId: " + data.notificationId + "\n" + "댓글: " + data.content + "\n" + "게시판 id: " + data.info.boardId + "\n" +
+                          if (data.notificationType === 'REPLY') {
+                            alert("notificationId: " + data.notificationId + "\n" + data.content + "\n" + "게시판 id: " + data.info.boardId + "\n" +
                                   "게시판: " + data.info.boardTitle + "\n" + "게시물 id: " + data.info.postId);
                           } else {
                             alert(data.content);
