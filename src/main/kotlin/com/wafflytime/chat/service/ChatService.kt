@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import java.lang.Integer.max
 import java.time.format.DateTimeFormatter
 
 interface ChatService {
@@ -47,35 +48,40 @@ class ChatServiceImpl(
             replyService.getReplyEntity(sourcePostId, it)
         }
 
-        val chat = if (sourceReply == null) {
-            chatRepository.save(
-                ChatEntity(
-                    participant1 = user, isAnonymous1 = request.isAnonymous,
-                    participant2 = sourcePost.writer, isAnonymous2 = sourcePost.isWriterAnonymous,
-                )
-            )
+        val target: UserEntity
+        val isTargetAnonymous: Boolean
+        if (sourceReply == null) {
+            target = sourcePost.writer
+            isTargetAnonymous = sourcePost.isWriterAnonymous
         } else {
-            chatRepository.save(
-                ChatEntity(
-                    participant1 = user, isAnonymous1 = request.isAnonymous,
-                    participant2 = sourceReply.writer, isAnonymous2 = sourceReply.isWriterAnonymous,
-                )
-            )
+            target = sourceReply.writer
+            isTargetAnonymous = sourceReply.isWriterAnonymous
         }
 
-        val infoMessage = messageRepository.save(
-            MessageEntity(
-                chat = chat,
-                content = "${sourceBoard.title}에 ${DateTimeFormatter.ofPattern("MM/DD hh:mm").format(sourcePost.createdAt)} 작성된 글을 통해 온 쪽지입니다.",
+        val chat =
+            if (!request.isAnonymous && !isTargetAnonymous) {
+                // 둘다 익명이 아닌 경우 서로의 아이디만 확인
+                chatRepository.findByBothParticipantId(user.id, target.id)
+            } else {
+                // 둘 중 한명이라도 익명인 경우 게시물과 익명 여부에도 의존적
+                chatRepository.findByAllConditions(
+                    sourcePostId,
+                    user.id,
+                    request.isAnonymous,
+                    target.id,
+                    isTargetAnonymous
+                )
+            } ?: createChat(
+                // 똑같은 아이덴티티로 보낸 쪽지가 존재하지 않는 경우 새 채팅방 생성
+                sourcePostId, user, request.isAnonymous, target, isTargetAnonymous,
+                "${sourceBoard.title}에 ${
+                    DateTimeFormatter.ofPattern("MM/DD hh:mm").format(sourcePost.createdAt)
+                } 작성된 글을 통해 온 쪽지입니다.",
             )
-        )
+
         val firstMessage = messageRepository.save(
-            MessageEntity(
-                chat = chat,
-                content = request.content
-            )
+            MessageEntity(chat, user, request.content)
         )
-        chat.addMessage(infoMessage)
         chat.addMessage(firstMessage)
 
         return ChatSimpleInfo.of(userId, chat)
@@ -106,25 +112,42 @@ class ChatServiceImpl(
         val chat = getChatEntity(chatId)
         val defaultSize: Int
         chat.run {
-            when (userId) {
-                participant1.id -> {
-                    defaultSize = unread1
-                    unread1 = 0
-                }
-                participant2.id -> {
-                    defaultSize = unread2
-                    unread2 = 0
-                }
+            defaultSize = when (userId) {
+                participant1.id -> unread1
+                participant2.id -> unread2
                 else -> throw UserChatMismatch
             }
         }
 
         val size = size ?: defaultSize
         if (size == 0) throw NoMoreUnreadMessages
+        chat.run {
+            when (userId) {
+                participant1.id -> unread1 = max(0, unread1 - size)
+                participant2.id -> unread2 = max(0, unread2 - size)
+            }
+        }
 
         val pageRequest = PageRequest.of(page, size)
         return messageRepository.findByChatIdPageable(chatId, pageRequest)
             .map { MessageInfo.of(userId, it) }
+    }
+
+    private fun createChat(postId: Long, participant1: UserEntity, isAnonymous1: Boolean, participant2: UserEntity, isAnonymous2: Boolean, systemMessageContent: String): ChatEntity {
+        val chat = chatRepository.save(
+            ChatEntity(
+                postId = postId,
+                participant1 = participant1, isAnonymous1 = isAnonymous1,
+                participant2 = participant2, isAnonymous2 = isAnonymous2,
+            )
+        )
+
+        val systemMessage = messageRepository.save(
+            MessageEntity(chat = chat, content = systemMessageContent)
+        )
+        chat.addMessage(systemMessage)
+
+        return chat
     }
 
     private fun getChatEntity(chatId: Long): ChatEntity {

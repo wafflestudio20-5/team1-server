@@ -7,6 +7,7 @@ import jakarta.persistence.*
 @Entity
 @Table(name = "chat")
 class ChatEntity(
+    val postId: Long?,
     @ManyToOne
     @JoinColumn(name = "participant1_id")
     val participant1: UserEntity,

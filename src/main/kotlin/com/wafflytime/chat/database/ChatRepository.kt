@@ -12,6 +12,8 @@ interface ChatRepository : JpaRepository<ChatEntity, Long>, ChatRepositorySuppor
 
 interface ChatRepositorySupport {
     fun findByParticipantIdWithLastMessage(userId: Long): List<ChatEntity>
+    fun findByAllConditions(postId: Long, participantId1: Long, isAnonymous1: Boolean, participantId2: Long, isAnonymous2: Boolean) : ChatEntity?
+    fun findByBothParticipantId(participantId1: Long, participantId2: Long) : ChatEntity?
 }
 
 @Repository
@@ -37,6 +39,37 @@ class ChatRepositorySupportImpl(
             .where(userEntity2.id.eq(chatEntity.participant2.id))
             .fetchJoin()
             .fetch()
+    }
+
+    override fun findByAllConditions(
+        postId: Long,
+        participantId1: Long,
+        isAnonymous1: Boolean,
+        participantId2: Long,
+        isAnonymous2: Boolean
+    ): ChatEntity? {
+        return jpaQueryFactory
+            .selectFrom(chatEntity)
+            .where(
+                chatEntity.postId.eq(postId)
+                    .and(chatEntity.participant1.id.eq(participantId1))
+                    .and(chatEntity.isAnonymous1.eq(isAnonymous1))
+                    .and(chatEntity.participant2.id.eq(participantId2))
+                    .and(chatEntity.isAnonymous2.eq(isAnonymous2))
+            )
+            .fetchOne()
+    }
+
+    override fun findByBothParticipantId(participantId1: Long, participantId2: Long) : ChatEntity? {
+        return jpaQueryFactory
+            .selectFrom(chatEntity)
+            .where(
+                chatEntity.participant1.id.eq(participantId1)
+                    .and(chatEntity.isAnonymous1.isTrue)
+                    .and(chatEntity.participant2.id.eq(participantId2))
+                    .and(chatEntity.isAnonymous2.isTrue)
+            )
+            .fetchOne()
     }
 
 }
