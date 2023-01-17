@@ -51,8 +51,10 @@ class ReplyService(
         post.nReplies++
 
         // 일반 댓글이 달리면 게시물 작성자에게 알림 & 대댓글이 달리면 parent 댓글 작성자에게 알림
-        notificationService.send(NotificationDto.fromReply(receiver = parent?.writer ?: post.writer, reply=reply))
-
+        // 게시물 작성자가 작성한 댓글은 알림이 가지 않음
+        if (!reply.isPostWriter) {
+            notificationService.send(NotificationDto.fromReply(receiver = parent?.writer ?: post.writer, reply=reply))
+        }
         return replyToResponse(reply)
     }
 
