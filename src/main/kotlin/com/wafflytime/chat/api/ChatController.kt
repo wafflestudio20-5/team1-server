@@ -1,19 +1,11 @@
 package com.wafflytime.chat.api
 
-import com.wafflytime.chat.dto.ChatSimpleInfo
-import com.wafflytime.chat.dto.CreateChatRequest
-import com.wafflytime.chat.dto.MessageInfo
-import com.wafflytime.chat.dto.SendMessageRequest
+import com.wafflytime.chat.dto.*
 import com.wafflytime.chat.service.ChatService
 import com.wafflytime.config.UserIdFromToken
 import jakarta.validation.Valid
 import org.springframework.data.domain.Page
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 class ChatController(
@@ -27,7 +19,7 @@ class ChatController(
         @PathVariable postId: Long,
         @RequestParam(required = false, value = "replyId") replyId: Long?,
         @Valid @RequestBody request: CreateChatRequest,
-    ): ChatSimpleInfo {
+    ): CreateChatResponse {
         return chatService.createChat(userId, boardId, postId, replyId, request)
     }
 
@@ -55,6 +47,15 @@ class ChatController(
         @RequestParam(required = false, value = "size") size: Int?,
     ): Page<MessageInfo> {
         return chatService.getMessages(userId, chatId, page, size)
+    }
+
+    @PutMapping("/api/chat/{chatId}")
+    fun updateChatBlock(
+        @UserIdFromToken userId: Long,
+        @PathVariable chatId: Long,
+        @Valid @RequestBody request: UpdateChatBlockRequest,
+    ): ChatSimpleInfo {
+        return chatService.updateChatBlock(userId, chatId, request)
     }
 
 }

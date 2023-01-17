@@ -8,6 +8,7 @@ data class ChatSimpleInfo(
     val target: String,
     val recentMessage: String,
     val unread: Int,
+    val blocked: Boolean,
 ) {
 
     companion object {
@@ -23,12 +24,14 @@ data class ChatSimpleInfo(
                     if (isAnonymous1) anonymousName else participant1.nickname,
                     recentMessage.content,
                     unread1,
+                    blocked1,
                 )
                 participant2.id -> ChatSimpleInfo(
                     id,
                     if (isAnonymous2) anonymousName else participant2.nickname,
                     recentMessage.content,
                     unread2,
+                    blocked2,
                 )
                 else -> throw UserChatMismatch
             }
