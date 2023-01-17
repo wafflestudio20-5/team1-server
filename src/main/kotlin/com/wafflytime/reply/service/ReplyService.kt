@@ -2,6 +2,7 @@ package com.wafflytime.reply.service
 
 import com.wafflytime.notification.dto.NotificationDto
 import com.wafflytime.notification.service.NotificationService
+import com.wafflytime.notification.type.NotificationType
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.post.service.PostService
 import com.wafflytime.reply.database.ReplyEntity
@@ -55,7 +56,7 @@ class ReplyService(
         notificationService.send(
             NotificationDto(
                 receiver = parent?.writer ?: post.writer,
-                content = request.contents,
+                content = NotificationType.REPLY.prefix + request.contents,
                 contentCreatedAt = reply.createdAt,
                 notificationInfo = ReplyNotificationInfo.of(post)
             )
