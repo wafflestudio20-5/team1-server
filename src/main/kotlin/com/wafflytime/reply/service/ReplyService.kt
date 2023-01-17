@@ -1,5 +1,7 @@
 package com.wafflytime.reply.service
 
+import com.wafflytime.notification.dto.NotificationDto
+import com.wafflytime.notification.service.NotificationService
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.post.service.PostService
 import com.wafflytime.reply.database.ReplyEntity
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service
 class ReplyService(
     private val userService: UserService,
     private val postService: PostService,
+    private val notificationService: NotificationService,
     private val replyRepository: ReplyRepository,
     private val replyRepositorySupport: ReplyRepositorySupport,
 ) {
@@ -47,6 +50,9 @@ class ReplyService(
 
         post.nReplies++
 
+        // 일반 댓글이 달리면 게시물 작성자에게 알림 & 대댓글이 달리면 parent 댓글 작성자에게 알림
+        notificationService.send(NotificationDto.fromReply(receiver = parent?.writer ?: post.writer, reply=reply))
+
         return replyToResponse(reply)
     }
 
@@ -63,6 +69,7 @@ class ReplyService(
         if (userId != reply.writer.id) throw ForbiddenReplyUpdate
 
         reply.update(request.contents)
+        // reply 수정은 알림이 가지 않는다
         return replyToResponse(reply)
     }
 
