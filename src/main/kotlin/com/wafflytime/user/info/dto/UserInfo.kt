@@ -6,7 +6,7 @@ data class UserInfo(
     val loginId: String?,
     val socialEmail: String?,
     val univEmail: String?,
-    val nickname: String?,
+    val nickname: String,
     var profilePreSignedUrl: String? = null
 ) {
 

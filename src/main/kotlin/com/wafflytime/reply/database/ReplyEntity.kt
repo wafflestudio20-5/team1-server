@@ -34,12 +34,9 @@ class ReplyEntity(
 ) : BaseTimeEntity() {
 
     @Transactional
-    fun update(contents: String? = null, isWriterAnonymous: Boolean? = null, isDisplayed: Boolean? = null) {
+    fun update(contents: String? = null, isDisplayed: Boolean? = null) {
         contents?.let {
             this.contents = contents
-        }
-        isWriterAnonymous?.let {
-            this.isWriterAnonymous = isWriterAnonymous
         }
         isDisplayed?.let {
             this.isDisplayed = isDisplayed

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Notification Test Page</title>
+</head>
+<body>
+<input type="text" id="id"/>
+<button type="button" onclick="login()">로그인</button>
+<input type="text" id="notificationId"/>
+<button type="button" onclick="check()">알림확인버튼(notification id 입력)</button>
+
+</body>
+</html>
+<script type="text/javaScript">
+    function login() {
+        const id = document.getElementById('id').value;
+        console.log("try to connect eventsource");
+        const eventSource = new EventSource(`/api/sse-connect/` + id);
+
+        eventSource.addEventListener("sse", function (event) {
+            console.log(event.data);
+
+            const data = JSON.parse(event.data);
+
+            (async () => {
+                // 브라우저 알림
+                const showNotification = () => {
+                        if (data.notificationType === 'REPLY') {
+                          alert("notificationId: " + data.notificationId + "\n" + data.content + "\n" + "게시판 id: " + data.info.boardId + "\n" +
+                                "게시판: " + data.info.boardTitle + "\n" + "게시물 id: " + data.info.postId);
+                        } else {
+                          alert(data.content);
+                        }
+
+
+
+<!--                    const notification = new Notification('알림!', {-->
+<!--                        body: data.content-->
+<!--                    });-->
+
+<!--                    setTimeout(() => {-->
+<!--                        notification.close();-->
+<!--                    }, 10 * 1000);-->
+
+<!--                    notification.addEventListener('click', () => {-->
+<!--                        window.open(data.url, '_blank');-->
+<!--                    });-->
+                }
+
+                // 브라우저 알림 허용 권한
+                let granted = false;
+
+                if (Notification.permission === 'granted') {
+                    granted = true;
+                } else if (Notification.permission !== 'denied') {
+                    let permission = await Notification.requestPermission().then(function (permission) {
+                      console.log(permission)
+                       });
+                    granted = permission === 'granted';
+                }
+
+                // 알림 보여주기
+                if (granted) {
+                    console.log("알람 보여줘!");
+                    showNotification();
+                }
+            })();
+        })
+    }
+
+    function check() {
+      const notificationId = document.getElementById('notificationId').value;
+
+      fetch('/api/notification-check/' + notificationId, {
+        method: "PUT"
+      })
+        .then((response) => response.json())
+        .then((data) => console.log(data));
+    }
+
+</script>

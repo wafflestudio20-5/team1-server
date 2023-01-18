@@ -1,5 +1,7 @@
 package com.wafflytime.reply.service
 
+import com.wafflytime.notification.dto.NotificationDto
+import com.wafflytime.notification.service.NotificationService
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.post.service.PostService
 import com.wafflytime.reply.database.ReplyEntity
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service
 class ReplyService(
     private val userService: UserService,
     private val postService: PostService,
+    private val notificationService: NotificationService,
     private val replyRepository: ReplyRepository,
     private val replyRepositorySupport: ReplyRepositorySupport,
 ) {
@@ -27,10 +30,8 @@ class ReplyService(
     fun createReply(userId: Long, boardId: Long, postId: Long, request: CreateReplyRequest): ReplyResponse {
         val post = postService.validateBoardAndPost(boardId, postId)
         val user = userService.getUser(userId)
-        val parent = request.parent?.let { validatePostAndReply(postId, it) }
-
-        if ((post.writer.id == user.id) && (post.isWriterAnonymous != request.isWriterAnonymous)) {
-            throw WriterAnonymousFixed
+        val parent = request.parent?.let {
+            validatePostAndReply(postId, it)
         }
 
         val reply = replyRepository.save(
@@ -49,6 +50,11 @@ class ReplyService(
 
         post.nReplies++
 
+        // 일반 댓글이 달리면 게시물 작성자에게 알림 & 대댓글이 달리면 parent 댓글 작성자에게 알림
+        // 게시물 작성자가 작성한 댓글은 알림이 가지 않음
+        if (!reply.isPostWriter) {
+            notificationService.send(NotificationDto.fromReply(receiver = parent?.writer ?: post.writer, reply=reply))
+        }
         return replyToResponse(reply)
     }
 
@@ -63,7 +69,9 @@ class ReplyService(
         postService.validateBoardAndPost(boardId, postId)
         val reply = validatePostAndReply(postId, replyId)
         if (userId != reply.writer.id) throw ForbiddenReplyUpdate
-        reply.update(request.contents, request.isWriterAnonymous)
+
+        reply.update(request.contents)
+        // reply 수정은 알림이 가지 않는다
         return replyToResponse(reply)
     }
 
@@ -125,7 +133,7 @@ class ReplyService(
             nickname = if (reply.isWriterAnonymous) {
                 if (reply.isPostWriter) "익명(작성자)"
                 else "익명${reply.anonymousId}"
-            } else reply.writer.nickname!!,
+            } else reply.writer.nickname,
             isRoot = reply.isRoot,
             contents = reply.contents,
             isDeleted = reply.isDeleted,

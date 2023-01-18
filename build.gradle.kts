@@ -43,7 +43,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-mail")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
-
+	implementation("com.vladmihalcea:hibernate-types-60:2.20.0")
 	// Swagger
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2")
 
@@ -65,6 +65,12 @@ dependencies {
 	implementation("com.querydsl:querydsl-core:$querydslVersion")
 	kapt("com.querydsl:querydsl-apt:$querydslVersion:jakarta")
 	kapt(group = "com.querydsl", name = "querydsl-apt", classifier = "jpa")
+
+	// json
+//	implementation("com.squareup.retrofit2:converter-gson:2.7.1")
+	implementation("org.json:json:20211205")
+
+
 }
 
 // QueryDSL

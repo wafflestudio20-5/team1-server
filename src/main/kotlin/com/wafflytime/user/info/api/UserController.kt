@@ -1,6 +1,10 @@
 package com.wafflytime.user.info.api
 
+import com.wafflytime.config.ExemptAuthentication
+import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
+import com.wafflytime.notification.dto.NotificationResponse
+import com.wafflytime.notification.service.NotificationService
 import com.wafflytime.post.dto.PostResponse
 import com.wafflytime.user.info.dto.DeleteScrapResponse
 import com.wafflytime.user.info.dto.UpdateUserInfoRequest
@@ -15,19 +19,23 @@ import org.springframework.web.bind.annotation.*
 @RestController
 class UserController(
     private val userService: UserService,
+    private val notificationService: NotificationService
 ) {
 
+    @ExemptEmailVerification
     @GetMapping("/api/user/me")
     fun getMyInfo(@UserIdFromToken userId: Long): UserInfo {
         return userService.getUserInfo(userId)
     }
 
+    @ExemptAuthentication
     @GetMapping("/api/user/check/id/{id}")
     fun checkLoginIdConflict(@PathVariable id: String): String {
         userService.checkLoginIdConflict(id)
         return "사용 가능한 아이디입니다"
     }
 
+    @ExemptAuthentication
     @GetMapping("/api/user/check/nickname/{nickname}")
     fun checkNicknameConflict(@PathVariable nickname: String): String {
         userService.checkNicknameConflict(nickname)
@@ -81,5 +89,14 @@ class UserController(
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
     ) : ResponseEntity<Page<PostResponse>> {
         return ResponseEntity.ok(userService.getMyPosts(userId, page, size))
+    }
+
+    @GetMapping("/api/user/notifications")
+    fun getNotifications(
+        @UserIdFromToken userId: Long,
+        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
+    ) : ResponseEntity<Page<NotificationResponse>> {
+        return ResponseEntity.ok(notificationService.getNotifications(userId, page, size))
     }
 }
