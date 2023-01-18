@@ -76,9 +76,16 @@ class UserServiceImpl (
     override fun updateUserInfo(userId: Long, request: UpdateUserInfoRequest): UserInfo {
         val user = getUserById(userId)
         request.run {
+            if ((oldPassword == null) != (newPassword == null)) throw InsufficientPasswordUpdateInfo
+
             try {
                 user.update(
-                    password?.let { passwordEncoder.encode(it) },
+                    oldPassword?.run {
+                        if (passwordEncoder.matches(this, user.password))
+                            newPassword?.let { passwordEncoder.encode(it) }
+                        else
+                            throw PasswordMismatch
+                    },
                     nickname,
                 )
             } catch (e: DataIntegrityViolationException) {

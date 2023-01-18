@@ -78,11 +78,11 @@ class ReplyService(
     @Transactional
     fun deleteReply(userId: Long, boardId: Long, postId: Long, replyId: Long) {
         val post = postService.validateBoardAndPost(boardId, postId)
+        val board = post.board
         val reply = validatePostAndReply(postId, replyId)
         val user = userService.getUser(userId)
 
-        // TODO: board 관리자도 추가 필요?
-        if (userId == reply.writer.id || user.isAdmin) {
+        if (userId == reply.writer.id || userId == board.owner?.id || user.isAdmin) {
             reply.delete()
             post.nReplies--
 
