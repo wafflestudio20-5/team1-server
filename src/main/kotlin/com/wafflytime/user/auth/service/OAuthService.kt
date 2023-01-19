@@ -68,6 +68,7 @@ class OAuthServiceImpl(
             .accept(MediaType.APPLICATION_JSON)
             .bodyValue(tokenRequest(code, provider))
             .retrieve()
+            .onStatus({it.isError}, {throw InvalidAuthorizationCode})
             .bodyToMono(OAuthToken::class.java)
             .block()
             ?: throw InvalidAuthorizationCode
@@ -97,6 +98,7 @@ class OAuthServiceImpl(
             .accept(MediaType.APPLICATION_JSON)
             .headers { header -> header.setBearerAuth(accessToken.accessToken) }
             .retrieve()
+            .onStatus({it.isError}, {throw InvalidOAuthToken})
             .bodyToMono<Map<String, Any>>()
             .block()
             ?: throw InvalidOAuthToken
