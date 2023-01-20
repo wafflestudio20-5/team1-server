@@ -19,8 +19,6 @@ class ReplyEntity(
     @JoinColumn(name = "post_id")
     val post: PostEntity,
 
-    val parentId: Long? = null, // 부모 댓글
-
     val replyGroup: Long, // 부모 댓글 인덱스
 
     val isRoot: Boolean = false, // true : 일반 댓글, false : 대댓글
