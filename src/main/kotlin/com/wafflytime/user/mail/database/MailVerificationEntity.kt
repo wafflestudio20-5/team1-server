@@ -10,6 +10,6 @@ import jakarta.persistence.Table
 class MailVerificationEntity(
     @field:Column(unique = true)
     val userId: Long,
-    val code: String,
-    val email: String,
+    var code: String,
+    var email: String,
 ): BaseTimeEntity()
