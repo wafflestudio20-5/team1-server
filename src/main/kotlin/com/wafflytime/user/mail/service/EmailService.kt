@@ -64,7 +64,7 @@ class EmailService(
         val mailVerification = mailVerificationRepository.findByUserId(userId)
             ?: throw VerificationNotStarted
 
-        if (now <= mailVerification.createdAt!!.plusMinutes(3)) {
+        if (now <= mailVerification.modifiedAt!!.plusMinutes(3)) {
             if (request.code == mailVerification.code) {
                 val user = userService.updateUserMailVerified(userId, mailVerification.email)
 

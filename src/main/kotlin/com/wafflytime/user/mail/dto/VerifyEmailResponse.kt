@@ -10,7 +10,7 @@ data class VerifyEmailResponse(
 
         fun of(entity: MailVerificationEntity) = entity.run {
             VerifyEmailResponse(
-                DateTimeResponse.includeSeconds(createdAt!!.plusMinutes(3))
+                DateTimeResponse.includeSeconds(modifiedAt!!.plusMinutes(3))
             )
         }
     }
