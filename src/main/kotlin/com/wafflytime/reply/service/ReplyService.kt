@@ -42,7 +42,6 @@ class ReplyService(
                 writer = user,
                 post = post,
                 replyGroup = parent?.replyGroup ?: (commentCount(post) + 1),
-                parentId = parent?.id,
                 isRoot = (parent == null),
                 isWriterAnonymous = request.isWriterAnonymous,
                 anonymousId = replyRepositorySupport.getAnonymousId(post, user),
@@ -151,7 +150,6 @@ class ReplyService(
     private fun replyToResponse(reply: ReplyEntity): ReplyResponse {
         return ReplyResponse(
             replyId = reply.id,
-            writerId = reply.writer.id,
             nickname = if (reply.isWriterAnonymous) {
                 if (reply.isPostWriter) "익명(작성자)"
                 else "익명${reply.anonymousId}"
