@@ -6,7 +6,9 @@ import com.wafflytime.chat.database.MessageEntity
 import com.wafflytime.chat.database.MessageRepository
 import com.wafflytime.chat.dto.*
 import com.wafflytime.chat.exception.*
+import com.wafflytime.post.database.PostEntity
 import com.wafflytime.post.service.PostService
+import com.wafflytime.reply.database.ReplyEntity
 import com.wafflytime.reply.service.ReplyService
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.service.UserService
@@ -16,7 +18,6 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.lang.Integer.max
-import java.time.format.DateTimeFormatter
 
 interface ChatService {
     fun createChat(userId: Long, sourceBoardId: Long, sourcePostId: Long, sourceReplyId: Long? = null, request: CreateChatRequest): CreateChatResponse
@@ -39,7 +40,6 @@ class ChatServiceImpl(
     override fun createChat(userId: Long, sourceBoardId: Long, sourcePostId: Long, sourceReplyId: Long?, request: CreateChatRequest): CreateChatResponse {
         val user = userService.getUser(userId)
         val sourcePost = postService.validateBoardAndPost(sourceBoardId, sourcePostId)
-        val sourceBoard = sourcePost.board
         val sourceReply = sourceReplyId?.let {
             replyService.getReplyEntity(sourcePostId, it)
         }
@@ -56,7 +56,7 @@ class ChatServiceImpl(
 
         if (user == target) throw SelfChatForbidden
 
-        // 채팅방 아이덴티티에 바탕으로 기존 채팅방 존재 여부 검색
+        // 채팅방 아이덴티티를 바탕으로 기존 채팅방 존재 여부 검색
         val existingChat =
             if (!request.isAnonymous && !isTargetAnonymous) {
                 // 둘다 익명이 아닌 경우 서로의 아이디만 확인
@@ -85,9 +85,7 @@ class ChatServiceImpl(
 
             systemMessage = sendMessage(
                 chat = newChat,
-                content = "${sourceBoard.title}에 ${
-                    DateTimeFormatter.ofPattern("MM/DD hh:mm").format(sourcePost.createdAt)
-                } 작성된 글을 통해 온 쪽지입니다.",
+                content = buildSystemMessage(sourcePost, sourceReply),
             )
 
             newChat
@@ -177,6 +175,16 @@ class ChatServiceImpl(
             message
         } else {
             message
+        }
+    }
+
+    private fun buildSystemMessage(post: PostEntity, reply: ReplyEntity? = null): String {
+        return if (reply == null) {
+            "${post.board.title}에 작성된 글을 통해 시작된 쪽지 입니다.\n" +
+                    "글 내용: ${post.title ?: post.contents}"
+        } else {
+            "${post.board.title}에 작성된 ${if (reply.isWriterAnonymous) "익명"+reply.anonymousId else reply.writer.nickname}의 댓글을 통해 시작된 쪽지입니다.\n" +
+                    "글 내용: ${post.title ?: post.contents}"
         }
     }
 
