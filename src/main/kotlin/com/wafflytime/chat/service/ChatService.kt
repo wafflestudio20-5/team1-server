@@ -126,21 +126,21 @@ class ChatServiceImpl(
         val chat = getChatEntity(chatId)
         val defaultSize: Int
         chat.run {
-            defaultSize = when (userId) {
-                participant1.id -> unread1
-                participant2.id -> unread2
+            when (userId) {
+                participant1.id -> {
+                    defaultSize = unread1
+                    unread1 = 0
+                }
+                participant2.id -> {
+                    defaultSize = unread2
+                    unread2 = 0
+                }
                 else -> throw UserChatMismatch
             }
         }
 
         val size = size ?: defaultSize
         if (size == 0) throw NoMoreUnreadMessages
-        chat.run {
-            when (userId) {
-                participant1.id -> unread1 = max(0, unread1 - size)
-                participant2.id -> unread2 = max(0, unread2 - size)
-            }
-        }
 
         val pageRequest = PageRequest.of(page, size)
         return messageRepository.findByChatIdPageable(chatId, pageRequest)
