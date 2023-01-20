@@ -40,10 +40,11 @@ class EmailService(
         userService.getUser(userId).univEmail?.let { throw AlreadyMailVerified }
         userService.checkUnivEmailConflict(email)
 
-        mailVerificationRepository.findByUserId(userId)?.let {
-            mailVerificationRepository.delete(it)
-        }
-        val mailVerification = mailVerificationRepository.save(
+        val mailVerification = mailVerificationRepository.findByUserId(userId)?.let {
+            it.code = createCode()
+            it.email = verifyEmailRequest.email
+            it
+        } ?: mailVerificationRepository.save(
             MailVerificationEntity(
                 userId,
                 createCode(),
