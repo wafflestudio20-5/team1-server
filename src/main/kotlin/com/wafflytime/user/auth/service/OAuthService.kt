@@ -35,7 +35,7 @@ class OAuthServiceImpl(
     override fun socialLogin(providerName: String, code: String): AuthToken {
         val socialEmail = getSocialEmail(providerName, code)
         val user = userRepository.findBySocialEmail(socialEmail)
-            ?: throw SocialLoginFailure
+            ?: signUp(socialEmail, "temp-nickname-$socialEmail")
         return authTokenService.buildAuthToken(user, LocalDateTime.now())
     }
 
@@ -43,15 +43,19 @@ class OAuthServiceImpl(
     @Transactional
     override fun socialSignUp(providerName: String, code: String, request: SocialSignUpRequest): AuthToken {
         val socialEmail = getSocialEmail(providerName, code)
+        val user = signUp(socialEmail, request.nickname)
+        return authTokenService.buildAuthToken(user, LocalDateTime.now())
+    }
+
+    private fun signUp(socialEmail: String, nickname: String): UserEntity {
         if (userRepository.findBySocialEmail(socialEmail) != null) {
             throw SocialEmailConflict
         }
-        val user = try {
-            userRepository.save(UserEntity(socialEmail = socialEmail, nickname = request.nickname))
+        return try {
+            userRepository.save(UserEntity(socialEmail = socialEmail, nickname = nickname))
         } catch (e: DataIntegrityViolationException) {
             throw NicknameConflict
         }
-        return authTokenService.buildAuthToken(user, LocalDateTime.now())
     }
 
     fun getSocialEmail(providerName: String, code: String): String {
@@ -68,7 +72,7 @@ class OAuthServiceImpl(
             .accept(MediaType.APPLICATION_JSON)
             .bodyValue(tokenRequest(code, provider))
             .retrieve()
-            .onStatus({it.isError}, {throw InvalidAuthorizationCode})
+            .onStatus({ it.isError }, { throw InvalidAuthorizationCode })
             .bodyToMono(OAuthToken::class.java)
             .block()
             ?: throw InvalidAuthorizationCode
@@ -98,7 +102,7 @@ class OAuthServiceImpl(
             .accept(MediaType.APPLICATION_JSON)
             .headers { header -> header.setBearerAuth(accessToken.accessToken) }
             .retrieve()
-            .onStatus({it.isError}, {throw InvalidOAuthToken})
+            .onStatus({ it.isError }, { throw InvalidOAuthToken })
             .bodyToMono<Map<String, Any>>()
             .block()
             ?: throw InvalidOAuthToken
