@@ -19,6 +19,7 @@ interface PostRepository : JpaRepository<PostEntity, Long>, PostRepositorySuppor
 interface PostRepositorySupport {
     fun getHotPosts(pageable: Pageable): Page<PostEntity>
     fun getBestPosts(pageable: Pageable): Page<PostEntity>
+    fun findPostsByKeyword(keyword: String, pageable: Pageable): Page<PostEntity>
 }
 
 @Component
@@ -35,6 +36,17 @@ class PostRepositorySupportImpl(
 
     override fun getBestPosts(pageable: Pageable): Page<PostEntity> {
         return getPostsOnLikesQuery(pageable, bestPostMinLikes, postEntity.nLikes.desc())
+    }
+
+    override fun findPostsByKeyword(keyword: String, pageable: Pageable): Page<PostEntity> {
+        val result = queryFactory
+            .selectFrom(postEntity)
+            .where(postEntity.contents.contains(keyword))
+            .orderBy(postEntity.createdAt.desc())
+            .offset(pageable.offset)
+            .limit(pageable.pageSize.toLong())
+            .fetch()
+        return PageImpl(result, pageable, result.size.toLong())
     }
 
     private fun getPostsOnLikesQuery(

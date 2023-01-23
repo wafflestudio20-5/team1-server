@@ -96,4 +96,13 @@ class PostController(
     ) : ResponseEntity<Page<PostResponse>> {
         return ResponseEntity.ok(postService.getBestPosts(page, size))
     }
+
+    @GetMapping("/api/posts/search")
+    fun searchBoards(
+        @RequestParam(required = true, value = "keyword") keyword: String,
+        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
+    ) : ResponseEntity<Page<PostResponse>> {
+        return ResponseEntity.ok(postService.searchPosts(keyword, page, size))
+    }
 }

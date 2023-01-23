@@ -152,4 +152,8 @@ class PostService(
             PostResponse.of(it)
         }
     }
+
+    fun searchPosts(keyword: String, page:Int, size:Int): Page<PostResponse> {
+        return postRepository.findPostsByKeyword(keyword, PageRequest.of(page, size)).map{ PostResponse.of(it) }
+    }
 }
