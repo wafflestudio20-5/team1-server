@@ -95,4 +95,8 @@ class BoardService(
         return boardRepository.findByIdOrNull(boardId)
             ?: throw BoardNotFound
     }
+
+    fun getHomeBoards(): List<HomeBoardResponse> {
+        return boardRepository.findHomeBoards().map { HomeBoardResponse.of(it)}
+    }
 }

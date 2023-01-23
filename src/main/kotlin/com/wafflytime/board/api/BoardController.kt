@@ -33,5 +33,8 @@ class BoardController(
         return ResponseEntity.ok().body(boardService.deleteBoard(userId, boardId))
     }
 
-
+    @GetMapping("/api/homeboards")
+    fun getHomePost() : ResponseEntity<List<HomeBoardResponse>> {
+        return ResponseEntity.ok(boardService.getHomeBoards())
+    }
 }
