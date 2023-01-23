@@ -12,11 +12,16 @@ import com.wafflytime.post.exception.*
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.service.UserService
 import jakarta.transaction.Transactional
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import kotlin.system.measureTimeMillis
 
 @Service
 class PostService(
@@ -155,5 +160,9 @@ class PostService(
 
     fun searchPosts(keyword: String, page:Int, size:Int): Page<PostResponse> {
         return postRepository.findPostsByKeyword(keyword, PageRequest.of(page, size)).map{ PostResponse.of(it) }
+    }
+
+    fun getHomePosts(): List<HomePostResponse> {
+        return postRepository.findHomePostsGrouped()
     }
 }
