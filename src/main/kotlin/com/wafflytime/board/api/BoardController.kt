@@ -37,4 +37,9 @@ class BoardController(
     fun getHomePost() : ResponseEntity<List<HomeBoardResponse>> {
         return ResponseEntity.ok(boardService.getHomeBoards())
     }
+
+    @GetMapping("/api/boards/search")
+    fun searchBoards(@RequestParam(required = true, value = "keyword") keyword: String) : ResponseEntity<List<BoardResponse>> {
+        return ResponseEntity.ok(boardService.searchBoards(keyword))
+    }
 }

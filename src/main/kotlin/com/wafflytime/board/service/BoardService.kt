@@ -99,4 +99,8 @@ class BoardService(
     fun getHomeBoards(): List<HomeBoardResponse> {
         return boardRepository.findHomeBoards().map { HomeBoardResponse.of(it)}
     }
+
+    fun searchBoards(keyword: String): List<BoardResponse> {
+        return boardRepository.findBoardsByKeyword(keyword).map { BoardResponse.of(it) }
+    }
 }
