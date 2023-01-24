@@ -3,7 +3,6 @@ package com.wafflytime.user.mail.api
 import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
 import com.wafflytime.user.auth.dto.AuthToken
-import com.wafflytime.user.mail.dto.VerifyEmailResponse
 import com.wafflytime.user.mail.dto.VerifyEmailRequest
 import com.wafflytime.user.mail.service.EmailService
 import com.wafflytime.user.mail.dto.VerifyEmailCode
@@ -21,8 +20,9 @@ class EmailVerificationController(
 
     @ExemptEmailVerification
     @PostMapping("/api/user/verify-mail")
-    fun verifyEmail(@UserIdFromToken userId: Long, @Valid @RequestBody request: VerifyEmailRequest) : ResponseEntity<VerifyEmailResponse> {
-        return ResponseEntity.ok().body(emailService.verifyEmail(userId, request))
+    fun verifyEmail(@UserIdFromToken userId: Long, @Valid @RequestBody request: VerifyEmailRequest) : ResponseEntity<String> {
+        emailService.verifyEmail(userId, request)
+        return ResponseEntity.ok().body("success")
     }
 
     @ExemptEmailVerification

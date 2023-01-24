@@ -2,7 +2,6 @@ package com.wafflytime.user.mail.service
 
 import com.wafflytime.user.auth.dto.AuthToken
 import com.wafflytime.user.auth.service.AuthTokenService
-import com.wafflytime.user.mail.dto.VerifyEmailResponse
 import com.wafflytime.user.mail.dto.VerifyEmailRequest
 import com.wafflytime.user.info.service.UserService
 import com.wafflytime.user.mail.database.MailVerificationEntity
@@ -23,6 +22,7 @@ class EmailService(
 ) {
     private val SNU_MAIL_SUFFIX = "@snu.ac.kr"
     private val CharPool : List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+    private val verificationSecond : Long = 190
 
     fun createCode() : String {
         return (1..8)
@@ -31,7 +31,7 @@ class EmailService(
     }
 
     @Transactional
-    fun verifyEmail(userId: Long, verifyEmailRequest: VerifyEmailRequest) : VerifyEmailResponse {
+    fun verifyEmail(userId: Long, verifyEmailRequest: VerifyEmailRequest) {
         val email = verifyEmailRequest.email
         if (!email.endsWith(SNU_MAIL_SUFFIX)) {
             throw InvalidMailSuffix
@@ -53,8 +53,6 @@ class EmailService(
         )
 
         asyncEmailService.sendEmail(mailVerification.email, mailVerification.code)
-
-        return VerifyEmailResponse.of(mailVerification)
     }
 
     @Transactional
@@ -64,7 +62,7 @@ class EmailService(
         val mailVerification = mailVerificationRepository.findByUserId(userId)
             ?: throw VerificationNotStarted
 
-        if (now <= mailVerification.modifiedAt!!.plusMinutes(3)) {
+        if (now <= mailVerification.modifiedAt!!.plusSeconds(verificationSecond)) {
             if (request.code == mailVerification.code) {
                 val user = userService.updateUserMailVerified(userId, mailVerification.email)
 
