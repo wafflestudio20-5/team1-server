@@ -115,6 +115,10 @@ class ReplyService(
         }
     }
 
+    fun getReplyEntity(postId: Long, replyId: Long): ReplyEntity {
+        return validatePostAndReply(postId, replyId)
+    }
+
     private fun commentCount(post: PostEntity): Long {
         return replyRepositorySupport.getLastReplyGroup(post)
     }
