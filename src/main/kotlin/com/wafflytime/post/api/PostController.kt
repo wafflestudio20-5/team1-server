@@ -103,8 +103,8 @@ class PostController(
         return ResponseEntity.ok(postService.searchPosts(keyword, page, size))
     }
 
-    @GetMapping("/api/homepost")
-    fun getHomePost() : ResponseEntity<List<HomePostResponse>> {
-        return ResponseEntity.ok(postService.getHomePosts())
+    @GetMapping("/api/homeposts")
+    fun getHomePostTest() : ResponseEntity<List<HomePostResponse>> {
+        return ResponseEntity.ok(postService.getHomePostsTest())
     }
 }

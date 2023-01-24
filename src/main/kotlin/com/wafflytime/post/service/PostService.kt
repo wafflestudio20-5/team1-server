@@ -1,27 +1,23 @@
 package com.wafflytime.post.service
 
+import com.wafflytime.board.dto.HomePostResponse
 import com.wafflytime.board.service.BoardService
+import com.wafflytime.board.type.BoardCategory
 import com.wafflytime.board.type.BoardType
+import com.wafflytime.common.RedisService
 import com.wafflytime.common.S3Service
 import com.wafflytime.post.database.*
-import com.wafflytime.post.database.PostEntity
-import com.wafflytime.post.database.PostRepository
 import com.wafflytime.post.database.image.ImageColumn
 import com.wafflytime.post.dto.*
 import com.wafflytime.post.exception.*
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.service.UserService
 import jakarta.transaction.Transactional
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import kotlin.system.measureTimeMillis
 
 @Service
 class PostService(
@@ -30,8 +26,10 @@ class PostService(
     private val scrapRepository: ScrapRepository,
     private val boardService: BoardService,
     private val userService: UserService,
-    private val s3Service: S3Service
+    private val s3Service: S3Service,
+    private val redisService: RedisService,
 ) {
+
 
     @Transactional
     fun createPost(userId: Long, boardId: Long, request: CreatePostRequest) : PostResponse {
@@ -56,8 +54,11 @@ class PostService(
             board = board,
             isQuestion = request.isQuestion,
             isWriterAnonymous = request.isWriterAnonymous
+            )
         )
-        )
+        if (board.category in listOf(BoardCategory.BASIC, BoardCategory.CAREER)) {
+            redisService.save(post)
+        }
         return PostResponse.of(post, s3ImageUrlDtoList?.map { ImageResponse.of(it) })
     }
 
@@ -162,7 +163,7 @@ class PostService(
         return postRepository.findPostsByKeyword(keyword, PageRequest.of(page, size)).map{ PostResponse.of(it) }
     }
 
-    fun getHomePosts(): List<HomePostResponse> {
-        return postRepository.findHomePostsGrouped()
+    fun getHomePostsTest(): List<HomePostResponse> {
+        return redisService.getLatestPostsGroup()
     }
 }

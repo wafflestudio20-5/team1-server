@@ -73,8 +73,8 @@ dependencies {
 	// coroutines
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
 
-
-
+	// redis
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 }
 
 // QueryDSL

@@ -37,6 +37,10 @@ spring:
       cache: false
       check-template-location: true
 
+  redis:
+    host: localhost
+    port: 6379
+
 auth.jwt:
   issuer: ${JWT_ISSUER}
   accessSecret: ${JWT_ACCESS_SECRET}

@@ -5,8 +5,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory
 import com.wafflytime.board.database.QBoardEntity.boardEntity
 import com.wafflytime.board.type.BoardCategory
 import com.wafflytime.post.database.QPostEntity.postEntity
-import com.wafflytime.post.dto.HomePostResponse
-import com.wafflytime.post.dto.PostResponse
 import kotlinx.coroutines.*
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -24,7 +22,7 @@ interface PostRepositorySupport {
     fun getHotPosts(pageable: Pageable): Page<PostEntity>
     fun getBestPosts(pageable: Pageable): Page<PostEntity>
     fun findPostsByKeyword(keyword: String, pageable: Pageable): Page<PostEntity>
-    fun findHomePostsGrouped() : List<HomePostResponse>
+    fun findHomePostsByQuery() : List<PostEntity>
 }
 
 @Component
@@ -56,7 +54,7 @@ class PostRepositorySupportImpl(
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun findHomePostsGrouped(): List<HomePostResponse> {
+    override fun findHomePostsByQuery(): List<PostEntity> {
         val boards = queryFactory.select(boardEntity)
             .from(boardEntity)
             .where(boardEntity.category.`in`(BoardCategory.BASIC, BoardCategory.CAREER))
@@ -72,13 +70,7 @@ class PostRepositorySupportImpl(
             })
         }
         runBlocking { future.forEach { it.await() } }
-
-        return boards.mapIndexed { index, boardEntity
-            ->
-            HomePostResponse.of(
-                boardEntity,
-                future[index].getCompleted().map { PostResponse.of(it) }
-            ) }
+        return future.flatMap { it.getCompleted().reversed() }
     }
 
 
