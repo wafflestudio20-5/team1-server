@@ -9,16 +9,15 @@ data class RedisPostDto(
     val boardTitle: String,
     val postId: Long,
     val title: String?,
-    val contents: String,
-    val images: Map<String, ImageColumn>?,
+    var contents: String,
+    var images: Map<String, ImageColumn>?,
     val createdAt: DateTimeResponse,
 
     // Redis 저장할 때 n 으로 시작하는 camel case는 redis가 맘대로 바꿔버린다... + "is"로 시작하는 이름은 아예 is를 제거해버림
-    val nlikes: Int,
-    val nscraps: Int,
-    val nreplies: Int
+    var nlikes: Int,
+    var nreplies: Int
 ) {
-    constructor() : this(-1, "", -1, "", "", null, DateTimeResponse(), -1, -1, -1)
+    constructor() : this(-1, "", -1, "", "", null, DateTimeResponse(), -1, -1)
 
     companion object {
         fun of(postEntity: PostEntity) : RedisPostDto {
@@ -31,7 +30,6 @@ data class RedisPostDto(
                 postEntity.images,
                 DateTimeResponse.of(postEntity.createdAt!!),
                 postEntity.nLikes,
-                postEntity.nScraps,
                 postEntity.nReplies
             )
         }

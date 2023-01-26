@@ -59,6 +59,48 @@ class RedisService(
         return future.map { it.getCompleted() }.sortedBy { it.boardId }
     }
 
+    fun updateCacheByDeletedPost(post: PostEntity) {
+        val (boardKey, cacheItems) = finCacheListByBoard(post.board)
+
+        cacheItems?.find { it.postId == post.id }?.run {
+            // delete할 item이 cache에 있는 경우 db에서 최신 4개 2개를 다시 fetch 해와 push 해준다
+            // redis list에서 특정 index에 있는 아이템을 삭제하는 api가 보이지 않고,
+            // db에서 2번째 혹은 4번째 최신 item을 db에서 가져오는거나 최신 2개 혹은 4개의 모든 item을 가져오는게 큰 차이가 없을 것 같아
+            // 아래와 같이 4개를 새로 가져와 새로 redis로 올려줬다
+            flushAndPushAllCache(
+                boardKey,
+                postRepository.findHomePostsByQuery(post.board.id, getMaxPostSize(post.board.type))
+                    .map { RedisPostDto.of(it) }
+            )
+        }
+    }
+
+    fun updateCacheByUpdatedPost(post: PostEntity) {
+        val (boardKey, cacheItems) = finCacheListByBoard(post.board)
+        cacheItems?.forEachIndexed { index, redisPostDto ->
+            if (redisPostDto.postId == post.id) {
+                cacheItems[index] = RedisPostDto.of(post)
+            }
+        }
+        flushAndPushAllCache(boardKey, cacheItems)
+    }
+
+    fun updateCacheByLikeOrReplyPost(post: PostEntity) {
+        val (boardKey, cacheItems) = finCacheListByBoard(post.board)
+        cacheItems?.find { it.postId == post.id }?.let {
+            it.nlikes = post.nLikes
+            it.nreplies = post.nReplies
+        }
+        flushAndPushAllCache(boardKey, cacheItems)
+    }
+
+    private fun flushAndPushAllCache(boardKey: String, cacheItems: List<RedisPostDto>?) {
+        cacheItems?.let {
+            redisPostTemplate.opsForList().operations.opsForList().leftPop(boardKey, cacheItems.size.toLong())
+            redisPostTemplate.opsForList().operations.opsForList().rightPushAll(boardKey, it)
+        }
+    }
+
     private fun getBoardKey(board: BoardEntity) : String {
         return "board:${board.id}:${board.type.name}:${board.title}"
     }
@@ -70,5 +112,12 @@ class RedisService(
 
     private fun getMaxPostSize(boardType: BoardType) : Long {
         return if (boardType.name.startsWith("CUSTOM")) 2 else 4
+    }
+
+    private fun finCacheListByBoard(board: BoardEntity) : Pair<String, MutableList<RedisPostDto>?> {
+        val boardKey = getBoardKey(board)
+        val cacheItems = redisPostTemplate.opsForList().operations.opsForList()
+            .range(boardKey, 0, getMaxPostSize(board.type))
+        return Pair(boardKey, cacheItems)
     }
 }

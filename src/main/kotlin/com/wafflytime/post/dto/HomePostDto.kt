@@ -11,7 +11,6 @@ data class HomePostDto(
     val contents: String,
     val images: List<ImageResponse>?,
     val nLikes: Int,
-    val nScraps: Int,
     val nReplies: Int
 ) {
     companion object {
@@ -25,7 +24,6 @@ data class HomePostDto(
                 contents = redisPostDto.contents,
                 images = images,
                 nLikes = redisPostDto.nlikes,
-                nScraps = redisPostDto.nscraps,
                 nReplies = redisPostDto.nreplies
             )
         }

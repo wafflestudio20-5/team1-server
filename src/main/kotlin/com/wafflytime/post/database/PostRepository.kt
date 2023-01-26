@@ -23,6 +23,7 @@ interface PostRepositorySupport {
     fun getBestPosts(pageable: Pageable): Page<PostEntity>
     fun findPostsByKeyword(keyword: String, pageable: Pageable): Page<PostEntity>
     fun findHomePostsByQuery() : List<PostEntity>
+    fun findHomePostsByQuery(boardId: Long, count: Long) : List<PostEntity>
 }
 
 @Component
@@ -73,6 +74,9 @@ class PostRepositorySupportImpl(
         return future.flatMap { it.getCompleted().reversed() }
     }
 
+    override fun findHomePostsByQuery(boardId: Long, count: Long): List<PostEntity> {
+        return findLatestPosts(boardId=boardId, limit = count)
+    }
 
     private fun findLatestPosts(boardId: Long, limit: Long) : List<PostEntity> {
         return queryFactory.selectFrom(postEntity)

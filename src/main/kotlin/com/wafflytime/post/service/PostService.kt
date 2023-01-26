@@ -84,6 +84,7 @@ class PostService(
         if (userId == post.writer.id || user.isAdmin || userId == post.board.owner!!.id) {
             s3Service.deleteFiles(post.images)
             postRepository.delete(post)
+            redisService.updateCacheByDeletedPost(post)
             return DeletePostResponse(
                 boardId = boardId,
                 boardTitle = post.board.title,
@@ -102,6 +103,7 @@ class PostService(
 
         val updatedS3ImageUrlDtoList = s3Service.updateImageRequest(post.images, request)
         post.update(request, getImagesEntityFromS3ImageUrl(updatedS3ImageUrlDtoList))
+        redisService.updateCacheByUpdatedPost(post)
         return PostResponse.of(post, updatedS3ImageUrlDtoList?.map { ImageResponse.of(it) })
     }
 
@@ -126,6 +128,7 @@ class PostService(
 
         postLikeRepository.save(PostLikeEntity(user = user, post = post))
         post.nLikes++
+        redisService.updateCacheByLikeOrReplyPost(post)
         return PostResponse.of(post)
     }
 

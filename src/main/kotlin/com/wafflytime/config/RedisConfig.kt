@@ -34,6 +34,7 @@ class RedisConfig {
         redisTemplate.setConnectionFactory(redisConnectionFactory)
         redisTemplate.keySerializer = StringRedisSerializer()
         redisTemplate.valueSerializer = GenericJackson2JsonRedisSerializer()
+        redisTemplate.setEnableTransactionSupport(true)
         return redisTemplate
     }
 
