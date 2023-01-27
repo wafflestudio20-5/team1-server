@@ -100,6 +100,7 @@ jobs:
             docker start $(docker ps -a | grep mysql | cut -d " " -f1)
             aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
             docker pull ${{ secrets[format('AWS_ECR{0}', steps.set_suffix.outputs.suffix)] }}:${{ steps.commit.outputs.short }}
+            docker run --name some-redis -p 6379:6379 -d redis
             docker run \
               -dp 80:8080 \
               -e MAIL_USERNAME=${{ secrets.MAIL_USERNAME }} \
