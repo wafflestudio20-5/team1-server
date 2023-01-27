@@ -1,6 +1,7 @@
 package com.wafflytime.post.api
 
 import com.wafflytime.board.dto.*
+import com.wafflytime.board.type.BoardCategory
 import com.wafflytime.config.UserIdFromToken
 import com.wafflytime.post.dto.*
 import com.wafflytime.post.service.PostService
@@ -106,5 +107,13 @@ class PostController(
     @GetMapping("/api/homeposts")
     fun getHomePostTest() : ResponseEntity<List<HomePostResponse>> {
         return ResponseEntity.ok(postService.getHomePostsTest())
+    }
+
+    @GetMapping("/api/latestposts")
+    fun getLatestPostsByCategory(
+        @RequestParam(required = true, value = "category") category: BoardCategory,
+        @RequestParam(required = false, value = "size", defaultValue = "2") size: Int
+    ) : ResponseEntity<List<PostResponse>> {
+        return ResponseEntity.ok(postService.getLatestPostsByCategory(category, size))
     }
 }

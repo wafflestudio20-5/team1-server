@@ -62,7 +62,7 @@ class RedisService(
         cacheItems?.find { it.postId == post.id }?.run {
             flushAndPushAllCache(
                 boardKey,
-                postRepository.findHomePostsByQuery(post.board.id, getMaxPostSize(post.board.type))
+                postRepository.findLatestPostsByBoardId(post.board.id, getMaxPostSize(post.board.type))
                     .map { RedisPostDto.of(it) }
             )
         }
@@ -84,9 +84,7 @@ class RedisService(
         cacheItems?.find { it.postId == post.id }?.let {
             it.nlikes = post.nLikes
             it.nreplies = post.nReplies
-        }?.run {
-            flushAndPushAllCache(boardKey, cacheItems)
-        }
+        }?.run { flushAndPushAllCache(boardKey, cacheItems) }
     }
 
     private fun flushAndPushAllCache(boardKey: String, cacheItems: List<RedisPostDto>?) {

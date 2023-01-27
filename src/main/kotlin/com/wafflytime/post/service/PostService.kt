@@ -169,4 +169,8 @@ class PostService(
     fun getHomePostsTest(): List<HomePostResponse> {
         return redisService.getLatestPostsGroup()
     }
+
+    fun getLatestPostsByCategory(category: BoardCategory, size: Int): List<PostResponse> {
+        return postRepository.findLatestPostsByCategory(category, size).map { PostResponse.of(it) }
+    }
 }

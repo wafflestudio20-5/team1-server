@@ -1,6 +1,7 @@
 package com.wafflytime.post.database
 
 import com.querydsl.core.types.OrderSpecifier
+import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.wafflytime.board.database.QBoardEntity.boardEntity
 import com.wafflytime.board.type.BoardCategory
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Component
 interface PostRepository : JpaRepository<PostEntity, Long>, PostRepositorySupport {
     fun findAllByBoardId(boardId: Long, pageable: Pageable) : Page<PostEntity>
     fun findAllByWriterId(writerId: Long, pageable: Pageable): Page<PostEntity>
-
 }
 
 interface PostRepositorySupport {
@@ -23,7 +23,8 @@ interface PostRepositorySupport {
     fun getBestPosts(pageable: Pageable): Page<PostEntity>
     fun findPostsByKeyword(keyword: String, pageable: Pageable): Page<PostEntity>
     fun findHomePostsByQuery() : List<PostEntity>
-    fun findHomePostsByQuery(boardId: Long, count: Long) : List<PostEntity>
+    fun findLatestPostsByCategory(category: BoardCategory, size: Int): List<PostEntity>
+    fun findLatestPostsByBoardId(boardId: Long, limit: Long) : List<PostEntity>
 }
 
 @Component
@@ -53,7 +54,6 @@ class PostRepositorySupportImpl(
         return PageImpl(result, pageable, result.size.toLong())
     }
 
-
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun findHomePostsByQuery(): List<PostEntity> {
         val boards = queryFactory.select(boardEntity)
@@ -65,7 +65,7 @@ class PostRepositorySupportImpl(
 
         boards.forEach {
             future.add(CoroutineScope(Dispatchers.Default).async {
-                findLatestPosts(
+                findLatestPostsByBoardId(
                     boardId = it.id,
                     limit = if (it.type.name.startsWith("CUSTOM")) 2 else 4)
             })
@@ -74,14 +74,18 @@ class PostRepositorySupportImpl(
         return future.flatMap { it.getCompleted().reversed() }
     }
 
-    override fun findHomePostsByQuery(boardId: Long, count: Long): List<PostEntity> {
-        return findLatestPosts(boardId=boardId, limit = count)
+    override fun findLatestPostsByCategory(category: BoardCategory, size: Int): List<PostEntity> {
+        return findLatestPosts(boardEntity.category.eq(category), size.toLong())
     }
 
-    private fun findLatestPosts(boardId: Long, limit: Long) : List<PostEntity> {
+    override fun findLatestPostsByBoardId(boardId: Long, limit: Long) : List<PostEntity> {
+        return findLatestPosts(boardEntity.id.eq(boardId), limit)
+    }
+
+    private fun findLatestPosts(whereCondition: BooleanExpression, limit: Long) : List<PostEntity> {
         return queryFactory.selectFrom(postEntity)
             .leftJoin(boardEntity).on(postEntity.board.id.eq(boardEntity.id))
-            .where(boardEntity.id.eq(boardId))
+            .where(whereCondition)
             .orderBy(postEntity.createdAt.desc())
             .limit(limit)
             .fetch()
