@@ -13,6 +13,7 @@ import org.springframework.context.event.EventListener
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 
+
 @Service
 class RedisService(
     private val redisPostTemplate: RedisTemplate<String, RedisPostDto>,
@@ -29,11 +30,7 @@ class RedisService(
         val operations = redisPostTemplate.opsForList()
         operations.leftPush(boardKey, RedisPostDto.of(post))
 
-        val maxSize = getMaxPostSize(post.board.type)
-        val size = operations.size(boardKey) ?: 0
-        if (size > maxSize) {
-            operations.rightPop(boardKey, size-maxSize)
-        }
+        popMaxOveredCache(boardKey, getMaxPostSize(post.board.type))
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -48,7 +45,7 @@ class RedisService(
             future.add(
                 CoroutineScope(Dispatchers.Default).async {
                     HomePostResponse.of(boardId = boardId, boardTitle=boardTitle, boardType=boardType,
-                        posts = redisPostTemplate.opsForList().operations.opsForList().range(it, 0, getMaxPostSize(boardType))?.map {
+                        posts = redisPostTemplate.opsForList().operations.opsForList().range(it, 0, getMaxPostSize(boardType)-1)?.map {
                                 redisPost -> HomePostDto.of(redisPost, s3Service.getPreSignedUrlsFromS3Keys(redisPost.images))
                         } ?: listOf()
                     )
@@ -63,10 +60,6 @@ class RedisService(
         val (boardKey, cacheItems) = finCacheListByBoard(post.board)
 
         cacheItems?.find { it.postId == post.id }?.run {
-            // delete할 item이 cache에 있는 경우 db에서 최신 4개 2개를 다시 fetch 해와 push 해준다
-            // redis list에서 특정 index에 있는 아이템을 삭제하는 api가 보이지 않고,
-            // db에서 2번째 혹은 4번째 최신 item을 db에서 가져오는거나 최신 2개 혹은 4개의 모든 item을 가져오는게 큰 차이가 없을 것 같아
-            // 아래와 같이 4개를 새로 가져와 새로 redis로 올려줬다
             flushAndPushAllCache(
                 boardKey,
                 postRepository.findHomePostsByQuery(post.board.id, getMaxPostSize(post.board.type))
@@ -80,9 +73,10 @@ class RedisService(
         cacheItems?.forEachIndexed { index, redisPostDto ->
             if (redisPostDto.postId == post.id) {
                 cacheItems[index] = RedisPostDto.of(post)
+                flushAndPushAllCache(boardKey, cacheItems)
+                return
             }
         }
-        flushAndPushAllCache(boardKey, cacheItems)
     }
 
     fun updateCacheByLikeOrReplyPost(post: PostEntity) {
@@ -90,14 +84,23 @@ class RedisService(
         cacheItems?.find { it.postId == post.id }?.let {
             it.nlikes = post.nLikes
             it.nreplies = post.nReplies
+        }?.run {
+            flushAndPushAllCache(boardKey, cacheItems)
         }
-        flushAndPushAllCache(boardKey, cacheItems)
     }
 
     private fun flushAndPushAllCache(boardKey: String, cacheItems: List<RedisPostDto>?) {
-        cacheItems?.let {
-            redisPostTemplate.opsForList().operations.opsForList().leftPop(boardKey, cacheItems.size.toLong())
-            redisPostTemplate.opsForList().operations.opsForList().rightPushAll(boardKey, it)
+        cacheItems?.reversed()?.let{
+            redisPostTemplate.opsForList().operations.opsForList().leftPushAll(boardKey, it)
+            popMaxOveredCache(boardKey, cacheItems.size.toLong())
+        }
+    }
+
+    private fun popMaxOveredCache(boardKey: String, maxSize: Long) {
+        val operations = redisPostTemplate.opsForList()
+        val size = operations.size(boardKey) ?: 0
+        if (size > maxSize) {
+            operations.rightPop(boardKey, size-maxSize)
         }
     }
 
