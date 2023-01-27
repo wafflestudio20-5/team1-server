@@ -1,24 +1,30 @@
 package com.wafflytime.post.database
 
 import com.querydsl.core.types.OrderSpecifier
+import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.jpa.impl.JPAQueryFactory
+import com.wafflytime.board.database.QBoardEntity.boardEntity
+import com.wafflytime.board.type.BoardCategory
 import com.wafflytime.post.database.QPostEntity.postEntity
+import kotlinx.coroutines.*
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Component
 
-
 interface PostRepository : JpaRepository<PostEntity, Long>, PostRepositorySupport {
     fun findAllByBoardId(boardId: Long, pageable: Pageable) : Page<PostEntity>
     fun findAllByWriterId(writerId: Long, pageable: Pageable): Page<PostEntity>
-
 }
 
 interface PostRepositorySupport {
     fun getHotPosts(pageable: Pageable): Page<PostEntity>
     fun getBestPosts(pageable: Pageable): Page<PostEntity>
+    fun findPostsByKeyword(keyword: String, pageable: Pageable): Page<PostEntity>
+    fun findHomePostsByQuery() : List<PostEntity>
+    fun findLatestPostsByCategory(category: BoardCategory, size: Int): List<PostEntity>
+    fun findLatestPostsByBoardId(boardId: Long, limit: Long) : List<PostEntity>
 }
 
 @Component
@@ -35,6 +41,54 @@ class PostRepositorySupportImpl(
 
     override fun getBestPosts(pageable: Pageable): Page<PostEntity> {
         return getPostsOnLikesQuery(pageable, bestPostMinLikes, postEntity.nLikes.desc())
+    }
+
+    override fun findPostsByKeyword(keyword: String, pageable: Pageable): Page<PostEntity> {
+        val result = queryFactory
+            .selectFrom(postEntity)
+            .where(postEntity.contents.contains(keyword))
+            .orderBy(postEntity.createdAt.desc())
+            .offset(pageable.offset)
+            .limit(pageable.pageSize.toLong())
+            .fetch()
+        return PageImpl(result, pageable, result.size.toLong())
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun findHomePostsByQuery(): List<PostEntity> {
+        val boards = queryFactory.select(boardEntity)
+            .from(boardEntity)
+            .where(boardEntity.category.`in`(BoardCategory.BASIC, BoardCategory.CAREER))
+            .fetch()
+
+        val future = mutableListOf<Deferred<List<PostEntity>>>()
+
+        boards.forEach {
+            future.add(CoroutineScope(Dispatchers.Default).async {
+                findLatestPostsByBoardId(
+                    boardId = it.id,
+                    limit = if (it.type.name.startsWith("CUSTOM")) 2 else 4)
+            })
+        }
+        runBlocking { future.forEach { it.await() } }
+        return future.flatMap { it.getCompleted().reversed() }
+    }
+
+    override fun findLatestPostsByCategory(category: BoardCategory, size: Int): List<PostEntity> {
+        return findLatestPosts(boardEntity.category.eq(category), size.toLong())
+    }
+
+    override fun findLatestPostsByBoardId(boardId: Long, limit: Long) : List<PostEntity> {
+        return findLatestPosts(boardEntity.id.eq(boardId), limit)
+    }
+
+    private fun findLatestPosts(whereCondition: BooleanExpression, limit: Long) : List<PostEntity> {
+        return queryFactory.selectFrom(postEntity)
+            .leftJoin(boardEntity).on(postEntity.board.id.eq(boardEntity.id))
+            .where(whereCondition)
+            .orderBy(postEntity.createdAt.desc())
+            .limit(limit)
+            .fetch()
     }
 
     private fun getPostsOnLikesQuery(

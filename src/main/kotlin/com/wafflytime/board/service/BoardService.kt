@@ -95,4 +95,10 @@ class BoardService(
         return boardRepository.findByIdOrNull(boardId)
             ?: throw BoardNotFound
     }
+
+
+    fun searchBoards(keyword: String): List<BoardResponse> {
+        return boardRepository.findBoardsByKeyword(keyword).map { BoardResponse.of(it) }
+    }
+
 }

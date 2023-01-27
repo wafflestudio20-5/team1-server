@@ -33,5 +33,8 @@ class BoardController(
         return ResponseEntity.ok().body(boardService.deleteBoard(userId, boardId))
     }
 
-
+    @GetMapping("/api/boards/search")
+    fun searchBoards(@RequestParam(required = true, value = "keyword") keyword: String) : ResponseEntity<List<BoardResponse>> {
+        return ResponseEntity.ok(boardService.searchBoards(keyword))
+    }
 }

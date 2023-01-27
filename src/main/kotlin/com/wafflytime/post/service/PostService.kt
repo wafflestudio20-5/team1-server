@@ -1,11 +1,12 @@
 package com.wafflytime.post.service
 
+import com.wafflytime.board.dto.HomePostResponse
 import com.wafflytime.board.service.BoardService
+import com.wafflytime.board.type.BoardCategory
 import com.wafflytime.board.type.BoardType
+import com.wafflytime.common.RedisService
 import com.wafflytime.common.S3Service
 import com.wafflytime.post.database.*
-import com.wafflytime.post.database.PostEntity
-import com.wafflytime.post.database.PostRepository
 import com.wafflytime.post.database.image.ImageColumn
 import com.wafflytime.post.dto.*
 import com.wafflytime.post.exception.*
@@ -25,8 +26,10 @@ class PostService(
     private val scrapRepository: ScrapRepository,
     private val boardService: BoardService,
     private val userService: UserService,
-    private val s3Service: S3Service
+    private val s3Service: S3Service,
+    private val redisService: RedisService,
 ) {
+
 
     @Transactional
     fun createPost(userId: Long, boardId: Long, request: CreatePostRequest) : PostResponse {
@@ -51,8 +54,11 @@ class PostService(
             board = board,
             isQuestion = request.isQuestion,
             isWriterAnonymous = request.isWriterAnonymous
+            )
         )
-        )
+        if (board.category in listOf(BoardCategory.BASIC, BoardCategory.CAREER)) {
+            redisService.save(post)
+        }
         return PostResponse.of(post, s3ImageUrlDtoList?.map { ImageResponse.of(it) })
     }
 
@@ -78,6 +84,7 @@ class PostService(
         if (userId == post.writer.id || user.isAdmin || userId == post.board.owner!!.id) {
             s3Service.deleteFiles(post.images)
             postRepository.delete(post)
+            redisService.updateCacheByDeletedPost(post)
             return DeletePostResponse(
                 boardId = boardId,
                 boardTitle = post.board.title,
@@ -96,6 +103,7 @@ class PostService(
 
         val updatedS3ImageUrlDtoList = s3Service.updateImageRequest(post.images, request)
         post.update(request, getImagesEntityFromS3ImageUrl(updatedS3ImageUrlDtoList))
+        redisService.updateCacheByUpdatedPost(post)
         return PostResponse.of(post, updatedS3ImageUrlDtoList?.map { ImageResponse.of(it) })
     }
 
@@ -120,6 +128,7 @@ class PostService(
 
         postLikeRepository.save(PostLikeEntity(user = user, post = post))
         post.nLikes++
+        redisService.updateCacheByLikeOrReplyPost(post)
         return PostResponse.of(post)
     }
 
@@ -151,5 +160,17 @@ class PostService(
         return postRepository.getBestPosts(PageRequest.of(page, size)).map {
             PostResponse.of(it)
         }
+    }
+
+    fun searchPosts(keyword: String, page:Int, size:Int): Page<PostResponse> {
+        return postRepository.findPostsByKeyword(keyword, PageRequest.of(page, size)).map{ PostResponse.of(it) }
+    }
+
+    fun getHomePostsTest(): List<HomePostResponse> {
+        return redisService.getLatestPostsGroup()
+    }
+
+    fun getLatestPostsByCategory(category: BoardCategory, size: Int): List<PostResponse> {
+        return postRepository.findLatestPostsByCategory(category, size).map { PostResponse.of(it) }
     }
 }

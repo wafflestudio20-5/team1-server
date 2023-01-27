@@ -1,5 +1,6 @@
 package com.wafflytime.reply.service
 
+import com.wafflytime.common.RedisService
 import com.wafflytime.notification.dto.NotificationDto
 import com.wafflytime.notification.service.NotificationService
 import com.wafflytime.post.database.PostEntity
@@ -25,6 +26,7 @@ class ReplyService(
     private val notificationService: NotificationService,
     private val replyRepository: ReplyRepository,
     private val replyRepositorySupport: ReplyRepositorySupport,
+    private val redisService: RedisService
 ) {
     @Transactional
     fun createReply(userId: Long, boardId: Long, postId: Long, request: CreateReplyRequest): ReplyResponse {
@@ -55,6 +57,8 @@ class ReplyService(
         if (!reply.isPostWriter) {
             notificationService.send(NotificationDto.fromReply(receiver = parent?.writer ?: post.writer, reply=reply))
         }
+        redisService.updateCacheByLikeOrReplyPost(post)
+
         return replyToResponse(reply)
     }
 
