@@ -9,6 +9,7 @@ data class DateTimeResponse(
     val hour: Int,
     val minute: Int,
 ) {
+    constructor() : this(-1, -1, -1, -1, -1)
 
     companion object {
 

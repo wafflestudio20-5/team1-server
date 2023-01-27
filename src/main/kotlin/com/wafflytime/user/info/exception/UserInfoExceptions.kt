@@ -14,3 +14,5 @@ object LoginIdConflict : UserInfo409("이미 사용중인 아이디입니다", 1
 object NicknameConflict : UserInfo409("이미 사용중인 닉네임입니다", 2)
 object MailConflict : UserInfo409("이미 해당 학교 메일로 인증한 계정이 존재합니다", 3)
 object NotScrapped : UserInfo400("스크랩하지 않은 게시물입니다", 4)
+object InsufficientPasswordUpdateInfo : UserInfo400("비밀번호를 변경할 때 기존 비밀번호와 새 비밀번호 둘 다 필요", 5)
+object PasswordMismatch : UserInfo403("비밀번호가 틀렸습니다", 6)

@@ -1,5 +1,6 @@
 package com.wafflytime.reply.service
 
+import com.wafflytime.common.RedisService
 import com.wafflytime.notification.dto.NotificationDto
 import com.wafflytime.notification.service.NotificationService
 import com.wafflytime.post.database.PostEntity
@@ -25,6 +26,7 @@ class ReplyService(
     private val notificationService: NotificationService,
     private val replyRepository: ReplyRepository,
     private val replyRepositorySupport: ReplyRepositorySupport,
+    private val redisService: RedisService
 ) {
     @Transactional
     fun createReply(userId: Long, boardId: Long, postId: Long, request: CreateReplyRequest): ReplyResponse {
@@ -55,6 +57,8 @@ class ReplyService(
         if (!reply.isPostWriter) {
             notificationService.send(NotificationDto.fromReply(receiver = parent?.writer ?: post.writer, reply=reply))
         }
+        redisService.updateCacheByLikeOrReplyPost(post)
+
         return replyToResponse(reply)
     }
 
@@ -78,11 +82,11 @@ class ReplyService(
     @Transactional
     fun deleteReply(userId: Long, boardId: Long, postId: Long, replyId: Long) {
         val post = postService.validateBoardAndPost(boardId, postId)
+        val board = post.board
         val reply = validatePostAndReply(postId, replyId)
         val user = userService.getUser(userId)
 
-        // TODO: board 관리자도 추가 필요?
-        if (userId == reply.writer.id || user.isAdmin) {
+        if (userId == reply.writer.id || userId == board.owner?.id || user.isAdmin) {
             reply.delete()
             post.nReplies--
 
@@ -113,6 +117,10 @@ class ReplyService(
         return replyRepositorySupport.getReplies(post, pageRequest).map {
             replyToResponse(it)
         }
+    }
+
+    fun getReplyEntity(postId: Long, replyId: Long): ReplyEntity {
+        return validatePostAndReply(postId, replyId)
     }
 
     private fun commentCount(post: PostEntity): Long {

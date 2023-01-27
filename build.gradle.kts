@@ -70,7 +70,11 @@ dependencies {
 //	implementation("com.squareup.retrofit2:converter-gson:2.7.1")
 	implementation("org.json:json:20211205")
 
+	// coroutines
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
 
+	// redis
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 }
 
 // QueryDSL
