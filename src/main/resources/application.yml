@@ -37,9 +37,6 @@ spring:
       cache: false
       check-template-location: true
 
-  redis:
-    host: localhost
-    port: 6379
 
 auth.jwt:
   issuer: ${JWT_ISSUER}
@@ -105,6 +102,10 @@ spring:
     hibernate:
       ddl-auto: update
 
+  redis:
+    host: localhost
+    port: 6379
+
 ---
 spring:
   config:
@@ -123,6 +124,10 @@ spring:
         show_sql: true
     hibernate:
       ddl-auto: update
+
+  redis:
+    host: host.docker.internal
+    port: 6379
 
 
 ---
@@ -143,3 +148,7 @@ spring:
         show_sql: false
     hibernate:
       ddl-auto: update
+
+  redis:
+    host: host.docker.internal
+    port: 6379
