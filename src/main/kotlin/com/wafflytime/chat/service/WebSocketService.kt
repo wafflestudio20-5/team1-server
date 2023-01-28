@@ -6,6 +6,8 @@ import com.wafflytime.chat.dto.WebSocketReceiveMessage
 import com.wafflytime.chat.dto.WebSocketSendMessage
 import com.wafflytime.chat.exception.UserChatMismatch
 import com.wafflytime.chat.exception.WebsocketAttributeError
+import com.wafflytime.notification.dto.NotificationDto
+import com.wafflytime.notification.service.NotificationService
 import org.springframework.stereotype.Service
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
@@ -21,6 +23,7 @@ interface WebSocketService {
 @Service
 class WebSocketServiceImpl(
     private val chatService: ChatService,
+    private val notificationService: NotificationService,
 ) : WebSocketService {
 
     private val webSocketSessions: MutableMap<Long, WebSocketSession> = mutableMapOf()
@@ -73,7 +76,11 @@ class WebSocketServiceImpl(
             )
             webSocketSessions[receiver.id]?.sendMessage(
                 convertToTextMessage(toReceiver)
-            )
+            ) ?: run {
+                notificationService.send(
+                    NotificationDto.fromMessage(receiver, messageEntity)
+                )
+            }
         } else {
             session.sendMessage(
                 convertToTextMessage(WebSocketReceiveMessage.of(userId, messageEntity))
