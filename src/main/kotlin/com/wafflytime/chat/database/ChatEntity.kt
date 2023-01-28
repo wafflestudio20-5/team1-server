@@ -35,4 +35,12 @@ class ChatEntity(
         }
     }
 
+    fun getSenderAndReceiver(senderId: Long): Pair<UserEntity, UserEntity> {
+        return when (senderId) {
+            participant1.id -> Pair(participant1, participant2)
+            participant2.id -> Pair(participant2, participant1)
+            else -> throw TODO()
+        }
+    }
+
 }

@@ -24,6 +24,8 @@ interface ChatService {
     fun getChats(userId: Long): List<ChatSimpleInfo>
     fun getMessages(userId: Long, chatId: Long, page: Int, size: Int?): Page<MessageInfo>
     fun updateChatBlock(userId: Long, chatId: Long, request: UpdateChatBlockRequest): ChatSimpleInfo
+    fun getChatEntity(chatId: Long): ChatEntity
+    fun saveMessage(chatEntity: ChatEntity, messageEntity: MessageEntity): MessageEntity
 }
 
 @Service
@@ -84,7 +86,7 @@ class ChatServiceImpl(
 
             systemMessage = sendMessage(
                 chat = newChat,
-                content = buildSystemMessage(sourcePost, sourceReply),
+                contents = buildSystemMessage(sourcePost, sourceReply),
             )
 
             newChat
@@ -109,7 +111,7 @@ class ChatServiceImpl(
         val chat = getChatEntity(chatId)
         validateChatParticipant(user, chat)
 
-        val message = sendMessage(chat, user, request.content)
+        val message = sendMessage(chat, user, request.contents)
 
         return MessageInfo.of(userId, message)
     }
@@ -165,8 +167,20 @@ class ChatServiceImpl(
         return ChatSimpleInfo.of(userId, chat)
     }
 
-    private fun sendMessage(chat: ChatEntity, sender: UserEntity? = null, content: String): MessageEntity {
-        val message = MessageEntity(chat, sender, content)
+    override fun getChatEntity(chatId: Long): ChatEntity {
+        return chatRepository.findByIdOrNull(chatId)
+            ?: throw ChatNotFound
+    }
+
+    @Transactional
+    override fun saveMessage(chat: ChatEntity, message: MessageEntity): MessageEntity {
+        val messageEntity = messageRepository.save(message)
+        chat.addMessage(messageEntity)
+        return messageEntity
+    }
+
+    private fun sendMessage(chat: ChatEntity, sender: UserEntity? = null, contents: String): MessageEntity {
+        val message = MessageEntity(chat, sender, contents)
 
         return if (!chat.isBlocked()) {
             val message = messageRepository.save(message)
@@ -185,11 +199,6 @@ class ChatServiceImpl(
             "${post.board.title}에 작성된 ${if (reply.isWriterAnonymous) "익명"+reply.anonymousId else reply.writer.nickname}의 댓글을 통해 시작된 쪽지입니다.\n" +
                     "글 내용: ${post.title ?: post.contents}"
         }
-    }
-
-    private fun getChatEntity(chatId: Long): ChatEntity {
-        return chatRepository.findByIdOrNull(chatId)
-            ?: throw ChatNotFound
     }
 
     private fun validateChatParticipant(user: UserEntity, chat: ChatEntity) {

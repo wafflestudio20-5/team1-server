@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service
 import java.security.Key
 import java.sql.Timestamp
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 @ConfigurationProperties("auth.jwt")
 data class AuthProperties @ConstructorBinding constructor(
@@ -35,6 +36,7 @@ interface AuthTokenService {
     fun authenticate(accessToken: String): Jws<Claims>
     fun getUserId(authResult: Jws<Claims>): Long
     fun isEmailVerified(authResult: Jws<Claims>): Boolean
+    fun getExpiration(authResult: Jws<Claims>): LocalDateTime
 }
 
 @Service
@@ -94,6 +96,13 @@ class AuthTokenServiceImpl(
         return authResult.body.get("email-verified", String::class.java)
             ?.toBoolean()
             ?: throw InvalidAuthToken
+    }
+
+    override fun getExpiration(authResult: Jws<Claims>): LocalDateTime {
+        return authResult.body.expiration
+            .toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime()
     }
 
     private fun buildAuthToken(userId: Long, now: LocalDateTime, emailVerified: Boolean): AuthToken {

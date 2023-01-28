@@ -16,7 +16,7 @@ data class MessageInfo(
             MessageInfo(
                 DateTimeResponse.of(createdAt ?: LocalDateTime.now()),
                 sender?.let { userId != it.id } ?: true,
-                content,
+                contents,
             )
         }
     }
