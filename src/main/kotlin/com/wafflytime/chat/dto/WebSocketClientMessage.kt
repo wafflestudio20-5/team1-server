@@ -1,6 +1,6 @@
 package com.wafflytime.chat.dto
 
-data class WebSocketSendMessage(
+data class WebSocketClientMessage(
     val chatId: Long,
     val contents: String,
 ) {

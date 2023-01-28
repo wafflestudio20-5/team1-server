@@ -23,8 +23,6 @@ interface ChatService {
     fun getChats(userId: Long): List<ChatSimpleInfo>
     fun getMessages(userId: Long, chatId: Long, page: Int, size: Int?): Page<MessageInfo>
     fun updateChatBlock(userId: Long, chatId: Long, request: UpdateChatBlockRequest): ChatSimpleInfo
-    fun getChatEntity(chatId: Long): ChatEntity
-    fun saveMessage(chatEntity: ChatEntity, messageEntity: MessageEntity): MessageEntity
 }
 
 @Service
@@ -32,6 +30,7 @@ class ChatServiceImpl(
     private val userService: UserService,
     private val postService: PostService,
     private val replyService: ReplyService,
+    private val webSocketService: WebSocketService,
     private val chatRepository: ChatRepository,
     private val messageRepository: MessageRepository,
 ): ChatService {
@@ -96,6 +95,8 @@ class ChatServiceImpl(
 
         val firstMessage = sendMessage(chat, user, request.content)
 
+        webSocketService.sendCreateChatResponse(chat, systemMessage, firstMessage)
+
         return CreateChatResponse(
             systemMessage != null,
             ChatSimpleInfo.of(userId, chat),
@@ -156,16 +157,9 @@ class ChatServiceImpl(
         return ChatSimpleInfo.of(userId, chat)
     }
 
-    override fun getChatEntity(chatId: Long): ChatEntity {
+    private fun getChatEntity(chatId: Long): ChatEntity {
         return chatRepository.findByIdOrNull(chatId)
             ?: throw ChatNotFound
-    }
-
-    @Transactional
-    override fun saveMessage(chat: ChatEntity, message: MessageEntity): MessageEntity {
-        val messageEntity = messageRepository.save(message)
-        chat.addMessage(messageEntity)
-        return messageEntity
     }
 
     private fun sendMessage(chat: ChatEntity, sender: UserEntity? = null, contents: String): MessageEntity {
