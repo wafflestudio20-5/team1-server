@@ -1,5 +1,6 @@
 package com.wafflytime.reply.service
 
+import com.wafflytime.common.DateTimeResponse
 import com.wafflytime.common.RedisService
 import com.wafflytime.notification.dto.NotificationDto
 import com.wafflytime.notification.service.NotificationService
@@ -142,6 +143,7 @@ class ReplyService(
                 if (reply.isPostWriter) "익명(작성자)"
                 else "익명${reply.anonymousId}"
             } else reply.writer.nickname,
+            createdAt = DateTimeResponse.of(reply.createdAt!!),
             isRoot = reply.isRoot,
             contents = reply.contents,
             isDeleted = reply.isDeleted,
