@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service
 
 interface ChatService {
     fun createChat(userId: Long, sourceBoardId: Long, sourcePostId: Long, sourceReplyId: Long? = null, request: CreateChatRequest): CreateChatResponse
-    fun sendMessage(userId: Long, chatId: Long, request: SendMessageRequest): MessageInfo
     fun getChats(userId: Long): List<ChatSimpleInfo>
     fun getMessages(userId: Long, chatId: Long, page: Int, size: Int?): Page<MessageInfo>
     fun updateChatBlock(userId: Long, chatId: Long, request: UpdateChatBlockRequest): ChatSimpleInfo
@@ -105,16 +104,6 @@ class ChatServiceImpl(
         )
     }
 
-    @Transactional
-    override fun sendMessage(userId: Long, chatId: Long, request: SendMessageRequest): MessageInfo {
-        val user = userService.getUser(userId)
-        val chat = getChatEntity(chatId)
-        validateChatParticipant(user, chat)
-
-        val message = sendMessage(chat, user, request.contents)
-
-        return MessageInfo.of(userId, message)
-    }
 
     @Transactional
     override fun getChats(userId: Long): List<ChatSimpleInfo> {
@@ -199,11 +188,6 @@ class ChatServiceImpl(
             "${post.board.title}에 작성된 ${if (reply.isWriterAnonymous) "익명"+reply.anonymousId else reply.writer.nickname}의 댓글을 통해 시작된 쪽지입니다.\n" +
                     "글 내용: ${post.title ?: post.contents}"
         }
-    }
-
-    private fun validateChatParticipant(user: UserEntity, chat: ChatEntity) {
-        if (chat.participant1 != user && chat.participant2 != user)
-            throw UserChatMismatch
     }
 
 }

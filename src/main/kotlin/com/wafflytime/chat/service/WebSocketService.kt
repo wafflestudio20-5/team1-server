@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.wafflytime.chat.database.MessageEntity
 import com.wafflytime.chat.dto.WebSocketReceiveMessage
 import com.wafflytime.chat.dto.WebSocketSendMessage
+import com.wafflytime.chat.exception.UserChatMismatch
+import com.wafflytime.chat.exception.WebsocketAttributeError
 import org.springframework.stereotype.Service
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
@@ -33,15 +35,31 @@ class WebSocketServiceImpl(
     }
 
     override fun sendMessage(session: WebSocketSession, message: TextMessage) {
-        if (jwtExpirationFromAttribute(session) > LocalDateTime.now()) {
-            session.close(CloseStatus(9900, "토큰 인증시간 만료"))
+        val expiration = try {
+            jwtExpirationFromAttribute(session)
+        } catch (e: WebsocketAttributeError) {
+            session.close(CloseStatus(9900, e.message))
+            return
+        }
+        if (expiration > LocalDateTime.now()) {
+            session.close(CloseStatus(9901, "토큰 인증시간 만료"))
             return
         }
 
-        val userId = userIdFromAttribute(session)
+        val userId = try {
+            userIdFromAttribute(session)
+        } catch (e: WebsocketAttributeError) {
+            session.close(CloseStatus(9900, e.message))
+            return
+        }
         val (chatId, contents) = convertToJson(message)
         val chat = chatService.getChatEntity(chatId)
-        val (sender, receiver) = chat.getSenderAndReceiver(userId)
+        val (sender, receiver) = try {
+            chat.getSenderAndReceiver(userId)
+        } catch (e: UserChatMismatch) {
+            session.close(CloseStatus(9902, e.message))
+            return
+        }
 
         val messageEntity = MessageEntity(chat, sender, contents)
 
@@ -65,12 +83,12 @@ class WebSocketServiceImpl(
 
     private fun userIdFromAttribute(session: WebSocketSession): Long {
         return session.attributes["UserIdFromToken"] as? Long
-            ?: throw TODO()
+            ?: throw WebsocketAttributeError
     }
 
     private fun jwtExpirationFromAttribute(session: WebSocketSession): LocalDateTime {
         return session.attributes["JwtExpiration"] as? LocalDateTime
-            ?: throw TODO()
+            ?: throw WebsocketAttributeError
     }
 
     private fun convertToJson(message: TextMessage): WebSocketSendMessage {

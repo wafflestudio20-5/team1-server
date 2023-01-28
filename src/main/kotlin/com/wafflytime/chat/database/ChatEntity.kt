@@ -1,5 +1,6 @@
 package com.wafflytime.chat.database
 
+import com.wafflytime.chat.exception.UserChatMismatch
 import com.wafflytime.common.BaseTimeEntity
 import com.wafflytime.user.info.database.UserEntity
 import jakarta.persistence.*
@@ -39,7 +40,7 @@ class ChatEntity(
         return when (senderId) {
             participant1.id -> Pair(participant1, participant2)
             participant2.id -> Pair(participant2, participant1)
-            else -> throw TODO()
+            else -> throw UserChatMismatch
         }
     }
 
