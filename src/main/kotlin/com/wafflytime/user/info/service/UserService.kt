@@ -108,7 +108,7 @@ class UserServiceImpl (
 
     override fun getMyScraps(userId: Long, page:Int, size:Int): Page<PostResponse> {
         return scrapRepository.findScrapsByUserId(userId, PageRequest.of(page, size)).map {
-            PostResponse.of(it.post)
+            PostResponse.of(userId, it.post)
         }
     }
 
@@ -127,7 +127,7 @@ class UserServiceImpl (
         return postRepository.findAllByWriterId(
             userId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         ).map {
-            PostResponse.of(it)
+            PostResponse.of(userId, it)
         }
     }
 
