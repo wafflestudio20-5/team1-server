@@ -64,4 +64,15 @@ class ReplyController(
     ) : ResponseEntity<Page<ReplyResponse>>{
         return ResponseEntity.ok(replyService.getReplies(boardId, postId, page, size))
     }
+
+    @PostMapping("/api/board/{boardId}/post/{postId}/reply/{replyId}/like")
+    fun likeReply(
+        @UserIdFromToken userId: Long,
+        @PathVariable boardId: Long,
+        @PathVariable postId: Long,
+        @PathVariable replyId: Long,
+    ): ResponseEntity<ReplyResponse> {
+        return ResponseEntity.ok(replyService.likeReply(userId, boardId, postId, replyId))
+    }
+
 }

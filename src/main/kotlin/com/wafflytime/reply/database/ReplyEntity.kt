@@ -31,6 +31,11 @@ class ReplyEntity(
     var isWriterAnonymous: Boolean = true,
     var isDisplayed: Boolean = true,
     var isDeleted: Boolean = false,
+
+    @OneToMany(mappedBy = "reply", cascade = [CascadeType.REMOVE], fetch = FetchType.LAZY)
+    val likes: MutableList<ReplyLikeEntity> = mutableListOf(),
+    var nLikes: Int = 0,
+
 ) : BaseTimeEntity() {
 
     @Transactional
