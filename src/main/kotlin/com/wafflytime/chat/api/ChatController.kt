@@ -49,4 +49,13 @@ class ChatController(
         return chatService.updateChatBlock(userId, chatId, request)
     }
 
+    @PutMapping("/api/chat/unread")
+    fun updateChatUnread(
+        @UserIdFromToken userId: Long,
+        @Valid @RequestBody request: UpdateUnreadRequest,
+    ): String {
+        chatService.updateUnread(userId, request)
+        return "success"
+    }
+
 }

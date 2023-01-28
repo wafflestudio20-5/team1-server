@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 data class MessageInfo(
     val sentAt: DateTimeResponse,
     val received: Boolean,
-    val content: String,
+    val contents: String,
 ) {
 
     companion object {

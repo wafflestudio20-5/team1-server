@@ -13,7 +13,8 @@ interface ChatRepository : JpaRepository<ChatEntity, Long>, ChatRepositorySuppor
 interface ChatRepositorySupport {
     fun findByParticipantIdWithLastMessage(userId: Long): List<ChatEntity>
     fun findByAllConditions(postId: Long, participantId1: Long, isAnonymous1: Boolean, participantId2: Long, isAnonymous2: Boolean) : ChatEntity?
-    fun findByBothParticipantId(participantId1: Long, participantId2: Long) : ChatEntity?
+    fun findByBothParticipantId(participantId1: Long, participantId2: Long): ChatEntity?
+    fun findByParticipantId(participantId: Long): List<ChatEntity>
 }
 
 @Repository
@@ -70,6 +71,16 @@ class ChatRepositorySupportImpl(
                     .and(chatEntity.isAnonymous2.isTrue)
             )
             .fetchOne()
+    }
+
+    override fun findByParticipantId(participantId: Long): List<ChatEntity> {
+        return jpaQueryFactory
+            .selectFrom(chatEntity)
+            .where(
+                chatEntity.participant1.id.eq(participantId)
+                    .or(chatEntity.participant2.id.eq(participantId))
+            )
+            .fetch()
     }
 
 }

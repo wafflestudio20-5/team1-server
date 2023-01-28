@@ -23,6 +23,7 @@ interface ChatService {
     fun getChats(userId: Long): List<ChatSimpleInfo>
     fun getMessages(userId: Long, chatId: Long, page: Int, size: Int?): Page<MessageInfo>
     fun updateChatBlock(userId: Long, chatId: Long, request: UpdateChatBlockRequest): ChatSimpleInfo
+    fun updateUnread(userId: Long, request: UpdateUnreadRequest)
 }
 
 @Service
@@ -93,7 +94,7 @@ class ChatServiceImpl(
             existingChat
         }
 
-        val firstMessage = sendMessage(chat, user, request.content)
+        val firstMessage = sendMessage(chat, user, request.contents)
 
         webSocketService.sendCreateChatResponse(chat, systemMessage, firstMessage)
 
@@ -155,6 +156,30 @@ class ChatServiceImpl(
         }
 
         return ChatSimpleInfo.of(userId, chat)
+    }
+
+    @Transactional
+    override fun updateUnread(userId: Long, request: UpdateUnreadRequest) {
+        val (chatIdList, unreadList) = request
+        val len = chatIdList.size
+        if (len != unreadList.size) throw ListLengthMismatch
+
+        val pairList = (0 until len).map { Pair(chatIdList[it], unreadList[it]) }
+            .sortedWith(compareBy { it.first })
+
+        val chatList = chatRepository.findByParticipantId(userId)
+        if (len != chatList.size) throw ListLengthMismatch
+
+        chatList.onEachIndexed { index, chatEntity ->
+            if (chatEntity.id != pairList[index].first) throw ListMismatch
+            chatEntity.run {
+                when (userId) {
+                    participant1.id -> unread1 = pairList[index].second
+                    participant2.id -> unread2 = pairList[index].second
+                }
+            }
+        }
+
     }
 
     private fun getChatEntity(chatId: Long): ChatEntity {
