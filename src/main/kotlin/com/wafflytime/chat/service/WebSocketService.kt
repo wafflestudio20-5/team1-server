@@ -54,7 +54,7 @@ class WebSocketServiceImpl(
             session.close(CloseStatus(4900, e.message))
             return
         }
-        if (expiration > LocalDateTime.now()) {
+        if (expiration < LocalDateTime.now()) {
             session.close(CloseStatus(4901, "토큰 인증시간 만료"))
             return
         }
