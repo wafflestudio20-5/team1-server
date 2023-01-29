@@ -11,4 +11,5 @@ data class ReplyResponse(
     val contents: String,
     val isDeleted: Boolean,
     val isPostWriter: Boolean,
+    val nLikes: Int,
 )
