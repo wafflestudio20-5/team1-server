@@ -1,13 +1,12 @@
 package com.wafflytime.reply.service
 
+import com.wafflytime.common.DateTimeResponse
 import com.wafflytime.common.RedisService
 import com.wafflytime.notification.dto.NotificationDto
 import com.wafflytime.notification.service.NotificationService
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.post.service.PostService
-import com.wafflytime.reply.database.ReplyEntity
-import com.wafflytime.reply.database.ReplyRepository
-import com.wafflytime.reply.database.ReplyRepositorySupport
+import com.wafflytime.reply.database.*
 import com.wafflytime.reply.dto.CreateReplyRequest
 import com.wafflytime.reply.dto.ReplyResponse
 import com.wafflytime.reply.dto.UpdateReplyRequest
@@ -26,6 +25,7 @@ class ReplyService(
     private val notificationService: NotificationService,
     private val replyRepository: ReplyRepository,
     private val replyRepositorySupport: ReplyRepositorySupport,
+    private val replyLikeRepository: ReplyLikeRepository,
     private val redisService: RedisService
 ) {
     @Transactional
@@ -119,6 +119,20 @@ class ReplyService(
         }
     }
 
+    @Transactional
+    fun likeReply(userId: Long, boardId: Long, postId: Long, replyId: Long): ReplyResponse {
+        postService.validateBoardAndPost(boardId, postId)
+        val reply = validatePostAndReply(postId, replyId)
+        val user = userService.getUser(userId)
+        if (reply.writer.id == userId) throw ForbiddenLike
+
+        replyLikeRepository.findByReplyIdAndUserId(replyId, userId)?.let { throw AlreadyLiked }
+
+        replyLikeRepository.save(ReplyLikeEntity(reply, user))
+        reply.nLikes++
+        return replyToResponse(reply)
+    }
+
     fun getReplyEntity(postId: Long, replyId: Long): ReplyEntity {
         return validatePostAndReply(postId, replyId)
     }
@@ -142,10 +156,12 @@ class ReplyService(
                 if (reply.isPostWriter) "익명(작성자)"
                 else "익명${reply.anonymousId}"
             } else reply.writer.nickname,
+            createdAt = DateTimeResponse.of(reply.createdAt!!),
             isRoot = reply.isRoot,
             contents = reply.contents,
             isDeleted = reply.isDeleted,
             isPostWriter = reply.isPostWriter,
+            nLikes = reply.nLikes,
         )
     }
 }

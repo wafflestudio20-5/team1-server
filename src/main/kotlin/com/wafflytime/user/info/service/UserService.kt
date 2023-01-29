@@ -72,7 +72,6 @@ class UserServiceImpl (
         userRepository.findByUnivEmail(univEmail)?.let { throw MailConflict }
     }
 
-    @Transactional
     override fun updateUserInfo(userId: Long, request: UpdateUserInfoRequest): UserInfo {
         val user = getUserById(userId)
         request.run {
@@ -88,6 +87,8 @@ class UserServiceImpl (
                     },
                     nickname,
                 )
+
+                userRepository.save(user)
             } catch (e: DataIntegrityViolationException) {
                 throw NicknameConflict
             }
@@ -108,7 +109,7 @@ class UserServiceImpl (
 
     override fun getMyScraps(userId: Long, page:Int, size:Int): Page<PostResponse> {
         return scrapRepository.findScrapsByUserId(userId, PageRequest.of(page, size)).map {
-            PostResponse.of(it.post)
+            PostResponse.of(userId, it.post)
         }
     }
 
@@ -127,7 +128,7 @@ class UserServiceImpl (
         return postRepository.findAllByWriterId(
             userId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         ).map {
-            PostResponse.of(it)
+            PostResponse.of(userId, it)
         }
     }
 
