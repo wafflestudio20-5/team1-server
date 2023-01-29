@@ -57,6 +57,7 @@ class EmailService(
 
         if (request.code == mailVerification.code) {
             val user = userService.updateUserMailVerified(userId, mailVerification.email)
+            redisService.deleteMailVerification(userId)
             return authTokenService.buildAuthToken(user, LocalDateTime.now())
         } else {
             throw WrongVerificationCode

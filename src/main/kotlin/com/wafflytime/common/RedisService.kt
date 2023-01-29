@@ -42,9 +42,13 @@ class RedisService(
     }
 
     fun getMailVerification(userId: Long) : RedisMailVerification? {
-        val key = getMailVerificationKey(userId)
         return redisEmailVerificationTemplate.opsForValue()
-            .getAndDelete(key)
+            .get(getMailVerificationKey(userId))
+    }
+
+    fun deleteMailVerification(userId: Long) {
+        redisEmailVerificationTemplate.opsForValue()
+            .getAndDelete(getMailVerificationKey(userId))
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
