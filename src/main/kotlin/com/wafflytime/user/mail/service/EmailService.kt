@@ -5,8 +5,6 @@ import com.wafflytime.user.auth.dto.AuthToken
 import com.wafflytime.user.auth.service.AuthTokenService
 import com.wafflytime.user.mail.dto.VerifyEmailRequest
 import com.wafflytime.user.info.service.UserService
-import com.wafflytime.user.mail.database.MailVerificationEntity
-import com.wafflytime.user.mail.database.MailVerificationRepository
 import com.wafflytime.user.mail.dto.RedisMailVerification
 import com.wafflytime.user.mail.dto.VerifyEmailCode
 import com.wafflytime.user.mail.exception.*
@@ -21,7 +19,6 @@ class EmailService(
     private val authTokenService: AuthTokenService,
     private val userService: UserService,
     private val redisService: RedisService,
-    private val mailVerificationRepository: MailVerificationRepository,
 ) {
     private val SNU_MAIL_SUFFIX = "@snu.ac.kr"
     private val CharPool : List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
