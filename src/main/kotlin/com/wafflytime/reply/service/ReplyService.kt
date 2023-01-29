@@ -161,6 +161,7 @@ class ReplyService(
             contents = reply.contents,
             isDeleted = reply.isDeleted,
             isPostWriter = reply.isPostWriter,
+            nLikes = reply.nLikes,
         )
     }
 }
