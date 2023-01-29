@@ -43,7 +43,7 @@ class RedisConfig {
         val redisTemplate = RedisTemplate<String, String>()
         redisTemplate.setConnectionFactory(redisConnectionFactory)
         redisTemplate.keySerializer = StringRedisSerializer()
-        redisTemplate.valueSerializer = GenericJackson2JsonRedisSerializer()
+        redisTemplate.valueSerializer = StringRedisSerializer()
         redisTemplate.setEnableTransactionSupport(true)
         return redisTemplate
     }
