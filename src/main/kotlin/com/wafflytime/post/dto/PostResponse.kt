@@ -11,6 +11,7 @@ data class PostResponse(
     val writerId: Long,
     val nickname: String?,
     val isWriterAnonymous: Boolean,
+    val isMyPost: Boolean,
     val isQuestion: Boolean,
     val title: String?,
     val contents: String,
@@ -21,11 +22,11 @@ data class PostResponse(
 ) {
     companion object {
 
-        fun of(postEntity: PostEntity) : PostResponse {
-            return of(postEntity, null)
+        fun of(userId: Long, postEntity: PostEntity) : PostResponse {
+            return of(userId, postEntity, null)
         }
 
-        fun of(postEntity: PostEntity, images: List<ImageResponse>?) : PostResponse {
+        fun of(userId: Long, postEntity: PostEntity, images: List<ImageResponse>?) : PostResponse {
             return PostResponse(
                 boardId = postEntity.board.id,
                 boardTitle = postEntity.board.title,
@@ -34,6 +35,7 @@ data class PostResponse(
                 writerId = postEntity.writer.id,
                 nickname = if (postEntity.isWriterAnonymous) null else postEntity.writer.nickname,
                 isWriterAnonymous = postEntity.isWriterAnonymous,
+                isMyPost = userId == postEntity.writer.id,
                 isQuestion = postEntity.isQuestion,
                 title = postEntity.title,
                 contents = postEntity.contents,
