@@ -15,3 +15,5 @@ object ReplyDeleted : Reply400("해당 댓글은 이미 삭제되었습니다", 
 object WriterAnonymousFixed : Reply400("익명 여부를 변경할 수 없습니다", 3)
 object ForbiddenReplyRemoval : Reply403("해당 댓글을 삭제할 권한이 없습니다", 4)
 object ForbiddenReplyUpdate : Reply403("해당 댓글을 수정할 권한이 없습니다", 5)
+object AlreadyLiked : Reply400("이미 공감한 댓글입니다", 6)
+object ForbiddenLike : Reply400("댓글 작성자는 공감할 수 없습니다", 7)

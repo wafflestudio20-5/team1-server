@@ -59,19 +59,20 @@ class PostService(
         if (board.category in listOf(BoardCategory.BASIC, BoardCategory.CAREER)) {
             redisService.save(post)
         }
-        return PostResponse.of(post, s3ImageUrlDtoList?.map { ImageResponse.of(it) })
+        return PostResponse.of(userId, post, s3ImageUrlDtoList?.map { ImageResponse.of(it) })
     }
 
-    fun getPost(boardId: Long, postId: Long): PostResponse {
+    fun getPost(userId: Long, boardId: Long, postId: Long): PostResponse {
         val post = validateBoardAndPost(boardId, postId)
-        return PostResponse.of(post, s3Service.getPreSignedUrlsFromS3Keys(post.images))
+        return PostResponse.of(userId, post, s3Service.getPreSignedUrlsFromS3Keys(post.images))
     }
 
-    fun getPosts(boardId: Long, page: Int, size:Int): Page<PostResponse> {
+    fun getPosts(userId: Long, boardId: Long, page: Int, size:Int): Page<PostResponse> {
         val sort = Sort.by(Sort.Direction.DESC, "createdAt")
         return postRepository.findAllByBoardId(boardId, PageRequest.of(page, size, sort)).map {
             PostResponse.of(
-                it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
+                userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images)
+            )
         }
     }
 
@@ -104,7 +105,7 @@ class PostService(
         val updatedS3ImageUrlDtoList = s3Service.updateImageRequest(post.images, request)
         post.update(request, getImagesEntityFromS3ImageUrl(updatedS3ImageUrlDtoList))
         redisService.updateCacheByUpdatedPost(post)
-        return PostResponse.of(post, updatedS3ImageUrlDtoList?.map { ImageResponse.of(it) })
+        return PostResponse.of(userId, post, updatedS3ImageUrlDtoList?.map { ImageResponse.of(it) })
     }
 
     fun validateBoardAndPost(boardId: Long, postId: Long) : PostEntity {
@@ -129,7 +130,7 @@ class PostService(
         postLikeRepository.save(PostLikeEntity(user = user, post = post))
         post.nLikes++
         redisService.updateCacheByLikeOrReplyPost(post)
-        return PostResponse.of(post)
+        return PostResponse.of(userId, post)
     }
 
     @Transactional
@@ -140,7 +141,7 @@ class PostService(
         }
         scrapRepository.save(ScrapEntity(user = user, post = post))
         post.nScraps++
-        return PostResponse.of(post)
+        return PostResponse.of(userId, post)
     }
 
     fun validateLikeScrapPost(userId: Long, boardId: Long, postId: Long): Pair<PostEntity, UserEntity> {
@@ -150,27 +151,27 @@ class PostService(
         return Pair(post, user)
     }
 
-    fun getHostPosts(page:Int, size:Int): Page<PostResponse> {
+    fun getHostPosts(userId: Long, page:Int, size:Int): Page<PostResponse> {
         return postRepository.getHotPosts(PageRequest.of(page, size)).map {
-            PostResponse.of(it)
+            PostResponse.of(userId, it)
         }
     }
 
-    fun getBestPosts(page: Int, size: Int): Page<PostResponse> {
+    fun getBestPosts(userId: Long, page: Int, size: Int): Page<PostResponse> {
         return postRepository.getBestPosts(PageRequest.of(page, size)).map {
-            PostResponse.of(it)
+            PostResponse.of(userId, it)
         }
     }
 
-    fun searchPosts(keyword: String, page:Int, size:Int): Page<PostResponse> {
-        return postRepository.findPostsByKeyword(keyword, PageRequest.of(page, size)).map{ PostResponse.of(it) }
+    fun searchPosts(userId: Long, keyword: String, page:Int, size:Int): Page<PostResponse> {
+        return postRepository.findPostsByKeyword(keyword, PageRequest.of(page, size)).map{ PostResponse.of(userId, it) }
     }
 
     fun getHomePostsTest(): List<HomePostResponse> {
         return redisService.getLatestPostsGroup()
     }
 
-    fun getLatestPostsByCategory(category: BoardCategory, size: Int): List<PostResponse> {
-        return postRepository.findLatestPostsByCategory(category, size).map { PostResponse.of(it) }
+    fun getLatestPostsByCategory(userId: Long, category: BoardCategory, size: Int): List<PostResponse> {
+        return postRepository.findLatestPostsByCategory(category, size).map { PostResponse.of(userId, it) }
     }
 }
