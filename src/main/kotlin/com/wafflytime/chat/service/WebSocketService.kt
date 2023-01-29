@@ -51,18 +51,18 @@ class WebSocketServiceImpl(
         val expiration = try {
             jwtExpirationFromAttribute(session)
         } catch (e: WebsocketAttributeError) {
-            session.close(CloseStatus(9900, e.message))
+            session.close(CloseStatus(4900, e.message))
             return
         }
-        if (expiration < LocalDateTime.now()) {
-            session.close(CloseStatus(9901, "토큰 인증시간 만료"))
+        if (expiration > LocalDateTime.now()) {
+            session.close(CloseStatus(4901, "토큰 인증시간 만료"))
             return
         }
 
         val userId = try {
             userIdFromAttribute(session)
         } catch (e: WebsocketAttributeError) {
-            session.close(CloseStatus(9900, e.message))
+            session.close(CloseStatus(4900, e.message))
             return
         }
         val (chatId, contents) = convertToJson(message)
@@ -70,7 +70,7 @@ class WebSocketServiceImpl(
         val (sender, receiver) = try {
             chat.getSenderAndReceiver(userId)
         } catch (e: UserChatMismatch) {
-            session.close(CloseStatus(9902, e.message))
+            session.close(CloseStatus(4902, e.message))
             return
         }
 
