@@ -13,6 +13,7 @@ import com.wafflytime.chat.exception.UserChatMismatch
 import com.wafflytime.chat.exception.WebsocketAttributeError
 import com.wafflytime.notification.dto.NotificationDto
 import com.wafflytime.notification.service.NotificationService
+import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.web.socket.CloseStatus
@@ -45,6 +46,7 @@ class WebSocketServiceImpl(
         webSocketSessions.remove(userIdFromAttribute(session))
     }
 
+    @Transactional
     override fun sendMessage(session: WebSocketSession, message: TextMessage) {
         val expiration = try {
             jwtExpirationFromAttribute(session)
@@ -52,7 +54,7 @@ class WebSocketServiceImpl(
             session.close(CloseStatus(9900, e.message))
             return
         }
-        if (expiration > LocalDateTime.now()) {
+        if (expiration < LocalDateTime.now()) {
             session.close(CloseStatus(9901, "토큰 인증시간 만료"))
             return
         }
@@ -96,6 +98,7 @@ class WebSocketServiceImpl(
         }
     }
 
+    @Transactional
     override fun sendCreateChatResponse(chat: ChatEntity, systemMessage: MessageEntity?, firstMessage: MessageEntity) {
         val senderSession = webSocketSessions[chat.participant1.id]
         val receiverSession = webSocketSessions[chat.participant2.id]
