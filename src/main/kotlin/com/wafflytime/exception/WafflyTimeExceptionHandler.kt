@@ -2,6 +2,7 @@ package com.wafflytime.exception
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -34,6 +35,11 @@ class WafflyTimeExceptionHandler {
     @ExceptionHandler(value = [HttpRequestMethodNotSupportedException::class])
     fun handle(e: HttpRequestMethodNotSupportedException): ResponseEntity<Map<String, Any>> {
         return createErrorInfo(HttpStatus.NOT_FOUND, 2, "해당 URI는 ${e.method} 메소드의 요청이 존재하지 않습니다.")
+    }
+
+    @ExceptionHandler(value = [HttpMessageNotReadableException::class])
+    fun handle(e: HttpMessageNotReadableException): ResponseEntity<Map<String, Any>> {
+        return createErrorInfo(HttpStatus.BAD_REQUEST, 3, "요청 형식이 잘못됐습니다(json body 형식 에러)")
     }
 
     @ExceptionHandler(value = [WafflyTimeException::class])
