@@ -1,6 +1,5 @@
 package com.wafflytime.user.mail.service
 
-import com.wafflytime.user.mail.dto.VerifyEmailCode
 import jakarta.mail.internet.MimeMessage
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
@@ -14,7 +13,7 @@ class AsyncEmailService(
 ) {
 
     @Async("mailExecutor")
-    fun sendEmail(email:String, verifyEmailCode: VerifyEmailCode) {
+    fun sendEmail(email:String, verifyEmailCode: String) {
 
         val preparator = MimeMessagePreparator {
                 msg: MimeMessage? ->
@@ -34,7 +33,7 @@ class AsyncEmailService(
             htmlMsgBuffer.append("<h3 style='color:blue;'>This is mail verification code.</h3>")
             htmlMsgBuffer.append("<div style='font-size:130%'>")
             htmlMsgBuffer.append("CODE : <strong>")
-            htmlMsgBuffer.append("${verifyEmailCode.code}</strong><div><br/> ")
+            htmlMsgBuffer.append("${verifyEmailCode}</strong><div><br/> ")
             htmlMsgBuffer.append("</div>")
             helper.setText(htmlMsgBuffer.toString(), true)
         }

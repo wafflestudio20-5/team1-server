@@ -8,6 +8,7 @@ data class DateTimeResponse(
     val day: Int,
     val hour: Int,
     val minute: Int,
+    val second: Int? = null,
 ) {
     constructor() : this(-1, -1, -1, -1, -1)
 
@@ -19,7 +20,18 @@ data class DateTimeResponse(
                 monthValue,
                 dayOfMonth,
                 hour,
-                minute
+                minute,
+            )
+        }
+
+        fun includeSeconds(dateTime: LocalDateTime): DateTimeResponse = dateTime.run {
+            DateTimeResponse(
+                year,
+                monthValue,
+                dayOfMonth,
+                hour,
+                minute,
+                second,
             )
         }
     }
