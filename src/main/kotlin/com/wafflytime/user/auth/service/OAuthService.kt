@@ -52,6 +52,7 @@ class OAuthServiceImpl(
         return authTokenService.buildAuthToken(user, LocalDateTime.now())
     }
 
+    @Transactional
     private fun signUp(socialEmail: String, nickname: String): UserEntity {
         if (userRepository.findBySocialEmail(socialEmail) != null) {
             throw SocialEmailConflict

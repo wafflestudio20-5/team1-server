@@ -15,6 +15,7 @@ class UserEntity(
     val socialEmail: String? = null,
     @field:Column(unique = true)
     var univEmail: String? = null,
+    @field:Column(unique = true)
     var nickname: String,
     val isAdmin: Boolean = false,
 
