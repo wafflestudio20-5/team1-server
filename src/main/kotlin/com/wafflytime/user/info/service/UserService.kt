@@ -72,7 +72,6 @@ class UserServiceImpl (
         userRepository.findByUnivEmail(univEmail)?.let { throw MailConflict }
     }
 
-    @Transactional
     override fun updateUserInfo(userId: Long, request: UpdateUserInfoRequest): UserInfo {
         val user = getUserById(userId)
         request.run {
@@ -88,6 +87,8 @@ class UserServiceImpl (
                     },
                     nickname,
                 )
+
+                userRepository.save(user)
             } catch (e: DataIntegrityViolationException) {
                 throw NicknameConflict
             }
