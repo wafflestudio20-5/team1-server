@@ -7,18 +7,21 @@ import com.wafflytime.post.database.PostEntity
 import com.wafflytime.post.database.PostRepository
 import com.wafflytime.post.dto.HomePostDto
 import com.wafflytime.post.dto.RedisPostDto
+import com.wafflytime.user.mail.dto.RedisMailVerification
 import kotlinx.coroutines.*
 import org.springframework.boot.context.event.ApplicationStartedEvent
 import org.springframework.context.event.EventListener
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 
 @Service
 class RedisService(
     private val redisPostTemplate: RedisTemplate<String, RedisPostDto>,
     private val postRepository: PostRepository,
-    private val s3Service: S3Service
+    private val s3Service: S3Service,
+    private val redisEmailVerificationTemplate: RedisTemplate<String, RedisMailVerification>,
 ) {
     @EventListener(ApplicationStartedEvent::class)
     fun pushInitialRedisCache() {
@@ -31,6 +34,17 @@ class RedisService(
         operations.leftPush(boardKey, RedisPostDto.of(post))
 
         popMaxOveredCache(boardKey, getMaxPostSize(post.board.type))
+    }
+
+    fun save(userId: Long, verificationSecond: Long, mailVerification: RedisMailVerification) {
+        redisEmailVerificationTemplate.opsForValue()
+            .set(getMailVerificationKey(userId), mailVerification, verificationSecond, TimeUnit.SECONDS)
+    }
+
+    fun getMailVerification(userId: Long) : RedisMailVerification? {
+        val key = getMailVerificationKey(userId)
+        return redisEmailVerificationTemplate.opsForValue()
+            .getAndDelete(key)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -109,6 +123,12 @@ class RedisService(
     private fun parseBoardKey(boardKey: String) : Triple<Long, BoardType, String> {
         val parsed = boardKey.split(":")
         return Triple(parsed[1].toLong(), BoardType.valueOf(parsed[2]), parsed[3])
+    }
+
+    private val mailVerificationKeyPrefix = "mail-verification:"
+
+    private fun getMailVerificationKey(userId: Long) : String {
+        return mailVerificationKeyPrefix + userId
     }
 
     private fun getMaxPostSize(boardType: BoardType) : Long {
