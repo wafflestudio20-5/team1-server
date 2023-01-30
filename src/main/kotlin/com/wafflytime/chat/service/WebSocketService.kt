@@ -48,16 +48,7 @@ class WebSocketServiceImpl(
 
     @Transactional
     override fun sendMessage(session: WebSocketSession, message: TextMessage) {
-        val expiration = try {
-            jwtExpirationFromAttribute(session)
-        } catch (e: WebsocketAttributeError) {
-            session.close(CloseStatus(4900, e.message))
-            return
-        }
-        if (expiration < LocalDateTime.now()) {
-            session.close(CloseStatus(4901, "토큰 인증시간 만료"))
-            return
-        }
+        if (!isSessionValid(session)) return
 
         val userId = try {
             userIdFromAttribute(session)
@@ -100,9 +91,11 @@ class WebSocketServiceImpl(
 
     @Transactional
     override fun sendCreateChatResponse(userId: Long, chat: ChatEntity, systemMessage: MessageEntity?, firstMessage: MessageEntity) {
+        val session1 = getWebSocketSession(chat.participant1.id)
+        val session2 = getWebSocketSession(chat.participant2.id)
         val (senderSession, receiverSession) = when (userId) {
-            chat.participant1.id -> Pair(webSocketSessions[chat.participant1.id], webSocketSessions[chat.participant2.id])
-            chat.participant2.id -> Pair(webSocketSessions[chat.participant2.id], webSocketSessions[chat.participant1.id])
+            chat.participant1.id -> Pair(session1, session2)
+            chat.participant2.id -> Pair(session2, session1)
             else -> throw UserChatMismatch
         }
 
@@ -133,6 +126,28 @@ class WebSocketServiceImpl(
                 NotificationDto.fromMessage(chat.participant2, firstMessage)
             )
         }
+    }
+
+    private fun getWebSocketSession(userId: Long): WebSocketSession? {
+        val session = webSocketSessions[userId]
+        session?.let { isSessionValid(it) }
+        return session
+    }
+
+    private fun isSessionValid(session: WebSocketSession): Boolean {
+        val expiration = try {
+            jwtExpirationFromAttribute(session)
+        } catch (e: WebsocketAttributeError) {
+            session.close(CloseStatus(4900, e.message))
+            return false
+        }
+
+        if (expiration < LocalDateTime.now()) {
+            session.close(CloseStatus(4901, "토큰 인증시간 만료"))
+            return false
+        }
+
+        return true
     }
 
     private fun userIdFromAttribute(session: WebSocketSession): Long {
