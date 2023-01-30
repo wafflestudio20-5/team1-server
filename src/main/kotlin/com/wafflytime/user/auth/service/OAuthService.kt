@@ -1,15 +1,14 @@
 package com.wafflytime.user.auth.service
 
 import com.wafflytime.config.ExemptAuthentication
-import com.wafflytime.user.auth.dto.AuthToken
-import com.wafflytime.user.auth.dto.OAuthToken
-import com.wafflytime.user.auth.dto.SocialSignUpRequest
+import com.wafflytime.user.auth.dto.*
 import com.wafflytime.user.auth.exception.*
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.database.UserRepository
 import com.wafflytime.user.info.exception.NicknameConflict
 import jakarta.transaction.Transactional
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
@@ -17,9 +16,10 @@ import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 interface OAuthService {
-    fun socialLogin(providerName: String, code: String): AuthToken
+    fun socialLogin(providerName: String, code: String): OAuthResponse
     fun socialSignUp(providerName: String, code: String, request: SocialSignUpRequest): AuthToken
 }
 
@@ -28,30 +28,42 @@ class OAuthServiceImpl(
     private val oAuthProperties: OAuthProperties,
     private val userRepository: UserRepository,
     private val authTokenService: AuthTokenService,
+    private val redisSocialTemplate: RedisTemplate<String, String>,
 ) : OAuthService {
 
     @ExemptAuthentication
     @Transactional
-    override fun socialLogin(providerName: String, code: String): AuthToken {
+    override fun socialLogin(providerName: String, code: String): OAuthResponse {
         val socialEmail = getSocialEmail(providerName, code)
         val user = userRepository.findBySocialEmail(socialEmail)
-            ?: throw SocialLoginFailure
-        return authTokenService.buildAuthToken(user, LocalDateTime.now())
+        if (user != null) {
+            return OAuthResponse(authTokenService.buildAuthToken(user, LocalDateTime.now()), false)
+        }
+        redisSocialTemplate.opsForValue().set(code, socialEmail)
+        redisSocialTemplate.expire(code, 10, TimeUnit.MINUTES)
+        return OAuthResponse(null, true)
     }
 
     @ExemptAuthentication
     @Transactional
     override fun socialSignUp(providerName: String, code: String, request: SocialSignUpRequest): AuthToken {
-        val socialEmail = getSocialEmail(providerName, code)
+        val socialEmail = redisSocialTemplate.opsForValue().get(code)
+            ?: throw OAuthCodeExpired
+        val user = signUp(socialEmail, request.nickname)
+        redisSocialTemplate.delete(code)
+        return authTokenService.buildAuthToken(user, LocalDateTime.now())
+    }
+
+    @Transactional
+    private fun signUp(socialEmail: String, nickname: String): UserEntity {
         if (userRepository.findBySocialEmail(socialEmail) != null) {
             throw SocialEmailConflict
         }
-        val user = try {
-            userRepository.save(UserEntity(socialEmail = socialEmail, nickname = request.nickname))
+        return try {
+            userRepository.save(UserEntity(socialEmail = socialEmail, nickname = nickname))
         } catch (e: DataIntegrityViolationException) {
             throw NicknameConflict
         }
-        return authTokenService.buildAuthToken(user, LocalDateTime.now())
     }
 
     fun getSocialEmail(providerName: String, code: String): String {
@@ -68,7 +80,7 @@ class OAuthServiceImpl(
             .accept(MediaType.APPLICATION_JSON)
             .bodyValue(tokenRequest(code, provider))
             .retrieve()
-            .onStatus({it.isError}, {throw InvalidAuthorizationCode})
+            .onStatus({ it.isError }, { throw InvalidAuthorizationCode })
             .bodyToMono(OAuthToken::class.java)
             .block()
             ?: throw InvalidAuthorizationCode
@@ -98,7 +110,7 @@ class OAuthServiceImpl(
             .accept(MediaType.APPLICATION_JSON)
             .headers { header -> header.setBearerAuth(accessToken.accessToken) }
             .retrieve()
-            .onStatus({it.isError}, {throw InvalidOAuthToken})
+            .onStatus({ it.isError }, { throw InvalidOAuthToken })
             .bodyToMono<Map<String, Any>>()
             .block()
             ?: throw InvalidOAuthToken

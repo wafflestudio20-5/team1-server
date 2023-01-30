@@ -2,6 +2,7 @@ package com.wafflytime.user.auth.api
 
 import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.user.auth.dto.AuthToken
+import com.wafflytime.user.auth.dto.OAuthResponse
 import com.wafflytime.user.auth.dto.SocialSignUpRequest
 import com.wafflytime.user.auth.service.OAuthService
 import jakarta.validation.Valid
@@ -13,7 +14,7 @@ class OAuthController(
 ) {
     @ExemptAuthentication
     @PostMapping("/api/auth/social/login/{provider}")
-    fun socialLogin(@PathVariable provider: String, @RequestParam code: String) : AuthToken {
+    fun socialLogin(@PathVariable provider: String, @RequestParam code: String) : OAuthResponse {
         return oAuthService.socialLogin(provider, code)
     }
 

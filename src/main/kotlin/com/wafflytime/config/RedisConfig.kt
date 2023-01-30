@@ -49,6 +49,16 @@ class RedisConfig {
     }
 
     @Bean
+    fun redisSocialTemplate(redisConnectionFactory: RedisConnectionFactory) : RedisTemplate<String, String> {
+        val redisTemplate = RedisTemplate<String, String>()
+        redisTemplate.setConnectionFactory(redisConnectionFactory)
+        redisTemplate.keySerializer = StringRedisSerializer()
+        redisTemplate.valueSerializer = StringRedisSerializer()
+        redisTemplate.setEnableTransactionSupport(true)
+        return redisTemplate
+    }
+
+    @Bean
     fun redisCacheManager(redisConnectionFactory: RedisConnectionFactory) : RedisCacheManager {
         val redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
             .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer((StringRedisSerializer())))
