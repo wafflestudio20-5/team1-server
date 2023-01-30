@@ -16,6 +16,7 @@ import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 interface OAuthService {
     fun socialLogin(providerName: String, code: String): OAuthResponse
@@ -39,6 +40,7 @@ class OAuthServiceImpl(
             return OAuthResponse(authTokenService.buildAuthToken(user, LocalDateTime.now()), false)
         }
         redisSocialTemplate.opsForValue().set(code, socialEmail)
+        redisSocialTemplate.expire(code, 10, TimeUnit.MINUTES)
         return OAuthResponse(null, true)
     }
 
@@ -46,7 +48,7 @@ class OAuthServiceImpl(
     @Transactional
     override fun socialSignUp(providerName: String, code: String, request: SocialSignUpRequest): AuthToken {
         val socialEmail = redisSocialTemplate.opsForValue().get(code)
-            ?: getSocialEmail(providerName, code)
+            ?: throw OAuthCodeExpired
         val user = signUp(socialEmail, request.nickname)
         redisSocialTemplate.delete(code)
         return authTokenService.buildAuthToken(user, LocalDateTime.now())
