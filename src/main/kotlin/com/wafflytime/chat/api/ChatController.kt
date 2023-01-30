@@ -2,9 +2,9 @@ package com.wafflytime.chat.api
 
 import com.wafflytime.chat.dto.*
 import com.wafflytime.chat.service.ChatService
+import com.wafflytime.common.CursorPage
 import com.wafflytime.config.UserIdFromToken
 import jakarta.validation.Valid
-import org.springframework.data.domain.Page
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -24,20 +24,30 @@ class ChatController(
     }
 
     @GetMapping("/api/chat")
+    fun getChat(
+        @UserIdFromToken userId: Long,
+        @RequestParam(required = true, value = "chatId") chatId: Long,
+    ): ChatSimpleInfo {
+        return chatService.getChat(userId, chatId)
+    }
+
+    @GetMapping("/api/chats")
     fun getChatList(
         @UserIdFromToken userId: Long,
-    ): List<ChatSimpleInfo> {
-        return chatService.getChats(userId)
+        @RequestParam(required = false, value = "cursor") cursor: Long?,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Long,
+    ): CursorPage<ChatSimpleInfo> {
+        return chatService.getChats(userId, cursor, size)
     }
 
     @GetMapping("/api/chat/{chatId}/messages")
     fun getMessages(
         @UserIdFromToken userId: Long,
         @PathVariable chatId: Long,
-        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
-        @RequestParam(required = false, value = "size") size: Int?,
-    ): Page<MessageInfo> {
-        return chatService.getMessages(userId, chatId, page, size)
+        @RequestParam(required = false, value = "cursor") cursor: Long?,
+        @RequestParam(required = false, value = "size") size: Long?,
+    ): CursorPage<MessageInfo> {
+        return chatService.getMessages(userId, chatId, cursor, size)
     }
 
     @PutMapping("/api/chat/{chatId}")

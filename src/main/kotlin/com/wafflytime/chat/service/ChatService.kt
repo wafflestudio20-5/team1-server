@@ -6,6 +6,7 @@ import com.wafflytime.chat.database.MessageEntity
 import com.wafflytime.chat.database.MessageRepository
 import com.wafflytime.chat.dto.*
 import com.wafflytime.chat.exception.*
+import com.wafflytime.common.CursorPage
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.post.service.PostService
 import com.wafflytime.reply.database.ReplyEntity
@@ -13,15 +14,14 @@ import com.wafflytime.reply.service.ReplyService
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.service.UserService
 import jakarta.transaction.Transactional
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
 interface ChatService {
     fun createChat(userId: Long, sourceBoardId: Long, sourcePostId: Long, sourceReplyId: Long? = null, request: CreateChatRequest): CreateChatResponse
-    fun getChats(userId: Long): List<ChatSimpleInfo>
-    fun getMessages(userId: Long, chatId: Long, page: Int, size: Int?): Page<MessageInfo>
+    fun getChat(userId: Long, chatId: Long): ChatSimpleInfo
+    fun getChats(userId: Long, cursor: Long?, size: Long): CursorPage<ChatSimpleInfo>
+    fun getMessages(userId: Long, chatId: Long, cursor: Long?, size: Long?): CursorPage<MessageInfo>
     fun updateChatBlock(userId: Long, chatId: Long, request: UpdateChatBlockRequest): ChatSimpleInfo
     fun updateUnread(userId: Long, request: UpdateUnreadRequest)
 }
@@ -106,25 +106,31 @@ class ChatServiceImpl(
         )
     }
 
+    @Transactional
+    override fun getChat(userId: Long, chatId: Long): ChatSimpleInfo {
+        return chatRepository.findByIdWithLastMessage(chatId)
+            ?.let { ChatSimpleInfo.of(userId, it) }
+            ?: throw ChatNotFound
+    }
 
     @Transactional
-    override fun getChats(userId: Long): List<ChatSimpleInfo> {
-        return chatRepository.findByParticipantIdWithLastMessage(userId)
+    override fun getChats(userId: Long, cursor: Long?, size: Long): CursorPage<ChatSimpleInfo> {
+        return chatRepository.findAllByParticipantIdWithLastMessage(userId, cursor, size)
             .map { ChatSimpleInfo.of(userId, it) }
     }
 
     @Transactional
-    override fun getMessages(userId: Long, chatId: Long, page: Int, size: Int?): Page<MessageInfo> {
+    override fun getMessages(userId: Long, chatId: Long, cursor: Long?, size: Long?): CursorPage<MessageInfo> {
         val chat = getChatEntity(chatId)
-        val defaultSize: Int
+        val defaultSize: Long
         chat.run {
             when (userId) {
                 participant1.id -> {
-                    defaultSize = unread1
+                    defaultSize = unread1.toLong()
                     unread1 = 0
                 }
                 participant2.id -> {
-                    defaultSize = unread2
+                    defaultSize = unread2.toLong()
                     unread2 = 0
                 }
                 else -> throw UserChatMismatch
@@ -132,11 +138,11 @@ class ChatServiceImpl(
         }
 
         val size = size ?: defaultSize
-        if (size == 0) throw NoMoreUnreadMessages
+        if (size == 0L) throw NoMoreUnreadMessages
 
-        val pageRequest = PageRequest.of(page, size)
-        return messageRepository.findByChatIdPageable(chatId, pageRequest)
-            .map { MessageInfo.of(userId, it) }
+        return messageRepository.findByChatIdPageable(chatId, cursor, size).map {
+            MessageInfo.of(userId, it)
+        }
     }
 
     @Transactional
@@ -167,7 +173,7 @@ class ChatServiceImpl(
         val pairList = (0 until len).map { Pair(chatIdList[it], unreadList[it]) }
             .sortedWith(compareBy { it.first })
 
-        val chatList = chatRepository.findByParticipantId(userId)
+        val chatList = chatRepository.findAllByParticipantId(userId)
         if (len != chatList.size) throw ListLengthMismatch
 
         chatList.onEachIndexed { index, chatEntity ->

@@ -1,5 +1,6 @@
 package com.wafflytime.user.info.api
 
+import com.wafflytime.common.CursorPage
 import com.wafflytime.config.ExemptAuthentication
 import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
@@ -12,7 +13,6 @@ import com.wafflytime.user.info.dto.UploadProfileImageRequest
 import com.wafflytime.user.info.dto.UserInfo
 import com.wafflytime.user.info.service.UserService
 import jakarta.validation.Valid
-import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -68,10 +68,10 @@ class UserController(
     @GetMapping("/api/user/myscrap")
     fun getMyScraps(
         @UserIdFromToken userId: Long,
-        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
-        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
-    ): ResponseEntity<Page<PostResponse>> {
-        return ResponseEntity.ok(userService.getMyScraps(userId, page, size))
+        @RequestParam(required = false, value = "cursor") cursor: Long?,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
+    ): ResponseEntity<CursorPage<PostResponse>> {
+        return ResponseEntity.ok(userService.getMyScraps(userId, cursor, size))
     }
 
     @DeleteMapping("/api/user/myscrap")
@@ -85,18 +85,18 @@ class UserController(
     @GetMapping("/api/user/mypost")
     fun getMyPosts(
         @UserIdFromToken userId: Long,
-        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
-        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
-    ) : ResponseEntity<Page<PostResponse>> {
-        return ResponseEntity.ok(userService.getMyPosts(userId, page, size))
+        @RequestParam(required = false, value = "cursor") cursor: Long?,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
+    ) : ResponseEntity<CursorPage<PostResponse>> {
+        return ResponseEntity.ok(userService.getMyPosts(userId, cursor, size))
     }
 
     @GetMapping("/api/user/notifications")
     fun getNotifications(
         @UserIdFromToken userId: Long,
-        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
-        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
-    ) : ResponseEntity<Page<NotificationResponse>> {
-        return ResponseEntity.ok(notificationService.getNotifications(userId, page, size))
+        @RequestParam(required = false, value = "cursor") cursor: Long?,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
+    ) : ResponseEntity<CursorPage<NotificationResponse>> {
+        return ResponseEntity.ok(notificationService.getNotifications(userId, cursor, size))
     }
 }

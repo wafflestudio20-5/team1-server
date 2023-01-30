@@ -12,3 +12,5 @@ open class PostException(msg: String, errorCode: Int, status: HttpStatus) : Waff
 open class ReplyException(msg: String, errorCode: Int, status: HttpStatus) : WafflyTimeException(msg, 600 + errorCode, status)
 open class NotificationException(msg: String, errorCode: Int, status: HttpStatus) : WafflyTimeException(msg, 700 + errorCode, status)
 open class ChatException(msg: String, errorCode: Int, status: HttpStatus) : WafflyTimeException(msg, 800 + errorCode, status)
+
+object DoubleCursorMismatch : WafflyTimeException("cursor 는 둘다 null 이거나 둘다 non-null 이어야 합니다", 4, HttpStatus.BAD_REQUEST)

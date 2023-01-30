@@ -4,8 +4,11 @@ import com.wafflytime.board.dto.HomePostResponse
 import com.wafflytime.board.service.BoardService
 import com.wafflytime.board.type.BoardCategory
 import com.wafflytime.board.type.BoardType
+import com.wafflytime.common.CursorPage
+import com.wafflytime.common.DoubleCursorPage
 import com.wafflytime.common.RedisService
 import com.wafflytime.common.S3Service
+import com.wafflytime.exception.DoubleCursorMismatch
 import com.wafflytime.post.database.*
 import com.wafflytime.post.database.image.ImageColumn
 import com.wafflytime.post.dto.*
@@ -15,7 +18,6 @@ import com.wafflytime.user.info.service.UserService
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
@@ -29,7 +31,6 @@ class PostService(
     private val s3Service: S3Service,
     private val redisService: RedisService,
 ) {
-
 
     @Transactional
     fun createPost(userId: Long, boardId: Long, request: CreatePostRequest) : PostResponse {
@@ -67,9 +68,8 @@ class PostService(
         return PostResponse.of(userId, post, s3Service.getPreSignedUrlsFromS3Keys(post.images))
     }
 
-    fun getPosts(userId: Long, boardId: Long, page: Int, size:Int): Page<PostResponse> {
-        val sort = Sort.by(Sort.Direction.DESC, "createdAt")
-        return postRepository.findAllByBoardId(boardId, PageRequest.of(page, size, sort)).map {
+    fun getPosts(userId: Long, boardId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
+        return postRepository.findAllByBoardId(boardId, cursor, size).map {
             PostResponse.of(
                 userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images)
             )
@@ -151,20 +151,25 @@ class PostService(
         return Pair(post, user)
     }
 
-    fun getHostPosts(userId: Long, page:Int, size:Int): Page<PostResponse> {
-        return postRepository.getHotPosts(PageRequest.of(page, size)).map {
+    fun getHotPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
+        return postRepository.getHotPosts(cursor, size).map {
             PostResponse.of(userId, it)
         }
     }
 
-    fun getBestPosts(userId: Long, page: Int, size: Int): Page<PostResponse> {
-        return postRepository.getBestPosts(PageRequest.of(page, size)).map {
+    fun getBestPosts(userId: Long, first: Long?, second: Long?, size: Long): DoubleCursorPage<PostResponse> {
+        if ((first == null) != (second == null)) throw DoubleCursorMismatch
+        val cursor = first?.let { Pair(it, second!!) }
+
+        return postRepository.getBestPosts(cursor, size).map {
             PostResponse.of(userId, it)
         }
     }
 
-    fun searchPosts(userId: Long, keyword: String, page:Int, size:Int): Page<PostResponse> {
-        return postRepository.findPostsByKeyword(keyword, PageRequest.of(page, size)).map{ PostResponse.of(userId, it) }
+    fun searchPosts(userId: Long, keyword: String, cursor: Long?, size: Long): CursorPage<PostResponse> {
+        return postRepository.findPostsByKeyword(keyword, cursor, size).map {
+            PostResponse.of(userId, it)
+        }
     }
 
     fun getHomePostsTest(): List<HomePostResponse> {

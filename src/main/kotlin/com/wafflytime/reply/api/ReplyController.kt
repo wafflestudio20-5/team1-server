@@ -1,12 +1,12 @@
 package com.wafflytime.reply.api
 
+import com.wafflytime.common.DoubleCursorPage
 import com.wafflytime.reply.dto.CreateReplyRequest
 import com.wafflytime.reply.dto.ReplyResponse
 import com.wafflytime.reply.dto.UpdateReplyRequest
 import com.wafflytime.reply.service.ReplyService
 import com.wafflytime.config.UserIdFromToken
 import jakarta.validation.Valid
-import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -59,10 +59,11 @@ class ReplyController(
     fun getReplies(
         @PathVariable boardId: Long,
         @PathVariable postId: Long,
-        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
-        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int,
-    ) : ResponseEntity<Page<ReplyResponse>>{
-        return ResponseEntity.ok(replyService.getReplies(boardId, postId, page, size))
+        @RequestParam(required = false, value = "first") first: Long?,
+        @RequestParam(required = false, value = "second") second: Long?,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Long,
+    ) : ResponseEntity<DoubleCursorPage<ReplyResponse>>{
+        return ResponseEntity.ok(replyService.getReplies(boardId, postId, first, second, size))
     }
 
     @PostMapping("/api/board/{boardId}/post/{postId}/reply/{replyId}/like")
