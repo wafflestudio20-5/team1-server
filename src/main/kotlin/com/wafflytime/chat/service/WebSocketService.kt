@@ -75,7 +75,7 @@ class WebSocketServiceImpl(
             session.sendMessage(
                 convertToTextMessage(toSender)
             )
-            webSocketSessions[receiver.id]?.sendMessage(
+            getWebSocketSession(receiver.id)?.sendMessage(
                 convertToTextMessage(toReceiver)
             ) ?: run {
                 notificationService.send(
