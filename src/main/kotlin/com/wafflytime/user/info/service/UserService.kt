@@ -28,7 +28,7 @@ interface UserService {
     fun checkNicknameConflict(nickname: String)
     fun checkUnivEmailConflict(univEmail: String)
     fun updateUserInfo(userId: Long, request: UpdateUserInfoRequest): UserInfo
-    fun updateUserMailVerified(userId: Long, verifyEmailRequest: VerifyEmailRequest): UserEntity
+    fun updateUserMailVerified(userId: Long, email: String): UserEntity
     fun getMyScraps(userId: Long, page:Int, size:Int): Page<PostResponse>
     fun deleteScrap(userId: Long, postId: Long): DeleteScrapResponse
     fun getMyPosts(userId: Long, page: Int, size: Int): Page<PostResponse>
@@ -99,10 +99,10 @@ class UserServiceImpl (
     }
 
     @Transactional
-    override fun updateUserMailVerified(userId: Long, verifyEmailRequest: VerifyEmailRequest): UserEntity {
+    override fun updateUserMailVerified(userId: Long, email: String): UserEntity {
         val user = getUserById(userId)
-        userRepository.findByUnivEmail(verifyEmailRequest.email)?.let { throw MailConflict }
-        user.univEmail = verifyEmailRequest.email
+        userRepository.findByUnivEmail(email)?.let { throw MailConflict }
+        user.univEmail = email
 
         return user
     }

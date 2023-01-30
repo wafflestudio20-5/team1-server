@@ -20,10 +20,10 @@ import org.springframework.stereotype.Service
 
 interface ChatService {
     fun createChat(userId: Long, sourceBoardId: Long, sourcePostId: Long, sourceReplyId: Long? = null, request: CreateChatRequest): CreateChatResponse
-    fun sendMessage(userId: Long, chatId: Long, request: SendMessageRequest): MessageInfo
     fun getChats(userId: Long): List<ChatSimpleInfo>
     fun getMessages(userId: Long, chatId: Long, page: Int, size: Int?): Page<MessageInfo>
     fun updateChatBlock(userId: Long, chatId: Long, request: UpdateChatBlockRequest): ChatSimpleInfo
+    fun updateUnread(userId: Long, request: UpdateUnreadRequest)
 }
 
 @Service
@@ -31,6 +31,7 @@ class ChatServiceImpl(
     private val userService: UserService,
     private val postService: PostService,
     private val replyService: ReplyService,
+    private val webSocketService: WebSocketService,
     private val chatRepository: ChatRepository,
     private val messageRepository: MessageRepository,
 ): ChatService {
@@ -84,7 +85,7 @@ class ChatServiceImpl(
 
             systemMessage = sendMessage(
                 chat = newChat,
-                content = buildSystemMessage(sourcePost, sourceReply),
+                contents = buildSystemMessage(sourcePost, sourceReply),
             )
 
             newChat
@@ -93,7 +94,9 @@ class ChatServiceImpl(
             existingChat
         }
 
-        val firstMessage = sendMessage(chat, user, request.content)
+        val firstMessage = sendMessage(chat, user, request.contents)
+
+        webSocketService.sendCreateChatResponse(chat, systemMessage, firstMessage)
 
         return CreateChatResponse(
             systemMessage != null,
@@ -103,16 +106,6 @@ class ChatServiceImpl(
         )
     }
 
-    @Transactional
-    override fun sendMessage(userId: Long, chatId: Long, request: SendMessageRequest): MessageInfo {
-        val user = userService.getUser(userId)
-        val chat = getChatEntity(chatId)
-        validateChatParticipant(user, chat)
-
-        val message = sendMessage(chat, user, request.content)
-
-        return MessageInfo.of(userId, message)
-    }
 
     @Transactional
     override fun getChats(userId: Long): List<ChatSimpleInfo> {
@@ -165,8 +158,37 @@ class ChatServiceImpl(
         return ChatSimpleInfo.of(userId, chat)
     }
 
-    private fun sendMessage(chat: ChatEntity, sender: UserEntity? = null, content: String): MessageEntity {
-        val message = MessageEntity(chat, sender, content)
+    @Transactional
+    override fun updateUnread(userId: Long, request: UpdateUnreadRequest) {
+        val (chatIdList, unreadList) = request
+        val len = chatIdList.size
+        if (len != unreadList.size) throw ListLengthMismatch
+
+        val pairList = (0 until len).map { Pair(chatIdList[it], unreadList[it]) }
+            .sortedWith(compareBy { it.first })
+
+        val chatList = chatRepository.findByParticipantId(userId)
+        if (len != chatList.size) throw ListLengthMismatch
+
+        chatList.onEachIndexed { index, chatEntity ->
+            if (chatEntity.id != pairList[index].first) throw ListMismatch
+            chatEntity.run {
+                when (userId) {
+                    participant1.id -> unread1 = pairList[index].second
+                    participant2.id -> unread2 = pairList[index].second
+                }
+            }
+        }
+
+    }
+
+    private fun getChatEntity(chatId: Long): ChatEntity {
+        return chatRepository.findByIdOrNull(chatId)
+            ?: throw ChatNotFound
+    }
+
+    private fun sendMessage(chat: ChatEntity, sender: UserEntity? = null, contents: String): MessageEntity {
+        val message = MessageEntity(chat, sender, contents)
 
         return if (!chat.isBlocked()) {
             val message = messageRepository.save(message)
@@ -185,16 +207,6 @@ class ChatServiceImpl(
             "${post.board.title}에 작성된 ${if (reply.isWriterAnonymous) "익명"+reply.anonymousId else reply.writer.nickname}의 댓글을 통해 시작된 쪽지입니다.\n" +
                     "글 내용: ${post.title ?: post.contents}"
         }
-    }
-
-    private fun getChatEntity(chatId: Long): ChatEntity {
-        return chatRepository.findByIdOrNull(chatId)
-            ?: throw ChatNotFound
-    }
-
-    private fun validateChatParticipant(user: UserEntity, chat: ChatEntity) {
-        if (chat.participant1 != user && chat.participant2 != user)
-            throw UserChatMismatch
     }
 
 }

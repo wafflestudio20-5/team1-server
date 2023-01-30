@@ -23,15 +23,6 @@ class ChatController(
         return chatService.createChat(userId, boardId, postId, replyId, request)
     }
 
-    @PostMapping("/api/chat/{chatId}")
-    fun sendMessage(
-        @UserIdFromToken userId: Long,
-        @PathVariable chatId: Long,
-        @Valid @RequestBody request: SendMessageRequest,
-    ): MessageInfo {
-        return chatService.sendMessage(userId, chatId, request)
-    }
-
     @GetMapping("/api/chat")
     fun getChatList(
         @UserIdFromToken userId: Long,
@@ -56,6 +47,15 @@ class ChatController(
         @Valid @RequestBody request: UpdateChatBlockRequest,
     ): ChatSimpleInfo {
         return chatService.updateChatBlock(userId, chatId, request)
+    }
+
+    @PutMapping("/api/chat/unread")
+    fun updateChatUnread(
+        @UserIdFromToken userId: Long,
+        @Valid @RequestBody request: UpdateUnreadRequest,
+    ): String {
+        chatService.updateUnread(userId, request)
+        return "success"
     }
 
 }

@@ -3,39 +3,31 @@ package com.wafflytime.user.mail.api
 import com.wafflytime.config.ExemptEmailVerification
 import com.wafflytime.config.UserIdFromToken
 import com.wafflytime.user.auth.dto.AuthToken
-import com.wafflytime.user.mail.dto.VerifyEmailCode
 import com.wafflytime.user.mail.dto.VerifyEmailRequest
-import com.wafflytime.user.auth.service.AuthTokenService
 import com.wafflytime.user.mail.service.EmailService
-import com.wafflytime.user.info.service.UserService
+import com.wafflytime.user.mail.dto.VerifyEmailCode
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
-import java.time.LocalDateTime
 
 @RestController
 class EmailVerificationController(
     private val emailService: EmailService,
-    private val userService: UserService,
-    private val authTokenService: AuthTokenService,
 ) {
 
     @ExemptEmailVerification
     @PostMapping("/api/user/verify-mail")
-    fun verifyEmail(@Valid @RequestBody request: VerifyEmailRequest) : ResponseEntity<VerifyEmailCode> {
-        return ResponseEntity.ok().body(emailService.verifyEmail(request))
+    fun verifyEmail(@UserIdFromToken userId: Long, @Valid @RequestBody request: VerifyEmailRequest) : ResponseEntity<String> {
+        emailService.verifyEmail(userId, request)
+        return ResponseEntity.ok().body("success")
     }
 
     @ExemptEmailVerification
-    @PatchMapping("/api/user/verified-mail")
-    fun patchUserMailVerified(@UserIdFromToken userId: Long, @Valid @RequestBody request: VerifyEmailRequest) : ResponseEntity<AuthToken> {
-        val user = userService.updateUserMailVerified(userId, request)
-
-        return ResponseEntity.ok().body(
-            authTokenService.buildAuthToken(user, LocalDateTime.now())
-        )
+    @PatchMapping("/api/user/verify-mail")
+    fun patchUserMailVerified(@UserIdFromToken userId: Long, @Valid @RequestBody request: VerifyEmailCode) : ResponseEntity<AuthToken> {
+        return ResponseEntity.ok().body(emailService.completeVerification(userId, request))
     }
 }

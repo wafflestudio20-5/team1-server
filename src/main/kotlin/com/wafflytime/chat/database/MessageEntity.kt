@@ -18,6 +18,6 @@ class MessageEntity(
     @JoinColumn(name = "sender_id")
     val sender: UserEntity? = null, // null 인 경우 안내 메세지
     @field:NotBlank
-    val content: String,
+    val contents: String,
 ): BaseTimeEntity() {
 }

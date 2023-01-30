@@ -1,6 +1,7 @@
 package com.wafflytime.config
 
 import com.wafflytime.post.dto.RedisPostDto
+import com.wafflytime.user.mail.dto.RedisMailVerification
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -35,6 +36,15 @@ class RedisConfig {
         redisTemplate.keySerializer = StringRedisSerializer()
         redisTemplate.valueSerializer = GenericJackson2JsonRedisSerializer()
         redisTemplate.setEnableTransactionSupport(true)
+        return redisTemplate
+    }
+
+    @Bean
+    fun redisMailVerificationTemplate(redisConnectionFactory: RedisConnectionFactory) : RedisTemplate<String, RedisMailVerification> {
+        val redisTemplate = RedisTemplate<String, RedisMailVerification>()
+        redisTemplate.setConnectionFactory(redisConnectionFactory)
+        redisTemplate.keySerializer = StringRedisSerializer()
+        redisTemplate.valueSerializer = GenericJackson2JsonRedisSerializer()
         return redisTemplate
     }
 
