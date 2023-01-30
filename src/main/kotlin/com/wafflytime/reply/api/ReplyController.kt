@@ -48,21 +48,23 @@ class ReplyController(
 
     @GetMapping("/api/board/{boardId}/post/{postId}/reply/{replyId}")
     fun getReply(
+        @UserIdFromToken userId: Long,
         @PathVariable boardId: Long,
         @PathVariable postId: Long,
         @PathVariable replyId: Long,
     ) : ResponseEntity<ReplyResponse>{
-        return ResponseEntity.ok(replyService.getReply(boardId, postId, replyId))
+        return ResponseEntity.ok(replyService.getReply(userId, boardId, postId, replyId))
     }
 
     @GetMapping("/api/board/{boardId}/post/{postId}/replies")
     fun getReplies(
+        @UserIdFromToken userId: Long,
         @PathVariable boardId: Long,
         @PathVariable postId: Long,
         @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Int,
     ) : ResponseEntity<Page<ReplyResponse>>{
-        return ResponseEntity.ok(replyService.getReplies(boardId, postId, page, size))
+        return ResponseEntity.ok(replyService.getReplies(userId, boardId, postId, page, size))
     }
 
     @PostMapping("/api/board/{boardId}/post/{postId}/reply/{replyId}/like")
