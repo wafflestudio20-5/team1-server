@@ -25,7 +25,7 @@ interface WebSocketService {
     fun addSession(session: WebSocketSession)
     fun removeSession(session: WebSocketSession)
     fun sendMessage(session: WebSocketSession, message: TextMessage)
-    fun sendCreateChatResponse(chat: ChatEntity, systemMessage: MessageEntity?, firstMessage: MessageEntity)
+    fun sendCreateChatResponse(userId: Long, chat: ChatEntity, systemMessage: MessageEntity?, firstMessage: MessageEntity)
 }
 
 @Service
@@ -99,9 +99,12 @@ class WebSocketServiceImpl(
     }
 
     @Transactional
-    override fun sendCreateChatResponse(chat: ChatEntity, systemMessage: MessageEntity?, firstMessage: MessageEntity) {
-        val senderSession = webSocketSessions[chat.participant1.id]
-        val receiverSession = webSocketSessions[chat.participant2.id]
+    override fun sendCreateChatResponse(userId: Long, chat: ChatEntity, systemMessage: MessageEntity?, firstMessage: MessageEntity) {
+        val (senderSession, receiverSession) = when (userId) {
+            chat.participant1.id -> Pair(webSocketSessions[chat.participant1.id], webSocketSessions[chat.participant2.id])
+            chat.participant2.id -> Pair(webSocketSessions[chat.participant2.id], webSocketSessions[chat.participant1.id])
+            else -> throw UserChatMismatch
+        }
 
         if (senderSession == null && receiverSession == null) return
 
