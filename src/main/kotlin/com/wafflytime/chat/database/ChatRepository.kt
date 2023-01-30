@@ -65,10 +65,12 @@ class ChatRepositorySupportImpl(
         return jpaQueryFactory
             .selectFrom(chatEntity)
             .where(
-                chatEntity.participant1.id.eq(participantId1)
-                    .and(chatEntity.isAnonymous1.isTrue)
-                    .and(chatEntity.participant2.id.eq(participantId2))
+                chatEntity.isAnonymous1.isTrue
                     .and(chatEntity.isAnonymous2.isTrue)
+                    .and(
+                        (chatEntity.participant1.id.eq(participantId1).and(chatEntity.participant2.id.eq(participantId2)))
+                            .or(chatEntity.participant1.id.eq(participantId2).and(chatEntity.participant2.id.eq(participantId1)))
+                    )
             )
             .fetchOne()
     }
