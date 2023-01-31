@@ -113,13 +113,13 @@ class ReplyService(
         return replyToResponse(userId, reply)
     }
 
-    fun getReplies(boardId: Long, postId: Long, first: Long?, second: Long?, size: Long): DoubleCursorPage<ReplyResponse> {
+    fun getReplies(userId: Long, boardId: Long, postId: Long, first: Long?, second: Long?, size: Long): DoubleCursorPage<ReplyResponse> {
         val post = postService.validateBoardAndPost(boardId, postId)
         if ((first == null) != (second == null)) throw DoubleCursorMismatch
         val cursor = first?.let { Pair(it, second!!) }
 
         return replyRepositorySupport.getReplies(post, cursor, size).map {
-            replyToResponse(it)
+            replyToResponse(userId, it)
         }
     }
 
