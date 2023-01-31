@@ -3,6 +3,7 @@ package com.wafflytime.notification.database
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.wafflytime.common.CursorPage
 import com.wafflytime.notification.database.QNotificationEntity.notificationEntity
+import com.wafflytime.notification.type.NotificationType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
@@ -20,6 +21,7 @@ class NotificationRepositorySupportImpl(
     override fun findAllByReceiverId(userId: Long, cursor: Long?, size: Long): CursorPage<NotificationEntity> {
         val query = queryFactory
             .selectFrom(notificationEntity)
+            .where(!notificationEntity.notificationType.eq(NotificationType.MESSAGE))
             .where(notificationEntity.receiver.id.eq(userId))
             .orderBy(notificationEntity.id.desc())
 
