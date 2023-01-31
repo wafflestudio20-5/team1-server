@@ -48,15 +48,17 @@ class ReplyController(
 
     @GetMapping("/api/board/{boardId}/post/{postId}/reply/{replyId}")
     fun getReply(
+        @UserIdFromToken userId: Long,
         @PathVariable boardId: Long,
         @PathVariable postId: Long,
         @PathVariable replyId: Long,
     ) : ResponseEntity<ReplyResponse>{
-        return ResponseEntity.ok(replyService.getReply(boardId, postId, replyId))
+        return ResponseEntity.ok(replyService.getReply(userId, boardId, postId, replyId))
     }
 
     @GetMapping("/api/board/{boardId}/post/{postId}/replies")
     fun getReplies(
+        @UserIdFromToken userId: Long,
         @PathVariable boardId: Long,
         @PathVariable postId: Long,
         @RequestParam(required = false, value = "first") first: Long?,

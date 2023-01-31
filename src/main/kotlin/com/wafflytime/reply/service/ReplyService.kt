@@ -61,7 +61,7 @@ class ReplyService(
         }
         redisService.updateCacheByLikeOrReplyPost(post)
 
-        return replyToResponse(reply)
+        return replyToResponse(userId, reply)
     }
 
     @Transactional
@@ -78,7 +78,7 @@ class ReplyService(
 
         reply.update(request.contents)
         // reply 수정은 알림이 가지 않는다
-        return replyToResponse(reply)
+        return replyToResponse(userId, reply)
     }
 
     @Transactional
@@ -107,10 +107,10 @@ class ReplyService(
         }
     }
 
-    fun getReply(boardId: Long, postId: Long, replyId: Long): ReplyResponse {
+    fun getReply(userId: Long, boardId: Long, postId: Long, replyId: Long): ReplyResponse {
         postService.validateBoardAndPost(boardId, postId)
         val reply = validatePostAndReply(postId, replyId)
-        return replyToResponse(reply)
+        return replyToResponse(userId, reply)
     }
 
     fun getReplies(boardId: Long, postId: Long, first: Long?, second: Long?, size: Long): DoubleCursorPage<ReplyResponse> {
@@ -134,7 +134,7 @@ class ReplyService(
 
         replyLikeRepository.save(ReplyLikeEntity(reply, user))
         reply.nLikes++
-        return replyToResponse(reply)
+        return replyToResponse(userId, reply)
     }
 
     fun getReplyEntity(postId: Long, replyId: Long): ReplyEntity {
@@ -152,7 +152,7 @@ class ReplyService(
         return reply
     }
 
-    private fun replyToResponse(reply: ReplyEntity): ReplyResponse {
+    private fun replyToResponse(userId: Long, reply: ReplyEntity): ReplyResponse {
         return ReplyResponse(
             replyId = reply.id,
             nickname = if (reply.isWriterAnonymous) {
@@ -164,6 +164,7 @@ class ReplyService(
             contents = reply.contents,
             isDeleted = reply.isDeleted,
             isPostWriter = reply.isPostWriter,
+            isMyReply = userId == reply.writer.id,
             nLikes = reply.nLikes,
         )
     }

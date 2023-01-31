@@ -98,8 +98,8 @@ class ChatRepositorySupportImpl(
         return jpaQueryFactory
             .selectFrom(chatEntity)
             .where(
-                chatEntity.isAnonymous1.isTrue
-                    .and(chatEntity.isAnonymous2.isTrue)
+                chatEntity.isAnonymous1.isFalse
+                    .and(chatEntity.isAnonymous2.isFalse)
                     .and(
                         (chatEntity.participant1.id.eq(participantId1).and(chatEntity.participant2.id.eq(participantId2)))
                             .or(chatEntity.participant1.id.eq(participantId2).and(chatEntity.participant2.id.eq(participantId1)))
