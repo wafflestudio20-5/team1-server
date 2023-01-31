@@ -54,7 +54,7 @@ class PostRepositorySupportImpl(
             (cursor?.run {
                 query
                     .where(postEntity.nLikes.loe(first.toInt()))
-                    .where(postEntity.nLikes.eq(first.toInt()).and(postEntity.id.lt(second)))
+                    .where(postEntity.nLikes.lt(first.toInt()).or(postEntity.id.lt(second)))
             } ?: query)
                 .limit(size)
                 .fetch()
