@@ -1,5 +1,6 @@
 package com.wafflytime.user.info.service
 
+import com.wafflytime.common.CursorPage
 import com.wafflytime.common.S3Service
 import com.wafflytime.post.database.PostRepository
 import com.wafflytime.post.database.ScrapRepository
@@ -11,12 +12,8 @@ import com.wafflytime.user.info.dto.UpdateUserInfoRequest
 import com.wafflytime.user.info.dto.UploadProfileImageRequest
 import com.wafflytime.user.info.dto.UserInfo
 import com.wafflytime.user.info.exception.*
-import com.wafflytime.user.mail.dto.VerifyEmailRequest
 import jakarta.transaction.Transactional
 import org.springframework.dao.DataIntegrityViolationException
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -29,9 +26,9 @@ interface UserService {
     fun checkUnivEmailConflict(univEmail: String)
     fun updateUserInfo(userId: Long, request: UpdateUserInfoRequest): UserInfo
     fun updateUserMailVerified(userId: Long, email: String): UserEntity
-    fun getMyScraps(userId: Long, page:Int, size:Int): Page<PostResponse>
+    fun getMyScraps(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse>
     fun deleteScrap(userId: Long, postId: Long): DeleteScrapResponse
-    fun getMyPosts(userId: Long, page: Int, size: Int): Page<PostResponse>
+    fun getMyPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse>
     fun updateProfileImage(userId: Long, request: UploadProfileImageRequest): UserInfo
     fun deleteProfileImage(userId: Long): UserInfo
 }
@@ -109,8 +106,8 @@ class UserServiceImpl (
         return user
     }
 
-    override fun getMyScraps(userId: Long, page:Int, size:Int): Page<PostResponse> {
-        return scrapRepository.findScrapsByUserId(userId, PageRequest.of(page, size)).map {
+    override fun getMyScraps(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
+        return scrapRepository.findScrapsByUserId(userId, cursor, size).map {
             PostResponse.of(userId, it.post)
         }
     }
@@ -126,10 +123,8 @@ class UserServiceImpl (
         return DeleteScrapResponse(scrap.post.id)
     }
 
-    override fun getMyPosts(userId: Long, page: Int, size: Int): Page<PostResponse> {
-        return postRepository.findAllByWriterId(
-            userId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
-        ).map {
+    override fun getMyPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
+        return postRepository.findAllByWriterId(userId, cursor, size).map {
             PostResponse.of(userId, it)
         }
     }

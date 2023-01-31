@@ -1,7 +1,10 @@
 package com.wafflytime.reply.service
 
+import com.wafflytime.common.CursorPage
 import com.wafflytime.common.DateTimeResponse
+import com.wafflytime.common.DoubleCursorPage
 import com.wafflytime.common.RedisService
+import com.wafflytime.exception.DoubleCursorMismatch
 import com.wafflytime.notification.dto.NotificationDto
 import com.wafflytime.notification.service.NotificationService
 import com.wafflytime.post.database.PostEntity
@@ -110,10 +113,12 @@ class ReplyService(
         return replyToResponse(userId, reply)
     }
 
-    fun getReplies(userId: Long, boardId: Long, postId: Long, page: Int, size: Int): Page<ReplyResponse> {
+    fun getReplies(userId: Long, boardId: Long, postId: Long, first: Long?, second: Long?, size: Long): DoubleCursorPage<ReplyResponse> {
         val post = postService.validateBoardAndPost(boardId, postId)
-        val pageRequest = PageRequest.of(page, size)
-        return replyRepositorySupport.getReplies(post, pageRequest).map {
+        if ((first == null) != (second == null)) throw DoubleCursorMismatch
+        val cursor = first?.let { Pair(it, second!!) }
+
+        return replyRepositorySupport.getReplies(post, cursor, size).map {
             replyToResponse(userId, it)
         }
     }

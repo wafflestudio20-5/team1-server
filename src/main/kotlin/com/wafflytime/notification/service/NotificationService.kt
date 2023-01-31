@@ -1,5 +1,6 @@
 package com.wafflytime.notification.service
 
+import com.wafflytime.common.CursorPage
 import com.wafflytime.notification.database.EmitterRepository
 import com.wafflytime.notification.database.NotificationEntity
 import com.wafflytime.notification.database.NotificationRepository
@@ -9,9 +10,6 @@ import com.wafflytime.notification.dto.NotificationResponse
 import com.wafflytime.notification.exception.NotificationNotFound
 import jakarta.transaction.Transactional
 import org.apache.catalina.connector.ClientAbortException
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
@@ -97,9 +95,10 @@ class NotificationService(
         return CheckNotificationResponse(notificationId)
     }
 
-    fun getNotifications(userId: Long, page: Int, size: Int): Page<NotificationResponse> {
-        return notificationRepository.findAllByReceiverId(
-            userId, PageRequest.of(page, size,  Sort.by(Sort.Direction.DESC, "createdAt"))
-        ).map { NotificationResponse.of(it) }
+    fun getNotifications(userId: Long, cursor: Long?, size: Long): CursorPage<NotificationResponse> {
+        return notificationRepository.findAllByReceiverId(userId, cursor, size).map {
+            NotificationResponse.of(it)
+        }
     }
+
 }

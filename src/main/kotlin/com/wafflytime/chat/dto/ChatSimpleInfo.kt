@@ -2,11 +2,13 @@ package com.wafflytime.chat.dto
 
 import com.wafflytime.chat.database.ChatEntity
 import com.wafflytime.chat.exception.UserChatMismatch
+import com.wafflytime.common.DateTimeResponse
 
 data class ChatSimpleInfo(
     val id: Long,
     val target: String,
     val recentMessage: String,
+    val recentTime: DateTimeResponse,
     val unread: Int,
     val blocked: Boolean,
 ) {
@@ -23,6 +25,7 @@ data class ChatSimpleInfo(
                     id,
                     if (isAnonymous2) anonymousName else participant2.nickname,
                     recentMessage.contents,
+                    DateTimeResponse.of(recentMessage.createdAt!!),
                     unread1,
                     blocked1,
                 )
@@ -30,6 +33,7 @@ data class ChatSimpleInfo(
                     id,
                     if (isAnonymous1) anonymousName else participant1.nickname,
                     recentMessage.contents,
+                    DateTimeResponse.of(recentMessage.createdAt!!),
                     unread2,
                     blocked2,
                 )
