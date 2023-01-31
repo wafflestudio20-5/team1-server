@@ -35,10 +35,6 @@ class BoardService(
             if (request.boardCategory != BoardCategory.OTHER) {
                 throw ForbiddenBoardCategory
             }
-        } else {
-            if (request.boardType in arrayOf(BoardType.CUSTOM_BASE, BoardType.CUSTOM_PHOTO)) {
-                throw ForbiddenBoardTypeAdmin
-            }
         }
         val board = boardRepository.save(BoardEntity(
             title = request.title,
