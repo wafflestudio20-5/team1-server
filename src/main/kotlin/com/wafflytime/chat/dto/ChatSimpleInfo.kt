@@ -21,14 +21,14 @@ data class ChatSimpleInfo(
             when (userId) {
                 participant1.id -> ChatSimpleInfo(
                     id,
-                    if (isAnonymous1) anonymousName else participant1.nickname,
+                    if (isAnonymous2) anonymousName else participant2.nickname,
                     recentMessage.contents,
                     unread1,
                     blocked1,
                 )
                 participant2.id -> ChatSimpleInfo(
                     id,
-                    if (isAnonymous2) anonymousName else participant2.nickname,
+                    if (isAnonymous1) anonymousName else participant1.nickname,
                     recentMessage.contents,
                     unread2,
                     blocked2,

@@ -96,7 +96,7 @@ class ChatServiceImpl(
 
         val firstMessage = sendMessage(chat, user, request.contents)
 
-        webSocketService.sendCreateChatResponse(chat, systemMessage, firstMessage)
+        webSocketService.sendCreateChatResponse(userId, chat, systemMessage, firstMessage)
 
         return CreateChatResponse(
             systemMessage != null,
