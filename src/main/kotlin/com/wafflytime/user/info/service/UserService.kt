@@ -64,6 +64,8 @@ class UserServiceImpl (
 
     @Transactional
     override fun checkNicknameConflict(nickname: String) {
+        val len = nickname.length
+        if (len < 2 || 10 < len) throw InvalidNicknameLength
         userRepository.findByNickname(nickname)?.let { throw NicknameConflict }
     }
 
