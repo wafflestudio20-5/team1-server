@@ -48,18 +48,20 @@ class ChatRepositorySupportImpl(
         val userEntity1 = QUserEntity("userEntity1")
         val userEntity2 = QUserEntity("userEntity2")
 
-        val cursorEntity = jpaQueryFactory
-            .selectFrom(chatEntity)
-            .where(chatEntity.id.eq(cursor))
-            .fetchOne()
-            ?: throw ChatNotFound
+        val cursorEntity = cursor?.let {
+            jpaQueryFactory
+                .selectFrom(chatEntity)
+                .where(chatEntity.id.eq(it))
+                .fetchOne()
+                ?: throw ChatNotFound
+        }
 
         val query = jpaQueryFactory
             .selectFrom(chatEntity)
             .where(chatEntity.participant1.id.eq(userId).or(chatEntity.participant2.id.eq(userId)))
             .orderBy(chatEntity.modifiedAt.desc())
 
-        val result = (cursor?.let { query.where(chatEntity.modifiedAt.lt(cursorEntity.modifiedAt)) } ?: query)
+        val result = (cursorEntity?.let { query.where(chatEntity.modifiedAt.lt(it.modifiedAt)) } ?: query)
             .limit(size)
             .leftJoin(chatEntity.messages, messageEntity)
             .where(messageEntity.chat.id.eq(chatEntity.id))
