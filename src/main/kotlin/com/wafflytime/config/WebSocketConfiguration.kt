@@ -2,6 +2,7 @@ package com.wafflytime.config
 
 import com.wafflytime.chat.service.WebSocketService
 import com.wafflytime.user.auth.exception.AuthTokenNotProvided
+import com.wafflytime.user.auth.exception.MailNotVerified
 import com.wafflytime.user.auth.service.AuthTokenService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -72,6 +73,8 @@ class WebSocketHandshakeInterceptor(
         val accessToken = request.headers["Authorization"]?.first() ?: throw AuthTokenNotProvided
 
         val authResult = authTokenService.authenticate(accessToken)
+        if (!authTokenService.isEmailVerified(authResult)) throw MailNotVerified
+
         attributes["UserIdFromToken"] = authTokenService.getUserId(authResult)
         attributes["JwtExpiration"] = authTokenService.getExpiration(authResult)
 
