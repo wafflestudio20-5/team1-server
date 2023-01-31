@@ -24,7 +24,7 @@ interface PostRepositorySupport {
     fun findHomePostsByQuery() : List<PostEntity>
     fun findLatestPostsByCategory(category: BoardCategory, size: Int): List<PostEntity>
     fun findLatestPostsByBoardId(boardId: Long, limit: Long) : List<PostEntity>
-    fun findALlByUserReply(userId: Long, cursor: Long?, size: Long): CursorPage<PostEntity>
+    fun findAllByUserReply(userId: Long, cursor: Long?, size: Long): CursorPage<PostEntity>
 }
 
 @Component
@@ -97,7 +97,7 @@ class PostRepositorySupportImpl(
         return findLatestPosts(boardEntity.id.eq(boardId), limit)
     }
 
-    override fun findALlByUserReply(userId: Long, cursor: Long?, size: Long): CursorPage<PostEntity> {
+    override fun findAllByUserReply(userId: Long, cursor: Long?, size: Long): CursorPage<PostEntity> {
         val query = queryFactory.select(postEntity)
             .from(replyEntity)
             .leftJoin(postEntity).on(replyEntity.post.id.eq(postEntity.id))

@@ -131,7 +131,7 @@ class UserServiceImpl (
     }
 
     override fun getMyRepliedPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
-        return postRepository.findALlByUserReply(userId, cursor, size).map {
+        return postRepository.findAllByUserReply(userId, cursor, size).map {
             PostResponse.of(userId, it)
         }
     }
