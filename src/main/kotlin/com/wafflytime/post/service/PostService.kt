@@ -66,6 +66,14 @@ class PostService(
         return PostResponse.of(userId, post, s3Service.getPreSignedUrlsFromS3Keys(post.images))
     }
 
+    fun getPosts(userId: Long, boardId: Long, page: Long, size: Long): CursorPage<PostResponse> {
+        return postRepository.findAllByBoardId(boardId, page, size).map {
+            PostResponse.of(
+                userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images)
+            )
+        }
+    }
+
     fun getPosts(userId: Long, boardId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
         return postRepository.findAllByBoardId(boardId, cursor, size).map {
             PostResponse.of(
@@ -149,8 +157,20 @@ class PostService(
         return Pair(post, user)
     }
 
+    fun getHotPosts(userId: Long, page: Long, size: Long): CursorPage<PostResponse> {
+        return postRepository.getHotPosts(page, size).map {
+            PostResponse.of(userId, it)
+        }
+    }
+
     fun getHotPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
         return postRepository.getHotPosts(cursor, size).map {
+            PostResponse.of(userId, it)
+        }
+    }
+
+    fun getBestPosts(userId: Long, page: Long, size: Long): DoubleCursorPage<PostResponse> {
+        return postRepository.getBestPosts(page, size).map {
             PostResponse.of(userId, it)
         }
     }
@@ -160,6 +180,12 @@ class PostService(
         val cursor = first?.let { Pair(it, second!!) }
 
         return postRepository.getBestPosts(cursor, size).map {
+            PostResponse.of(userId, it)
+        }
+    }
+
+    fun searchPosts(userId: Long, keyword: String, page: Long, size: Long): CursorPage<PostResponse> {
+        return postRepository.findPostsByKeyword(keyword, page, size).map {
             PostResponse.of(userId, it)
         }
     }

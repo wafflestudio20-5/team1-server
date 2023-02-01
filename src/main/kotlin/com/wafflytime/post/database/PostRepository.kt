@@ -16,14 +16,20 @@ import org.springframework.stereotype.Component
 interface PostRepository : JpaRepository<PostEntity, Long>, PostRepositorySupport
 
 interface PostRepositorySupport {
+    fun findAllByBoardId(boardId: Long, page: Long, size: Long): CursorPage<PostEntity>
     fun findAllByBoardId(boardId: Long, cursor: Long?, size: Long): CursorPage<PostEntity>
+    fun findAllByWriterId(writerId: Long, page: Long, size: Long): CursorPage<PostEntity>
     fun findAllByWriterId(writerId: Long, cursor: Long?, size: Long): CursorPage<PostEntity>
+    fun getHotPosts(page: Long, size: Long): CursorPage<PostEntity>
     fun getHotPosts(cursor: Long?, size: Long): CursorPage<PostEntity>
+    fun getBestPosts(page: Long, size: Long): DoubleCursorPage<PostEntity>
     fun getBestPosts(cursor: Pair<Long, Long>?, size: Long): DoubleCursorPage<PostEntity>
+    fun findPostsByKeyword(keyword: String, page: Long, size: Long): CursorPage<PostEntity>
     fun findPostsByKeyword(keyword: String, cursor: Long?, size: Long): CursorPage<PostEntity>
     fun findHomePostsByQuery() : List<PostEntity>
     fun findLatestPostsByCategory(category: BoardCategory, size: Int): List<PostEntity>
     fun findLatestPostsByBoardId(boardId: Long, limit: Long) : List<PostEntity>
+    fun findAllByUserReply(userId: Long, page: Long, size: Long): CursorPage<PostEntity>
     fun findAllByUserReply(userId: Long, cursor: Long?, size: Long): CursorPage<PostEntity>
 }
 
@@ -35,16 +41,44 @@ class PostRepositorySupportImpl(
     private val hotPostMinLikes = 10
     private val bestPostMinLikes = 20
 
+    override fun findAllByBoardId(boardId: Long, page: Long, size: Long): CursorPage<PostEntity> {
+        return findAllByConditionDesc(postEntity.board.id.eq(boardId), page, size)
+    }
+
     override fun findAllByBoardId(boardId: Long, cursor: Long?, size: Long): CursorPage<PostEntity> {
         return findAllByConditionDesc(postEntity.board.id.eq(boardId), cursor, size)
+    }
+
+    override fun findAllByWriterId(writerId: Long, page: Long, size: Long): CursorPage<PostEntity> {
+        return findAllByConditionDesc(postEntity.writer.id.eq(writerId), page, size)
     }
 
     override fun findAllByWriterId(writerId: Long, cursor: Long?, size: Long): CursorPage<PostEntity> {
         return findAllByConditionDesc(postEntity.writer.id.eq(writerId), cursor, size)
     }
 
+    override fun getHotPosts(page: Long, size: Long): CursorPage<PostEntity> {
+        return findAllByConditionDesc(postEntity.nLikes.goe(hotPostMinLikes), page, size)
+    }
+
     override fun getHotPosts(cursor: Long?, size: Long): CursorPage<PostEntity> {
         return findAllByConditionDesc(postEntity.nLikes.goe(hotPostMinLikes), cursor, size)
+    }
+
+    override fun getBestPosts(page: Long, size: Long): DoubleCursorPage<PostEntity> {
+        val result = queryFactory
+            .selectFrom(postEntity)
+            .where(postEntity.nLikes.goe(bestPostMinLikes))
+            .orderBy(postEntity.nLikes.desc(), postEntity.id.desc())
+            .offset(page * size)
+            .limit(size)
+            .fetch()
+
+        return DoubleCursorPage(
+            contents = result,
+            page = page,
+            size = result.size.toLong()
+        )
     }
 
     override fun getBestPosts(cursor: Pair<Long, Long>?, size: Long): DoubleCursorPage<PostEntity> {
@@ -62,7 +96,15 @@ class PostRepositorySupportImpl(
                 .limit(size)
                 .fetch()
 
-        return DoubleCursorPage(result, result.lastOrNull()?.run { Pair(nLikes.toLong(), id) }, result.size.toLong())
+        return DoubleCursorPage(
+            contents = result,
+            cursor = result.lastOrNull()?.run { Pair(nLikes.toLong(), id) },
+            size = result.size.toLong()
+        )
+    }
+
+    override fun findPostsByKeyword(keyword: String, page: Long, size: Long): CursorPage<PostEntity> {
+        return findAllByConditionDesc(postEntity.contents.contains(keyword), page, size)
     }
 
     override fun findPostsByKeyword(keyword: String, cursor: Long?, size: Long): CursorPage<PostEntity> {
@@ -97,6 +139,17 @@ class PostRepositorySupportImpl(
         return findLatestPosts(boardEntity.id.eq(boardId), limit)
     }
 
+    override fun findAllByUserReply(userId: Long, page: Long, size: Long): CursorPage<PostEntity> {
+        val query = queryFactory.select(postEntity)
+            .from(replyEntity)
+            .leftJoin(postEntity).on(replyEntity.post.id.eq(postEntity.id))
+            .where(replyEntity.writer.id.eq(userId))
+            .orderBy(postEntity.createdAt.desc())
+            .groupBy(postEntity.id)
+
+        return getCursorPagedPostsByPostId(query, page, size)
+    }
+
     override fun findAllByUserReply(userId: Long, cursor: Long?, size: Long): CursorPage<PostEntity> {
         val query = queryFactory.select(postEntity)
             .from(replyEntity)
@@ -108,6 +161,15 @@ class PostRepositorySupportImpl(
         return getCursorPagedPostsByPostId(query, cursor, size)
     }
 
+    private fun findAllByConditionDesc(whereCondition: BooleanExpression, page: Long, size: Long) : CursorPage<PostEntity> {
+        val query = queryFactory
+            .selectFrom(postEntity)
+            .where(whereCondition)
+            .orderBy(postEntity.id.desc())
+
+        return getCursorPagedPostsByPostId(query, page, size)
+    }
+
     private fun findAllByConditionDesc(whereCondition: BooleanExpression, cursor: Long?, size: Long) : CursorPage<PostEntity> {
         val query = queryFactory
             .selectFrom(postEntity)
@@ -117,11 +179,27 @@ class PostRepositorySupportImpl(
         return getCursorPagedPostsByPostId(query, cursor, size)
     }
 
+    private fun getCursorPagedPostsByPostId(query: JPAQuery<PostEntity>, page: Long, size: Long) : CursorPage<PostEntity> {
+        val result = query
+            .offset(page * size)
+            .limit(size)
+            .fetch()
+        return CursorPage(
+            contents = result,
+            page = page,
+            size = result.size.toLong()
+        )
+    }
+
     private fun getCursorPagedPostsByPostId(query: JPAQuery<PostEntity>, cursor: Long?, size: Long) : CursorPage<PostEntity> {
         val result = (cursor?.let { query.where(postEntity.id.lt(it)) } ?: query)
             .limit(size)
             .fetch()
-        return CursorPage(result, result.lastOrNull()?.id, result.size.toLong())
+        return CursorPage(
+            contents = result,
+            cursor = result.lastOrNull()?.id,
+            size = result.size.toLong()
+        )
     }
 
     private fun findLatestPosts(whereCondition: BooleanExpression, limit: Long) : List<PostEntity> {
