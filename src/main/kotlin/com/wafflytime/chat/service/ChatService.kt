@@ -208,18 +208,21 @@ class ChatServiceImpl(
             .sortedWith(compareBy { it.first })
 
         val chatList = chatRepository.findAllByParticipantId(userId)
-        if (len != chatList.size) throw ListLengthMismatch
+        var from = 0
+        val to = chatList.size
 
-        chatList.onEachIndexed { index, chatEntity ->
-            if (chatEntity.id != pairList[index].first) throw ListMismatch
-            chatEntity.run {
+        pairList.forEach { (chatId, unread) ->
+            val result = chatList.subList(from, to).indexOfFirst { it.id == chatId }
+            if (result < 0) throw ChatNotFound
+
+            from += result
+            chatList[from].run {
                 when (userId) {
-                    participant1.id -> unread1 = pairList[index].second
-                    participant2.id -> unread2 = pairList[index].second
+                    participant1.id -> unread1 = unread
+                    participant2.id -> unread2 = unread
                 }
             }
         }
-
     }
 
     private fun getChatEntity(chatId: Long): ChatEntity {
