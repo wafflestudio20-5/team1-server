@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service
 interface ChatService {
     fun createChat(userId: Long, sourceBoardId: Long, sourcePostId: Long, sourceReplyId: Long? = null, request: CreateChatRequest): CreateChatResponse
     fun getChat(userId: Long, chatId: Long): ChatSimpleInfo
+    fun getChats(userId: Long, page: Long, size: Long): CursorPage<ChatSimpleInfo>
     fun getChats(userId: Long, cursor: Long?, size: Long): CursorPage<ChatSimpleInfo>
+    fun getMessages(userId: Long, chatId: Long, page: Long, size: Long?): CursorPage<MessageInfo>
     fun getMessages(userId: Long, chatId: Long, cursor: Long?, size: Long?): CursorPage<MessageInfo>
     fun updateChatBlock(userId: Long, chatId: Long, request: UpdateChatBlockRequest): ChatSimpleInfo
     fun updateUnread(userId: Long, request: UpdateUnreadRequest)
@@ -114,9 +116,41 @@ class ChatServiceImpl(
     }
 
     @Transactional
+    override fun getChats(userId: Long, page: Long, size: Long): CursorPage<ChatSimpleInfo> {
+        return chatRepository.findAllByParticipantIdWithLastMessage(userId, page, size)
+            .map { ChatSimpleInfo.of(userId, it) }
+    }
+
+    @Transactional
     override fun getChats(userId: Long, cursor: Long?, size: Long): CursorPage<ChatSimpleInfo> {
         return chatRepository.findAllByParticipantIdWithLastMessage(userId, cursor, size)
             .map { ChatSimpleInfo.of(userId, it) }
+    }
+
+    @Transactional
+    override fun getMessages(userId: Long, chatId: Long, page: Long, size: Long?): CursorPage<MessageInfo> {
+        val chat = getChatEntity(chatId)
+        val defaultSize: Long
+        chat.run {
+            when (userId) {
+                participant1.id -> {
+                    defaultSize = unread1.toLong()
+                    unread1 = 0
+                }
+                participant2.id -> {
+                    defaultSize = unread2.toLong()
+                    unread2 = 0
+                }
+                else -> throw UserChatMismatch
+            }
+        }
+
+        val size = size ?: defaultSize
+        if (size == 0L) throw NoMoreUnreadMessages
+
+        return messageRepository.findByChatIdPageable(chatId, page, size).map {
+            MessageInfo.of(userId, it)
+        }
     }
 
     @Transactional
