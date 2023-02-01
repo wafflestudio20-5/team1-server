@@ -1,8 +1,24 @@
 package com.wafflytime.exception
 
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import java.time.LocalDateTime
 
-open class WafflyTimeException(msg: String, val errorCode: Int = 0, val status: HttpStatus) : RuntimeException(msg)
+open class WafflyTimeException(msg: String, val errorCode: Int = 0, val status: HttpStatus) : RuntimeException(msg) {
+
+    fun toResponse(): ResponseEntity<Any> {
+        return ResponseEntity(
+            mapOf(
+                "timestamp" to LocalDateTime.now(),
+                "status" to status.value(),
+                "error-code" to errorCode,
+                "default-message" to message
+            ),
+            status
+        )
+    }
+
+}
 
 open class AuthException(msg: String, errorCode: Int, status: HttpStatus) : WafflyTimeException(msg, 100 + errorCode, status)
 open class UserInfoException(msg: String, errorCode: Int, status: HttpStatus) : WafflyTimeException(msg, 200 + errorCode, status)
