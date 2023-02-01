@@ -91,6 +91,15 @@ class UserController(
         return ResponseEntity.ok(userService.getMyPosts(userId, cursor, size))
     }
 
+    @GetMapping("/api/user/myrepliedpost")
+    fun getMyRepliedPosts(
+        @UserIdFromToken userId: Long,
+        @RequestParam(required = false, value = "cursor") cursor: Long?,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
+    ): ResponseEntity<CursorPage<PostResponse>> {
+        return ResponseEntity.ok(userService.getMyRepliedPosts(userId, cursor, size))
+    }
+
     @GetMapping("/api/user/notifications")
     fun getNotifications(
         @UserIdFromToken userId: Long,

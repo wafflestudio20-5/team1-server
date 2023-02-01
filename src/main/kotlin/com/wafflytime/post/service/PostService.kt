@@ -16,8 +16,6 @@ import com.wafflytime.post.exception.*
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.service.UserService
 import jakarta.transaction.Transactional
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 

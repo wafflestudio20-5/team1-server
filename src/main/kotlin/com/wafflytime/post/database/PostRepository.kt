@@ -1,12 +1,14 @@
 package com.wafflytime.post.database
 
 import com.querydsl.core.types.dsl.BooleanExpression
+import com.querydsl.jpa.impl.JPAQuery
 import com.querydsl.jpa.impl.JPAQueryFactory
 import com.wafflytime.board.database.QBoardEntity.boardEntity
 import com.wafflytime.board.type.BoardCategory
 import com.wafflytime.common.CursorPage
 import com.wafflytime.common.DoubleCursorPage
 import com.wafflytime.post.database.QPostEntity.postEntity
+import com.wafflytime.reply.database.QReplyEntity.replyEntity
 import kotlinx.coroutines.*
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Component
@@ -22,6 +24,7 @@ interface PostRepositorySupport {
     fun findHomePostsByQuery() : List<PostEntity>
     fun findLatestPostsByCategory(category: BoardCategory, size: Int): List<PostEntity>
     fun findLatestPostsByBoardId(boardId: Long, limit: Long) : List<PostEntity>
+    fun findAllByUserReply(userId: Long, cursor: Long?, size: Long): CursorPage<PostEntity>
 }
 
 @Component
@@ -94,16 +97,30 @@ class PostRepositorySupportImpl(
         return findLatestPosts(boardEntity.id.eq(boardId), limit)
     }
 
+    override fun findAllByUserReply(userId: Long, cursor: Long?, size: Long): CursorPage<PostEntity> {
+        val query = queryFactory.select(postEntity)
+            .from(replyEntity)
+            .leftJoin(postEntity).on(replyEntity.post.id.eq(postEntity.id))
+            .where(replyEntity.writer.id.eq(userId))
+            .orderBy(postEntity.createdAt.desc())
+            .groupBy(postEntity.id)
+
+        return getCursorPagedPostsByPostId(query, cursor, size)
+    }
+
     private fun findAllByConditionDesc(whereCondition: BooleanExpression, cursor: Long?, size: Long) : CursorPage<PostEntity> {
         val query = queryFactory
             .selectFrom(postEntity)
             .where(whereCondition)
             .orderBy(postEntity.id.desc())
 
+        return getCursorPagedPostsByPostId(query, cursor, size)
+    }
+
+    private fun getCursorPagedPostsByPostId(query: JPAQuery<PostEntity>, cursor: Long?, size: Long) : CursorPage<PostEntity> {
         val result = (cursor?.let { query.where(postEntity.id.lt(it)) } ?: query)
             .limit(size)
             .fetch()
-
         return CursorPage(result, result.lastOrNull()?.id, result.size.toLong())
     }
 

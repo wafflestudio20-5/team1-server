@@ -31,6 +31,7 @@ interface UserService {
     fun getMyPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse>
     fun updateProfileImage(userId: Long, request: UploadProfileImageRequest): UserInfo
     fun deleteProfileImage(userId: Long): UserInfo
+    fun getMyRepliedPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse>
 }
 
 @Service
@@ -125,6 +126,12 @@ class UserServiceImpl (
 
     override fun getMyPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
         return postRepository.findAllByWriterId(userId, cursor, size).map {
+            PostResponse.of(userId, it)
+        }
+    }
+
+    override fun getMyRepliedPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
+        return postRepository.findAllByUserReply(userId, cursor, size).map {
             PostResponse.of(userId, it)
         }
     }

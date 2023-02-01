@@ -1,6 +1,5 @@
 package com.wafflytime.reply.service
 
-import com.wafflytime.common.CursorPage
 import com.wafflytime.common.DateTimeResponse
 import com.wafflytime.common.DoubleCursorPage
 import com.wafflytime.common.RedisService
@@ -16,8 +15,6 @@ import com.wafflytime.reply.dto.UpdateReplyRequest
 import com.wafflytime.reply.exception.*
 import com.wafflytime.user.info.service.UserService
 import jakarta.transaction.Transactional
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
