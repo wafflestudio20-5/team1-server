@@ -26,11 +26,14 @@ interface UserService {
     fun checkUnivEmailConflict(univEmail: String)
     fun updateUserInfo(userId: Long, request: UpdateUserInfoRequest): UserInfo
     fun updateUserMailVerified(userId: Long, email: String): UserEntity
+    fun getMyScraps(userId: Long, page: Long, size: Long): CursorPage<PostResponse>
     fun getMyScraps(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse>
     fun deleteScrap(userId: Long, postId: Long): DeleteScrapResponse
+    fun getMyPosts(userId: Long, page: Long, size: Long): CursorPage<PostResponse>
     fun getMyPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse>
     fun updateProfileImage(userId: Long, request: UploadProfileImageRequest): UserInfo
     fun deleteProfileImage(userId: Long): UserInfo
+    fun getMyRepliedPosts(userId: Long, page: Long, size: Long): CursorPage<PostResponse>
     fun getMyRepliedPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse>
 }
 
@@ -107,6 +110,12 @@ class UserServiceImpl (
         return user
     }
 
+    override fun getMyScraps(userId: Long, page: Long, size: Long): CursorPage<PostResponse> {
+        return scrapRepository.findScrapsByUserId(userId, page, size).map {
+            PostResponse.of(userId, it.post)
+        }
+    }
+
     override fun getMyScraps(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
         return scrapRepository.findScrapsByUserId(userId, cursor, size).map {
             PostResponse.of(userId, it.post)
@@ -124,8 +133,20 @@ class UserServiceImpl (
         return DeleteScrapResponse(scrap.post.id)
     }
 
+    override fun getMyPosts(userId: Long, page: Long, size: Long): CursorPage<PostResponse> {
+        return postRepository.findAllByWriterId(userId, page, size).map {
+            PostResponse.of(userId, it)
+        }
+    }
+
     override fun getMyPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
         return postRepository.findAllByWriterId(userId, cursor, size).map {
+            PostResponse.of(userId, it)
+        }
+    }
+
+    override fun getMyRepliedPosts(userId: Long, page: Long, size: Long): CursorPage<PostResponse> {
+        return postRepository.findAllByUserReply(userId, page, size).map {
             PostResponse.of(userId, it)
         }
     }

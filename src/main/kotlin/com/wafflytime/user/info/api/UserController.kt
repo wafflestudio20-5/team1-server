@@ -68,10 +68,14 @@ class UserController(
     @GetMapping("/api/user/myscrap")
     fun getMyScraps(
         @UserIdFromToken userId: Long,
+        @RequestParam(required = false, value = "page") page: Long?,
         @RequestParam(required = false, value = "cursor") cursor: Long?,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
     ): ResponseEntity<CursorPage<PostResponse>> {
-        return ResponseEntity.ok(userService.getMyScraps(userId, cursor, size))
+        return ResponseEntity.ok(
+            page?.let { userService.getMyScraps(userId, it, size) }
+                ?: userService.getMyScraps(userId, cursor, size)
+        )
     }
 
     @DeleteMapping("/api/user/myscrap")
@@ -85,27 +89,39 @@ class UserController(
     @GetMapping("/api/user/mypost")
     fun getMyPosts(
         @UserIdFromToken userId: Long,
+        @RequestParam(required = false, value = "page") page: Long?,
         @RequestParam(required = false, value = "cursor") cursor: Long?,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
     ) : ResponseEntity<CursorPage<PostResponse>> {
-        return ResponseEntity.ok(userService.getMyPosts(userId, cursor, size))
+        return ResponseEntity.ok(
+            page?.let { userService.getMyPosts(userId, it, size) }
+                ?: userService.getMyPosts(userId, cursor, size)
+        )
     }
 
     @GetMapping("/api/user/myrepliedpost")
     fun getMyRepliedPosts(
         @UserIdFromToken userId: Long,
+        @RequestParam(required = false, value = "page") page: Long?,
         @RequestParam(required = false, value = "cursor") cursor: Long?,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
     ): ResponseEntity<CursorPage<PostResponse>> {
-        return ResponseEntity.ok(userService.getMyRepliedPosts(userId, cursor, size))
+        return ResponseEntity.ok(
+            page?.let { userService.getMyRepliedPosts(userId, it, size) }
+                ?: userService.getMyRepliedPosts(userId, cursor, size)
+        )
     }
 
     @GetMapping("/api/user/notifications")
     fun getNotifications(
         @UserIdFromToken userId: Long,
+        @RequestParam(required = false, value = "page") page: Long?,
         @RequestParam(required = false, value = "cursor") cursor: Long?,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
     ) : ResponseEntity<CursorPage<NotificationResponse>> {
-        return ResponseEntity.ok(notificationService.getNotifications(userId, cursor, size))
+        return ResponseEntity.ok(
+            page?.let { notificationService.getNotifications(userId, it, size) }
+                ?: notificationService.getNotifications(userId, cursor, size)
+        )
     }
 }
