@@ -2,11 +2,12 @@ package com.wafflytime.post.api
 
 import com.wafflytime.board.dto.*
 import com.wafflytime.board.type.BoardCategory
+import com.wafflytime.common.CursorPage
+import com.wafflytime.common.DoubleCursorPage
 import com.wafflytime.config.UserIdFromToken
 import com.wafflytime.post.dto.*
 import com.wafflytime.post.service.PostService
 import jakarta.validation.Valid
-import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -28,10 +29,10 @@ class PostController(
     fun getPosts(
         @UserIdFromToken userId: Long,
         @PathVariable boardId: Long,
-        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
-        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
-    ) : ResponseEntity<Page<PostResponse>> {
-        return ResponseEntity.ok(postService.getPosts(userId, boardId, page, size))
+        @RequestParam(required = false, value = "cursor") cursor: Long?,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
+    ) : ResponseEntity<CursorPage<PostResponse>> {
+        return ResponseEntity.ok(postService.getPosts(userId, boardId, cursor, size))
     }
 
     @PostMapping("/api/board/{boardId}/post")
@@ -84,29 +85,30 @@ class PostController(
     @GetMapping("/api/hotpost")
     fun getHotPost(
         @UserIdFromToken userId: Long,
-        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
-        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
-    ) : ResponseEntity<Page<PostResponse>> {
-        return ResponseEntity.ok(postService.getHostPosts(userId, page, size))
+        @RequestParam(required = false, value = "cursor") cursor: Long?,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
+    ) : ResponseEntity<CursorPage<PostResponse>> {
+        return ResponseEntity.ok(postService.getHotPosts(userId, cursor, size))
     }
 
     @GetMapping("/api/bestpost")
     fun getBestPost(
         @UserIdFromToken userId: Long,
-        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
-        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
-    ) : ResponseEntity<Page<PostResponse>> {
-        return ResponseEntity.ok(postService.getBestPosts(userId, page, size))
+        @RequestParam(required = false, value = "first") first: Long?,
+        @RequestParam(required = false, value = "second") second: Long?,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
+    ) : ResponseEntity<DoubleCursorPage<PostResponse>> {
+        return ResponseEntity.ok(postService.getBestPosts(userId, first, second, size))
     }
 
     @GetMapping("/api/posts/search")
-    fun searchBoards(
+    fun searchPosts(
         @UserIdFromToken userId: Long,
         @RequestParam(required = true, value = "keyword") keyword: String,
-        @RequestParam(required = false, value = "page", defaultValue = "0") page: Int,
-        @RequestParam(required = false, value = "size", defaultValue = "20") size: Int
-    ) : ResponseEntity<Page<PostResponse>> {
-        return ResponseEntity.ok(postService.searchPosts(userId, keyword, page, size))
+        @RequestParam(required = false, value = "cursor") cursor: Long?,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
+    ) : ResponseEntity<CursorPage<PostResponse>> {
+        return ResponseEntity.ok(postService.searchPosts(userId, keyword, cursor, size))
     }
 
     @GetMapping("/api/homeposts")

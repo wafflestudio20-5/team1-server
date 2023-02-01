@@ -1,7 +1,9 @@
 package com.wafflytime.reply.service
 
 import com.wafflytime.common.DateTimeResponse
+import com.wafflytime.common.DoubleCursorPage
 import com.wafflytime.common.RedisService
+import com.wafflytime.exception.DoubleCursorMismatch
 import com.wafflytime.notification.dto.NotificationDto
 import com.wafflytime.notification.service.NotificationService
 import com.wafflytime.post.database.PostEntity
@@ -13,8 +15,6 @@ import com.wafflytime.reply.dto.UpdateReplyRequest
 import com.wafflytime.reply.exception.*
 import com.wafflytime.user.info.service.UserService
 import jakarta.transaction.Transactional
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
@@ -42,7 +42,6 @@ class ReplyService(
                 writer = user,
                 post = post,
                 replyGroup = parent?.replyGroup ?: (commentCount(post) + 1),
-                parentId = parent?.id,
                 isRoot = (parent == null),
                 isWriterAnonymous = request.isWriterAnonymous,
                 anonymousId = replyRepositorySupport.getAnonymousId(post, user),
@@ -59,7 +58,7 @@ class ReplyService(
         }
         redisService.updateCacheByLikeOrReplyPost(post)
 
-        return replyToResponse(reply)
+        return replyToResponse(userId, reply)
     }
 
     @Transactional
@@ -76,7 +75,7 @@ class ReplyService(
 
         reply.update(request.contents)
         // reply 수정은 알림이 가지 않는다
-        return replyToResponse(reply)
+        return replyToResponse(userId, reply)
     }
 
     @Transactional
@@ -105,17 +104,19 @@ class ReplyService(
         }
     }
 
-    fun getReply(boardId: Long, postId: Long, replyId: Long): ReplyResponse {
+    fun getReply(userId: Long, boardId: Long, postId: Long, replyId: Long): ReplyResponse {
         postService.validateBoardAndPost(boardId, postId)
         val reply = validatePostAndReply(postId, replyId)
-        return replyToResponse(reply)
+        return replyToResponse(userId, reply)
     }
 
-    fun getReplies(boardId: Long, postId: Long, page: Int, size: Int): Page<ReplyResponse> {
+    fun getReplies(userId: Long, boardId: Long, postId: Long, first: Long?, second: Long?, size: Long): DoubleCursorPage<ReplyResponse> {
         val post = postService.validateBoardAndPost(boardId, postId)
-        val pageRequest = PageRequest.of(page, size)
-        return replyRepositorySupport.getReplies(post, pageRequest).map {
-            replyToResponse(it)
+        if ((first == null) != (second == null)) throw DoubleCursorMismatch
+        val cursor = first?.let { Pair(it, second!!) }
+
+        return replyRepositorySupport.getReplies(post, cursor, size).map {
+            replyToResponse(userId, it)
         }
     }
 
@@ -130,7 +131,7 @@ class ReplyService(
 
         replyLikeRepository.save(ReplyLikeEntity(reply, user))
         reply.nLikes++
-        return replyToResponse(reply)
+        return replyToResponse(userId, reply)
     }
 
     fun getReplyEntity(postId: Long, replyId: Long): ReplyEntity {
@@ -148,10 +149,9 @@ class ReplyService(
         return reply
     }
 
-    private fun replyToResponse(reply: ReplyEntity): ReplyResponse {
+    private fun replyToResponse(userId: Long, reply: ReplyEntity): ReplyResponse {
         return ReplyResponse(
             replyId = reply.id,
-            writerId = reply.writer.id,
             nickname = if (reply.isWriterAnonymous) {
                 if (reply.isPostWriter) "익명(작성자)"
                 else "익명${reply.anonymousId}"
@@ -161,6 +161,7 @@ class ReplyService(
             contents = reply.contents,
             isDeleted = reply.isDeleted,
             isPostWriter = reply.isPostWriter,
+            isMyReply = userId == reply.writer.id,
             nLikes = reply.nLikes,
         )
     }

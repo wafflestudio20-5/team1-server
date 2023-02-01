@@ -1,5 +1,6 @@
 package com.wafflytime.notification.dto
 
+import com.wafflytime.chat.database.MessageEntity
 import com.wafflytime.notification.type.NotificationType
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.reply.database.ReplyEntity
@@ -16,6 +17,7 @@ data class NotificationInfo (
     constructor() : this(null, null, null, null)
 
     companion object {
+
         fun fromReply(post: PostEntity) : NotificationInfo {
             return NotificationInfo(
                 boardId = post.board.id,
@@ -23,6 +25,13 @@ data class NotificationInfo (
                 postId = post.id
             )
         }
+
+        fun fromMessage(message: MessageEntity) : NotificationInfo {
+            return NotificationInfo(
+                chatId = message.chat.id
+            )
+        }
+
     }
 }
 
@@ -33,7 +42,9 @@ data class NotificationDto (
     val contentCreatedAt: LocalDateTime?,
     val notificationInfo: NotificationInfo
 ) {
+
     companion object {
+
         fun fromReply(receiver: UserEntity, reply: ReplyEntity) : NotificationDto {
             return NotificationDto(
                 notificationType = NotificationType.REPLY,
@@ -43,5 +54,16 @@ data class NotificationDto (
                 notificationInfo = NotificationInfo.fromReply(reply.post)
             )
         }
+
+        fun fromMessage(receiver: UserEntity, message: MessageEntity) : NotificationDto {
+            return NotificationDto(
+                notificationType = NotificationType.MESSAGE,
+                receiver = receiver,
+                content = NotificationType.MESSAGE.prefix + message.contents,
+                contentCreatedAt = message.createdAt,
+                notificationInfo = NotificationInfo.fromMessage(message)
+            )
+        }
+
     }
 }

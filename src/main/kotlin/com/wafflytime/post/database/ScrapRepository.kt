@@ -1,6 +1,7 @@
 package com.wafflytime.post.database
 
 import com.querydsl.jpa.impl.JPAQueryFactory
+import com.wafflytime.common.CursorPage
 import com.wafflytime.post.database.QScrapEntity.scrapEntity
 import com.wafflytime.user.info.database.QUserEntity.userEntity
 import org.springframework.data.domain.Page
@@ -17,32 +18,27 @@ interface ScrapRepository : JpaRepository<ScrapEntity, Long>, ScrapRepositorySup
 
 
 interface ScrapRepositorySupport {
-    fun findScrapsByUserId(userId: Long, pageable: Pageable) : Page<ScrapEntity>
+    fun findScrapsByUserId(userId: Long, cursor: Long?, size: Long): CursorPage<ScrapEntity>
 }
 
 @Component
 class ScrapRepositorySupportImpl(
     private val queryFactory: JPAQueryFactory
 ) : ScrapRepositorySupport {
-    override fun findScrapsByUserId(userId: Long, pageable: Pageable): Page<ScrapEntity> {
-        // N+1 문제를 해결하고자 fetchJoin() 쓰고, 대신에 pageable 은 마지막에 따로 처리
-        val result = queryFactory
+
+    override fun findScrapsByUserId(userId: Long, cursor: Long?, size: Long): CursorPage<ScrapEntity> {
+        val query = queryFactory
             .selectFrom(scrapEntity)
             .leftJoin(scrapEntity.post).fetchJoin()
             .leftJoin(userEntity).fetchJoin()
             .where(scrapEntity.user.id.eq(userId))
-            .orderBy(scrapEntity.createdAt.desc())
+            .orderBy(scrapEntity.id.desc())
+
+        val result = (cursor?.let { query.where(scrapEntity.id.lt(it)) } ?: query)
+            .limit(size)
             .fetch()
-        return createPageableResult(result, pageable)
+
+        return CursorPage(result, result.lastOrNull()?.id, result.size.toLong())
     }
 
-    fun <T> createPageableResult(result: MutableList<T>, pageable: Pageable) : Page<T> {
-        var start = pageable.offset.toInt()
-        val end = min(start + pageable.pageSize, result.size)
-
-        if (start > end) {
-            start = end
-        }
-        return PageImpl(result.subList(start, end), pageable, result.size.toLong())
-    }
 }

@@ -1,6 +1,9 @@
 package com.wafflytime.chat.dto
 
+import jakarta.validation.constraints.NotBlank
+
 data class CreateChatRequest(
     val isAnonymous: Boolean,
-    val content: String,
+    @field:NotBlank
+    val contents: String,
 )

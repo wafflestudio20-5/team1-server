@@ -1,12 +1,10 @@
 package com.wafflytime.reply.database
 
 import com.querydsl.jpa.impl.JPAQueryFactory
+import com.wafflytime.common.DoubleCursorPage
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.reply.database.QReplyEntity.replyEntity
 import com.wafflytime.user.info.database.UserEntity
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Component
 
@@ -35,20 +33,26 @@ class ReplyRepositorySupport(
             .fetchOne()
     }
 
-    fun getReplies(post: PostEntity, pageable: Pageable): Page<ReplyEntity> {
+    fun getReplies(post: PostEntity, cursor: Pair<Long, Long>?, size: Long): DoubleCursorPage<ReplyEntity> {
         val query = queryFactory.selectFrom(replyEntity)
             .innerJoin(replyEntity.post)
             .where(replyEntity.post.id.eq(post.id))
             .where(replyEntity.isDisplayed.isTrue)
+            .orderBy(replyEntity.replyGroup.desc(), replyEntity.id.desc())
 
-        val count = query.fetch().size.toLong()
-        val result = query.orderBy(replyEntity.replyGroup.desc(), replyEntity.createdAt.desc())
-            .offset(pageable.offset)
-            .limit(pageable.pageSize.toLong())
-            .fetch()
-            .reversed()
+        val result =
+            (cursor?.run {
+                query
+                    .where(replyEntity.replyGroup.loe(first))
+                    .where(replyEntity.replyGroup.lt(first).or(replyEntity.id.lt(second)))
+            } ?: query)
+                .limit(size)
+                .innerJoin(replyEntity.writer)
+                .fetchJoin()
+                .fetch()
+                .reversed()
 
-        return PageImpl(result, pageable, count)
+        return DoubleCursorPage(result, result.firstOrNull()?.run { Pair(replyGroup, id) }, result.size.toLong())
     }
 
     fun countChildReplies(post: PostEntity, replyGroup: Long): Long {

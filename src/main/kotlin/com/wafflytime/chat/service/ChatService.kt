@@ -6,6 +6,7 @@ import com.wafflytime.chat.database.MessageEntity
 import com.wafflytime.chat.database.MessageRepository
 import com.wafflytime.chat.dto.*
 import com.wafflytime.chat.exception.*
+import com.wafflytime.common.CursorPage
 import com.wafflytime.post.database.PostEntity
 import com.wafflytime.post.service.PostService
 import com.wafflytime.reply.database.ReplyEntity
@@ -13,17 +14,16 @@ import com.wafflytime.reply.service.ReplyService
 import com.wafflytime.user.info.database.UserEntity
 import com.wafflytime.user.info.service.UserService
 import jakarta.transaction.Transactional
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
 interface ChatService {
     fun createChat(userId: Long, sourceBoardId: Long, sourcePostId: Long, sourceReplyId: Long? = null, request: CreateChatRequest): CreateChatResponse
-    fun sendMessage(userId: Long, chatId: Long, request: SendMessageRequest): MessageInfo
-    fun getChats(userId: Long): List<ChatSimpleInfo>
-    fun getMessages(userId: Long, chatId: Long, page: Int, size: Int?): Page<MessageInfo>
+    fun getChat(userId: Long, chatId: Long): ChatSimpleInfo
+    fun getChats(userId: Long, cursor: Long?, size: Long): CursorPage<ChatSimpleInfo>
+    fun getMessages(userId: Long, chatId: Long, cursor: Long?, size: Long?): CursorPage<MessageInfo>
     fun updateChatBlock(userId: Long, chatId: Long, request: UpdateChatBlockRequest): ChatSimpleInfo
+    fun updateUnread(userId: Long, request: UpdateUnreadRequest)
 }
 
 @Service
@@ -31,6 +31,7 @@ class ChatServiceImpl(
     private val userService: UserService,
     private val postService: PostService,
     private val replyService: ReplyService,
+    private val webSocketService: WebSocketService,
     private val chatRepository: ChatRepository,
     private val messageRepository: MessageRepository,
 ): ChatService {
@@ -84,7 +85,7 @@ class ChatServiceImpl(
 
             systemMessage = sendMessage(
                 chat = newChat,
-                content = buildSystemMessage(sourcePost, sourceReply),
+                contents = buildSystemMessage(sourcePost, sourceReply),
             )
 
             newChat
@@ -93,7 +94,9 @@ class ChatServiceImpl(
             existingChat
         }
 
-        val firstMessage = sendMessage(chat, user, request.content)
+        val firstMessage = sendMessage(chat, user, request.contents)
+
+        webSocketService.sendCreateChatResponse(userId, chat, systemMessage, firstMessage)
 
         return CreateChatResponse(
             systemMessage != null,
@@ -104,34 +107,30 @@ class ChatServiceImpl(
     }
 
     @Transactional
-    override fun sendMessage(userId: Long, chatId: Long, request: SendMessageRequest): MessageInfo {
-        val user = userService.getUser(userId)
-        val chat = getChatEntity(chatId)
-        validateChatParticipant(user, chat)
-
-        val message = sendMessage(chat, user, request.content)
-
-        return MessageInfo.of(userId, message)
+    override fun getChat(userId: Long, chatId: Long): ChatSimpleInfo {
+        return chatRepository.findByIdWithLastMessage(chatId)
+            ?.let { ChatSimpleInfo.of(userId, it) }
+            ?: throw ChatNotFound
     }
 
     @Transactional
-    override fun getChats(userId: Long): List<ChatSimpleInfo> {
-        return chatRepository.findByParticipantIdWithLastMessage(userId)
+    override fun getChats(userId: Long, cursor: Long?, size: Long): CursorPage<ChatSimpleInfo> {
+        return chatRepository.findAllByParticipantIdWithLastMessage(userId, cursor, size)
             .map { ChatSimpleInfo.of(userId, it) }
     }
 
     @Transactional
-    override fun getMessages(userId: Long, chatId: Long, page: Int, size: Int?): Page<MessageInfo> {
+    override fun getMessages(userId: Long, chatId: Long, cursor: Long?, size: Long?): CursorPage<MessageInfo> {
         val chat = getChatEntity(chatId)
-        val defaultSize: Int
+        val defaultSize: Long
         chat.run {
             when (userId) {
                 participant1.id -> {
-                    defaultSize = unread1
+                    defaultSize = unread1.toLong()
                     unread1 = 0
                 }
                 participant2.id -> {
-                    defaultSize = unread2
+                    defaultSize = unread2.toLong()
                     unread2 = 0
                 }
                 else -> throw UserChatMismatch
@@ -139,11 +138,11 @@ class ChatServiceImpl(
         }
 
         val size = size ?: defaultSize
-        if (size == 0) throw NoMoreUnreadMessages
+        if (size == 0L) throw NoMoreUnreadMessages
 
-        val pageRequest = PageRequest.of(page, size)
-        return messageRepository.findByChatIdPageable(chatId, pageRequest)
-            .map { MessageInfo.of(userId, it) }
+        return messageRepository.findByChatIdPageable(chatId, cursor, size).map {
+            MessageInfo.of(userId, it)
+        }
     }
 
     @Transactional
@@ -165,8 +164,37 @@ class ChatServiceImpl(
         return ChatSimpleInfo.of(userId, chat)
     }
 
-    private fun sendMessage(chat: ChatEntity, sender: UserEntity? = null, content: String): MessageEntity {
-        val message = MessageEntity(chat, sender, content)
+    @Transactional
+    override fun updateUnread(userId: Long, request: UpdateUnreadRequest) {
+        val (chatIdList, unreadList) = request
+        val len = chatIdList.size
+        if (len != unreadList.size) throw ListLengthMismatch
+
+        val pairList = (0 until len).map { Pair(chatIdList[it], unreadList[it]) }
+            .sortedWith(compareBy { it.first })
+
+        val chatList = chatRepository.findAllByParticipantId(userId)
+        if (len != chatList.size) throw ListLengthMismatch
+
+        chatList.onEachIndexed { index, chatEntity ->
+            if (chatEntity.id != pairList[index].first) throw ListMismatch
+            chatEntity.run {
+                when (userId) {
+                    participant1.id -> unread1 = pairList[index].second
+                    participant2.id -> unread2 = pairList[index].second
+                }
+            }
+        }
+
+    }
+
+    private fun getChatEntity(chatId: Long): ChatEntity {
+        return chatRepository.findByIdOrNull(chatId)
+            ?: throw ChatNotFound
+    }
+
+    private fun sendMessage(chat: ChatEntity, sender: UserEntity? = null, contents: String): MessageEntity {
+        val message = MessageEntity(chat, sender, contents)
 
         return if (!chat.isBlocked()) {
             val message = messageRepository.save(message)
@@ -185,16 +213,6 @@ class ChatServiceImpl(
             "${post.board.title}에 작성된 ${if (reply.isWriterAnonymous) "익명"+reply.anonymousId else reply.writer.nickname}의 댓글을 통해 시작된 쪽지입니다.\n" +
                     "글 내용: ${post.title ?: post.contents}"
         }
-    }
-
-    private fun getChatEntity(chatId: Long): ChatEntity {
-        return chatRepository.findByIdOrNull(chatId)
-            ?: throw ChatNotFound
-    }
-
-    private fun validateChatParticipant(user: UserEntity, chat: ChatEntity) {
-        if (chat.participant1 != user && chat.participant2 != user)
-            throw UserChatMismatch
     }
 
 }

@@ -24,3 +24,4 @@ object SocialLoginFailure : Auth404("해당 소셜 이메일로 가입한 계정
 object OAuthProviderNotSupported : Auth400("지원하지 않는 OAuth Provider 입니다", 10)
 object InvalidAuthorizationCode : Auth401("잘못된 Authorization code 입니다", 11)
 object InvalidOAuthToken : Auth500("잘못된 OAuth access token", 12)
+object OAuthCodeExpired : Auth401("만료된 코드입니다", 13)
