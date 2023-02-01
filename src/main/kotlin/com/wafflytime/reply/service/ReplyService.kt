@@ -110,6 +110,14 @@ class ReplyService(
         return replyToResponse(userId, reply)
     }
 
+    fun getReplies(userId: Long, boardId: Long, postId: Long, page: Long, size: Long): DoubleCursorPage<ReplyResponse> {
+        val post = postService.validateBoardAndPost(boardId, postId)
+
+        return replyRepositorySupport.getReplies(post, page, size).map {
+            replyToResponse(userId, it)
+        }
+    }
+
     fun getReplies(userId: Long, boardId: Long, postId: Long, first: Long?, second: Long?, size: Long): DoubleCursorPage<ReplyResponse> {
         val post = postService.validateBoardAndPost(boardId, postId)
         if ((first == null) != (second == null)) throw DoubleCursorMismatch

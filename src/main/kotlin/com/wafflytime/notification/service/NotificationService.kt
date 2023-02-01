@@ -95,6 +95,12 @@ class NotificationService(
         return CheckNotificationResponse(notificationId)
     }
 
+    fun getNotifications(userId: Long, page: Long, size: Long): CursorPage<NotificationResponse> {
+        return notificationRepository.findAllByReceiverId(userId, page, size).map {
+            NotificationResponse.of(it)
+        }
+    }
+
     fun getNotifications(userId: Long, cursor: Long?, size: Long): CursorPage<NotificationResponse> {
         return notificationRepository.findAllByReceiverId(userId, cursor, size).map {
             NotificationResponse.of(it)

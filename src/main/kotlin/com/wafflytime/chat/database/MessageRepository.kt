@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository
 interface MessageRepository : JpaRepository<MessageEntity, Long>, MessageRepositorySupport
 
 interface MessageRepositorySupport {
+    fun findByChatIdPageable(chatId: Long, page: Long, size: Long): CursorPage<MessageEntity>
     fun findByChatIdPageable(chatId: Long, cursor: Long?, size: Long): CursorPage<MessageEntity>
 }
 
@@ -17,6 +18,23 @@ interface MessageRepositorySupport {
 class MessageRepositorySupportImpl(
     private val jpaQueryFactory: JPAQueryFactory
 ) : QuerydslRepositorySupport(MessageEntity::class.java), MessageRepositorySupport {
+
+    override fun findByChatIdPageable(chatId: Long, page: Long, size: Long): CursorPage<MessageEntity> {
+        val result = jpaQueryFactory
+            .selectFrom(messageEntity)
+            .where(messageEntity.chat.id.eq(chatId))
+            .orderBy(messageEntity.id.desc())
+            .offset(page * size)
+            .limit(size)
+            .fetch()
+            .reversed()
+
+        return CursorPage(
+            contents = result,
+            page = page,
+            size = result.size.toLong()
+        )
+    }
 
     override fun findByChatIdPageable(chatId: Long, cursor: Long?, size: Long): CursorPage<MessageEntity> {
         val query = jpaQueryFactory
@@ -29,7 +47,11 @@ class MessageRepositorySupportImpl(
             .fetch()
             .reversed()
 
-        return CursorPage(result, result.firstOrNull()?.id, result.size.toLong())
+        return CursorPage(
+            contents = result,
+            cursor = result.firstOrNull()?.id,
+            size = result.size.toLong()
+        )
     }
 
 }

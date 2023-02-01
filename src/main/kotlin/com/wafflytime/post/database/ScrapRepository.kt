@@ -18,6 +18,7 @@ interface ScrapRepository : JpaRepository<ScrapEntity, Long>, ScrapRepositorySup
 
 
 interface ScrapRepositorySupport {
+    fun findScrapsByUserId(userId: Long, page: Long, size: Long): CursorPage<ScrapEntity>
     fun findScrapsByUserId(userId: Long, cursor: Long?, size: Long): CursorPage<ScrapEntity>
 }
 
@@ -25,6 +26,24 @@ interface ScrapRepositorySupport {
 class ScrapRepositorySupportImpl(
     private val queryFactory: JPAQueryFactory
 ) : ScrapRepositorySupport {
+
+    override fun findScrapsByUserId(userId: Long, page: Long, size: Long): CursorPage<ScrapEntity> {
+        val result = queryFactory
+            .selectFrom(scrapEntity)
+            .leftJoin(scrapEntity.post).fetchJoin()
+            .leftJoin(userEntity).fetchJoin()
+            .where(scrapEntity.user.id.eq(userId))
+            .orderBy(scrapEntity.id.desc())
+            .offset(page * size)
+            .limit(size)
+            .fetch()
+
+        return CursorPage(
+            contents = result,
+            page = page,
+            size = result.size.toLong()
+        )
+    }
 
     override fun findScrapsByUserId(userId: Long, cursor: Long?, size: Long): CursorPage<ScrapEntity> {
         val query = queryFactory
@@ -38,7 +57,11 @@ class ScrapRepositorySupportImpl(
             .limit(size)
             .fetch()
 
-        return CursorPage(result, result.lastOrNull()?.id, result.size.toLong())
+        return CursorPage(
+            contents = result,
+            cursor = result.lastOrNull()?.id,
+            size = result.size.toLong()
+        )
     }
 
 }

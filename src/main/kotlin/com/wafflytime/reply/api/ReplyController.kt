@@ -61,11 +61,15 @@ class ReplyController(
         @UserIdFromToken userId: Long,
         @PathVariable boardId: Long,
         @PathVariable postId: Long,
+        @RequestParam(required = false, value = "page") page: Long?,
         @RequestParam(required = false, value = "first") first: Long?,
         @RequestParam(required = false, value = "second") second: Long?,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Long,
     ) : ResponseEntity<DoubleCursorPage<ReplyResponse>>{
-        return ResponseEntity.ok(replyService.getReplies(userId, boardId, postId, first, second, size))
+        return ResponseEntity.ok(
+            page?.let { replyService.getReplies(userId, boardId, postId, first, second, size) }
+                ?: replyService.getReplies(userId, boardId, postId, first, second, size)
+        )
     }
 
     @PostMapping("/api/board/{boardId}/post/{postId}/reply/{replyId}/like")

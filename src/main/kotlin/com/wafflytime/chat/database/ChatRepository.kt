@@ -14,6 +14,7 @@ interface ChatRepository : JpaRepository<ChatEntity, Long>, ChatRepositorySuppor
 
 interface ChatRepositorySupport {
     fun findByIdWithLastMessage(chatId: Long): ChatEntity?
+    fun findAllByParticipantIdWithLastMessage(userId: Long, page: Long, size: Long): CursorPage<ChatEntity>
     fun findAllByParticipantIdWithLastMessage(userId: Long, cursor: Long?, size: Long): CursorPage<ChatEntity>
     fun findByAllConditions(postId: Long, participantId1: Long, isAnonymous1: Boolean, participantId2: Long, isAnonymous2: Boolean) : ChatEntity?
     fun findByBothParticipantId(participantId1: Long, participantId2: Long): ChatEntity?
@@ -42,6 +43,34 @@ class ChatRepositorySupportImpl(
             .where(userEntity2.id.eq(chatEntity.participant2.id))
             .fetchJoin()
             .fetchOne()
+    }
+
+    override fun findAllByParticipantIdWithLastMessage(userId: Long, page: Long, size: Long): CursorPage<ChatEntity> {
+        val userEntity1 = QUserEntity("userEntity1")
+        val userEntity2 = QUserEntity("userEntity2")
+
+        val result = jpaQueryFactory
+            .selectFrom(chatEntity)
+            .where(chatEntity.participant1.id.eq(userId).or(chatEntity.participant2.id.eq(userId)))
+            .orderBy(chatEntity.modifiedAt.desc())
+            .offset(page * size)
+            .limit(size)
+            .leftJoin(chatEntity.messages, messageEntity)
+            .where(messageEntity.chat.id.eq(chatEntity.id))
+            .fetchJoin()
+            .leftJoin(chatEntity.participant1, userEntity1)
+            .where(userEntity1.id.eq(chatEntity.participant1.id))
+            .fetchJoin()
+            .leftJoin(chatEntity.participant2, userEntity2)
+            .where(userEntity2.id.eq(chatEntity.participant2.id))
+            .fetchJoin()
+            .fetch()
+
+        return CursorPage(
+            contents = result,
+            page = page,
+            size = result.size.toLong(),
+        )
     }
 
     override fun findAllByParticipantIdWithLastMessage(userId: Long, cursor: Long?, size: Long): CursorPage<ChatEntity> {
@@ -74,7 +103,11 @@ class ChatRepositorySupportImpl(
             .fetchJoin()
             .fetch()
 
-        return CursorPage(result, result.lastOrNull()?.id, result.size.toLong())
+        return CursorPage(
+            contents = result,
+            cursor = result.lastOrNull()?.id,
+            size = result.size.toLong(),
+        )
     }
 
     override fun findByAllConditions(

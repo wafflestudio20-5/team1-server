@@ -33,6 +33,26 @@ class ReplyRepositorySupport(
             .fetchOne()
     }
 
+    fun getReplies(post: PostEntity, page: Long, size: Long): DoubleCursorPage<ReplyEntity> {
+        val result = queryFactory.selectFrom(replyEntity)
+            .innerJoin(replyEntity.post)
+            .where(replyEntity.post.id.eq(post.id))
+            .where(replyEntity.isDisplayed.isTrue)
+            .orderBy(replyEntity.replyGroup.desc(), replyEntity.id.desc())
+            .offset(page * size)
+            .limit(size)
+            .innerJoin(replyEntity.writer)
+            .fetchJoin()
+            .fetch()
+            .reversed()
+
+        return DoubleCursorPage(
+            contents = result,
+            page = page,
+            size = result.size.toLong()
+        )
+    }
+
     fun getReplies(post: PostEntity, cursor: Pair<Long, Long>?, size: Long): DoubleCursorPage<ReplyEntity> {
         val query = queryFactory.selectFrom(replyEntity)
             .innerJoin(replyEntity.post)
@@ -52,7 +72,11 @@ class ReplyRepositorySupport(
                 .fetch()
                 .reversed()
 
-        return DoubleCursorPage(result, result.firstOrNull()?.run { Pair(replyGroup, id) }, result.size.toLong())
+        return DoubleCursorPage(
+            contents = result,
+            cursor = result.firstOrNull()?.run { Pair(replyGroup, id) },
+            size = result.size.toLong()
+        )
     }
 
     fun countChildReplies(post: PostEntity, replyGroup: Long): Long {

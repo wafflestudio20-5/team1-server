@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository
 interface NotificationRepository : JpaRepository<NotificationEntity, Long>, NotificationRepositorySupport
 
 interface NotificationRepositorySupport {
+    fun findAllByReceiverId(userId: Long, page: Long, size: Long): CursorPage<NotificationEntity>
     fun findAllByReceiverId(userId: Long, cursor: Long?, size: Long): CursorPage<NotificationEntity>
 }
 
@@ -17,6 +18,23 @@ interface NotificationRepositorySupport {
 class NotificationRepositorySupportImpl(
     private val queryFactory: JPAQueryFactory,
 ) : NotificationRepositorySupport {
+
+    override fun findAllByReceiverId(userId: Long, page: Long, size: Long): CursorPage<NotificationEntity> {
+        val result = queryFactory
+            .selectFrom(notificationEntity)
+            .where(!notificationEntity.notificationType.eq(NotificationType.MESSAGE))
+            .where(notificationEntity.receiver.id.eq(userId))
+            .orderBy(notificationEntity.id.desc())
+            .offset(page * size)
+            .limit(size)
+            .fetch()
+
+        return CursorPage(
+            contents = result,
+            page = page,
+            size = result.size.toLong()
+        )
+    }
 
     override fun findAllByReceiverId(userId: Long, cursor: Long?, size: Long): CursorPage<NotificationEntity> {
         val query = queryFactory
@@ -29,7 +47,11 @@ class NotificationRepositorySupportImpl(
             .limit(size)
             .fetch()
 
-        return CursorPage(result, result.lastOrNull()?.id, result.size.toLong())
+        return CursorPage(
+            contents = result,
+            cursor = result.lastOrNull()?.id,
+            size = result.size.toLong()
+        )
     }
 
 }
