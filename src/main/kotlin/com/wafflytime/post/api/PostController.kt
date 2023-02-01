@@ -29,10 +29,14 @@ class PostController(
     fun getPosts(
         @UserIdFromToken userId: Long,
         @PathVariable boardId: Long,
+        @RequestParam(required = false, value = "page") page: Long?,
         @RequestParam(required = false, value = "cursor") cursor: Long?,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
     ) : ResponseEntity<CursorPage<PostResponse>> {
-        return ResponseEntity.ok(postService.getPosts(userId, boardId, cursor, size))
+        return ResponseEntity.ok(
+            page?.let { postService.getPosts(userId, boardId, it, size) }
+                ?: postService.getPosts(userId, boardId, cursor, size)
+        )
     }
 
     @PostMapping("/api/board/{boardId}/post")
@@ -85,30 +89,42 @@ class PostController(
     @GetMapping("/api/hotpost")
     fun getHotPost(
         @UserIdFromToken userId: Long,
+        @RequestParam(required = false, value = "page") page: Long?,
         @RequestParam(required = false, value = "cursor") cursor: Long?,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
     ) : ResponseEntity<CursorPage<PostResponse>> {
-        return ResponseEntity.ok(postService.getHotPosts(userId, cursor, size))
+        return ResponseEntity.ok(
+            page?.let { postService.getHotPosts(userId, it, size) }
+                ?: postService.getHotPosts(userId, cursor, size)
+        )
     }
 
     @GetMapping("/api/bestpost")
     fun getBestPost(
         @UserIdFromToken userId: Long,
+        @RequestParam(required = false, value = "page") page: Long?,
         @RequestParam(required = false, value = "first") first: Long?,
         @RequestParam(required = false, value = "second") second: Long?,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
     ) : ResponseEntity<DoubleCursorPage<PostResponse>> {
-        return ResponseEntity.ok(postService.getBestPosts(userId, first, second, size))
+        return ResponseEntity.ok(
+            page?.let { postService.getBestPosts(userId, it, size) }
+                ?: postService.getBestPosts(userId, first, second, size)
+        )
     }
 
     @GetMapping("/api/posts/search")
     fun searchPosts(
         @UserIdFromToken userId: Long,
+        @RequestParam(required = false, value = "page") page: Long?,
         @RequestParam(required = true, value = "keyword") keyword: String,
         @RequestParam(required = false, value = "cursor") cursor: Long?,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
     ) : ResponseEntity<CursorPage<PostResponse>> {
-        return ResponseEntity.ok(postService.searchPosts(userId, keyword, cursor, size))
+        return ResponseEntity.ok(
+            page?.let { postService.searchPosts(userId, keyword, it, size) }
+                ?: postService.searchPosts(userId, keyword, cursor, size)
+        )
     }
 
     @GetMapping("/api/homeposts")
