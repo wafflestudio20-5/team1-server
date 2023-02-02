@@ -38,10 +38,11 @@ class ScrapRepositorySupportImpl(
             .limit(size)
             .fetch()
 
-        return CursorPage(
+        return CursorPage.of(
             contents = result,
             page = page,
-            size = result.size.toLong()
+            size = result.size.toLong(),
+            requestSize = size
         )
     }
 
@@ -57,10 +58,11 @@ class ScrapRepositorySupportImpl(
             .limit(size)
             .fetch()
 
-        return CursorPage(
+        return CursorPage.of(
             contents = result,
             cursor = result.lastOrNull()?.id,
-            size = result.size.toLong()
+            size = result.size.toLong(),
+            requestSize = size
         )
     }
 
