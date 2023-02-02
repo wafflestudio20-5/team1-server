@@ -32,7 +32,12 @@
 
 ## Contribution
 ### 1. Email Authentication
-
+에타는 해당 대학교 메일을 갖고 있는 유저만 가입할 수 있기 때문에, 메일 인증이 필요하다. 메일 인증을 위해 Spring Mail과 redis를 사용하였다.
+- 유저의 SNU 메일을 request body로 받는다.
+- 랜덤 코드를 생성해 유저의 메일로 코드를 전송한다
+- 랜덤 코드를 redis에 저장하고, 유효시간은 3분+a 로 설정한다
+- 유저는 받은 코드를 3분 안에 인증 확인 화면에 코드를 입력한다
+- 클라이언트는 유저가 적은 코드를 서버로 전송해주고, 서버는 코드를 redis에서 꺼내와 일치하는지 비교한다
 ### 2. Image Control
 
 ### 3. SubQuery -> Redis & Coroutine
