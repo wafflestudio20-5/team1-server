@@ -27,7 +27,7 @@
 - Spring Cloud
 - Redis
 - WebSocket
-- Aws EC2, ECR, RDS
+- Aws EC2, ECR, RDS, S3
 - Github Action (CI/CD)
 
 ## Contribution
@@ -38,8 +38,13 @@
 - 랜덤 코드를 redis에 저장하고, 유효시간은 3분+a 로 설정한다
 - 유저는 받은 코드를 3분 안에 인증 확인 화면에 코드를 입력한다
 - 클라이언트는 유저가 적은 코드를 서버로 전송해주고, 서버는 코드를 redis에서 꺼내와 일치하는지 비교한다
-### 2. Image Control
 
+### 2. Image Control
+유저 프로필 이미지, 게시물 사진들을 aws S3에 저장하고, s3 url를 db 엔티티에 기록한다. 직접적인 s3 url이 외부로 유출 되는 것을 막고, 사진을 업로드하고 다운로드 하는 과정을 서버가 아닌 클라이언트에게 부담하기 위해 aws S3에서 제공하는 Presiged URL을 사용했다. 이미지 업로드, 다운로드를 서버가 책임지면 서버에 큰 부하가 걸리기 떄문에 각각의 클라이언트가 처리한다.
+- 클라이언트는 이미지 파일 이름을 서버로 전송한다
+- 서버는 이미지의 유효시간이 설정된 s3 presiged url을 생성해 클라이언트에게 전송해준다. 실제 s3 url은 db entity로 저장한다
+- 클라이언트는 response로 받은 presigned url로 이미지를 업로드한다
+- 이미지를 GET 해야 하는 경우, 서버는 db enttiy에 기록된 s3 url을 통해 presigned url을 생성해 클라이언트에게 전달한다. 클라이언트는 presigend url을 통해 이미지를 get 해온다.
 ### 3. SubQuery -> Redis & Coroutine
 에타 홈 화면에서 특정 category에 속한(16개) 게시판 별 최근 4개의 게시물을 보여주는 api를 구현해야 한다. 이를 sql 문으로 바꾸면 다음과 같다
 ```sql
