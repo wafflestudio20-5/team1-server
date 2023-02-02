@@ -84,5 +84,6 @@ runBlocking { future.forEach { it.await() } }
 ### 4. Real-Time Chat (WebSocket)
 
 ### 5. SSE notification
+현재 에타 웹에서는 자신이 작성한 게시물에 댓글이 달리는 경우, 알림이 오지만 이 알림은 새로고침을 해야만 확인할 수 있다. SSE(Server-Sent-Event)를 이용하여 유저가 화면을 보고 있는 중에는 알림이 뜰 수 있게 구현 하였다. (TODO: 프론트가 구현 완료되면 추후 알림 뜨는 사진 첨부)
 
 ### 6. OAuth Code with Redis
