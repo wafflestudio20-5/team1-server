@@ -40,7 +40,7 @@ interface WebSocketService {
     fun removeSession(session: WebSocketSession)
     fun sendMessage(session: WebSocketSession, message: TextMessage)
     fun sendCreateChatResponse(userId: Long, chat: ChatEntity, systemMessage: MessageEntity?, firstMessage: MessageEntity)
-    fun sendUpdateRequiredResponse(userId: Long)
+    fun sendUpdateRequiredResponse(userId: Long, chatId: List<Long>, unread: List<Int>)
 }
 
 @Service
@@ -148,9 +148,9 @@ class WebSocketServiceImpl(
         }
     }
 
-    override fun sendUpdateRequiredResponse(userId: Long) {
+    override fun sendUpdateRequiredResponse(userId: Long, chatId: List<Long>, unread: List<Int>) {
         webSocketSessions[userId]?.run {
-            sendMessage(convertToTextMessage(WebSocketUpdateRequired()))
+            sendMessage(convertToTextMessage(WebSocketUpdateRequired(chatId, unread)))
         }
     }
 

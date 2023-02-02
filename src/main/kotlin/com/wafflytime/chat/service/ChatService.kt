@@ -224,7 +224,7 @@ class ChatServiceImpl(
             }
         }
 
-        webSocketService.sendUpdateRequiredResponse(userId)
+        webSocketService.sendUpdateRequiredResponse(userId, chatIdList, unreadList)
     }
 
     private fun getChatEntity(chatId: Long): ChatEntity {
