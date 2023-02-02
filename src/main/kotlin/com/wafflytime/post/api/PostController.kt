@@ -116,14 +116,29 @@ class PostController(
     @GetMapping("/api/posts/search")
     fun searchPosts(
         @UserIdFromToken userId: Long,
-        @RequestParam(required = false, value = "page") page: Long?,
         @RequestParam(required = true, value = "keyword") keyword: String,
+        @RequestParam(required = false, value = "page") page: Long?,
         @RequestParam(required = false, value = "cursor") cursor: Long?,
         @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
     ) : ResponseEntity<CursorPage<PostResponse>> {
         return ResponseEntity.ok(
             page?.let { postService.searchPosts(userId, keyword, it, size) }
                 ?: postService.searchPosts(userId, keyword, cursor, size)
+        )
+    }
+
+    @GetMapping("/api/board/{boardId}/posts/search")
+    fun searchPostsInBoard(
+        @UserIdFromToken userId: Long,
+        @PathVariable boardId: Long,
+        @RequestParam(required = true, value = "keyword") keyword: String,
+        @RequestParam(required = false, value = "page") page: Long?,
+        @RequestParam(required = false, value = "cursor") cursor: Long?,
+        @RequestParam(required = false, value = "size", defaultValue = "20") size: Long
+    ) : ResponseEntity<CursorPage<PostResponse>> {
+        return ResponseEntity.ok(
+            page?.let { postService.searchPostsInBoard(userId, boardId, keyword, it, size) }
+                ?: postService.searchPostsInBoard(userId, boardId, keyword, cursor, size)
         )
     }
 

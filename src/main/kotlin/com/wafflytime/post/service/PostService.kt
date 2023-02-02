@@ -196,6 +196,20 @@ class PostService(
         }
     }
 
+    fun searchPostsInBoard(userId: Long, boardId: Long, keyword: String, page: Long, size: Long): CursorPage<PostResponse> {
+        boardService.getBoardEntity(boardId)
+        return postRepository.findPostsInBoardByKeyword(boardId, keyword, page, size).map {
+            PostResponse.of(userId, it)
+        }
+    }
+
+    fun searchPostsInBoard(userId: Long, boardId: Long, keyword: String, cursor: Long?, size: Long): CursorPage<PostResponse> {
+        boardService.getBoardEntity(boardId)
+        return postRepository.findPostsInBoardByKeyword(boardId, keyword, cursor, size).map {
+            PostResponse.of(userId, it)
+        }
+    }
+
     fun getHomePostsTest(): List<HomePostResponse> {
         return redisService.getLatestPostsGroup()
     }
