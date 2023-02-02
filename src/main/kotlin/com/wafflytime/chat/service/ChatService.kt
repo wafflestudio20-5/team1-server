@@ -115,7 +115,7 @@ class ChatServiceImpl(
         val chat = getChatEntity(chatId)
         validateChatParticipant(user, chat)
 
-        val message = sendMessage(chat, user, request.content)
+        val message = sendMessage(chat, user, request.contents)
 
         webSocketService.sendCreateMessageResponse(userId, chat, message)
 
