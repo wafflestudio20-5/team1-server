@@ -26,6 +26,8 @@ interface PostRepositorySupport {
     fun getBestPosts(cursor: Pair<Long, Long>?, size: Long): DoubleCursorPage<PostEntity>
     fun findPostsByKeyword(keyword: String, page: Long, size: Long): CursorPage<PostEntity>
     fun findPostsByKeyword(keyword: String, cursor: Long?, size: Long): CursorPage<PostEntity>
+    fun findPostsInBoardByKeyword(boardId: Long, keyword: String, page: Long, size: Long): CursorPage<PostEntity>
+    fun findPostsInBoardByKeyword(boardId: Long, keyword: String, cursor: Long?, size: Long): CursorPage<PostEntity>
     fun findHomePostsByQuery() : List<PostEntity>
     fun findLatestPostsByCategory(category: BoardCategory, size: Int): List<PostEntity>
     fun findLatestPostsByBoardId(boardId: Long, limit: Long) : List<PostEntity>
@@ -106,11 +108,19 @@ class PostRepositorySupportImpl(
     }
 
     override fun findPostsByKeyword(keyword: String, page: Long, size: Long): CursorPage<PostEntity> {
-        return findAllByConditionDesc(postEntity.contents.contains(keyword), page, size)
+        return findAllByConditionDesc(postEntity.contents.contains(keyword).or(postEntity.title.contains(keyword)), page, size)
     }
 
     override fun findPostsByKeyword(keyword: String, cursor: Long?, size: Long): CursorPage<PostEntity> {
-        return findAllByConditionDesc(postEntity.contents.contains(keyword), cursor, size)
+        return findAllByConditionDesc(postEntity.contents.contains(keyword).or(postEntity.title.contains(keyword)), cursor, size)
+    }
+
+    override fun findPostsInBoardByKeyword(boardId: Long, keyword: String, page: Long, size: Long): CursorPage<PostEntity> {
+        return findAllByConditionDesc(postEntity.board.id.eq(boardId).and(postEntity.contents.contains(keyword).or(postEntity.title.contains(keyword))), page, size)
+    }
+
+    override fun findPostsInBoardByKeyword(boardId: Long, keyword: String, cursor: Long?, size: Long): CursorPage<PostEntity> {
+        return findAllByConditionDesc(postEntity.board.id.eq(boardId).and(postEntity.contents.contains(keyword).or(postEntity.title.contains(keyword))), cursor, size)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
