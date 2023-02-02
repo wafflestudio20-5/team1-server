@@ -15,4 +15,28 @@
 
 ### 2. Prod Development
 - Set ```-Dspring.profiles.active=prod``` in VM options
-- prod 로 테스트 해보는 것은 최대한 피하도록 한다
+
+## Tech Stack
+- Spring Data Jpa
+- Spring Security
+- Spring Mail
+- Spring MVC
+- Spring Webflux (for OAuth)
+- Spring Cloud
+- Redis
+- WebSocket
+- Aws EC2, ECR, RDS
+- Github Action (CI/CD)
+
+## Contribution
+### 1. Email Authentication
+
+### 2. Image Control
+
+### 3. SubQuery -> Redis & Coroutine
+
+### 4. Real-Time Chat (WebSocket)
+
+### 5. SSE notification
+
+### 6. OAuth Code with Redis
