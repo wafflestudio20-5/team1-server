@@ -36,7 +36,7 @@
 ### 2. Image Control
 
 ### 3. SubQuery -> Redis & Coroutine
-
+에타 홈 화면에서 특정 category에 속한(16개) 게시판 별 최근 4개의 게시물을 보여주는 api를 구현해야 한다. 이를 sql 문으로 바꾸면 다음과 같다
 ### 4. Real-Time Chat (WebSocket)
 
 ### 5. SSE notification
