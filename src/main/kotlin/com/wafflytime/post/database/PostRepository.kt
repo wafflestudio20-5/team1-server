@@ -74,10 +74,11 @@ class PostRepositorySupportImpl(
             .limit(size)
             .fetch()
 
-        return DoubleCursorPage(
+        return DoubleCursorPage.of(
             contents = result,
             page = page,
-            size = result.size.toLong()
+            size = result.size.toLong(),
+            requestSize = size
         )
     }
 
@@ -96,10 +97,11 @@ class PostRepositorySupportImpl(
                 .limit(size)
                 .fetch()
 
-        return DoubleCursorPage(
+        return DoubleCursorPage.of(
             contents = result,
             cursor = result.lastOrNull()?.run { Pair(nLikes.toLong(), id) },
-            size = result.size.toLong()
+            size = result.size.toLong(),
+            requestSize = size
         )
     }
 
@@ -184,10 +186,12 @@ class PostRepositorySupportImpl(
             .offset(page * size)
             .limit(size)
             .fetch()
-        return CursorPage(
+
+        return CursorPage.of(
             contents = result,
             page = page,
-            size = result.size.toLong()
+            size = result.size.toLong(),
+            requestSize = size
         )
     }
 
@@ -195,10 +199,11 @@ class PostRepositorySupportImpl(
         val result = (cursor?.let { query.where(postEntity.id.lt(it)) } ?: query)
             .limit(size)
             .fetch()
-        return CursorPage(
+        return CursorPage.of(
             contents = result,
             cursor = result.lastOrNull()?.id,
-            size = result.size.toLong()
+            size = result.size.toLong(),
+            requestSize = size
         )
     }
 
