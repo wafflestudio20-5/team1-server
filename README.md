@@ -1,4 +1,6 @@
 # team1-server
+<img width="100%" src="https://user-images.githubusercontent.com/60849888/216391327-08f296d4-2b24-4ae2-90e0-674efe09bebd.png"/>
+
 
 ## Build and Run
 ### 1. Local Development
