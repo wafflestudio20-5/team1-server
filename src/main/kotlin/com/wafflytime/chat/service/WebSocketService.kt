@@ -39,6 +39,7 @@ interface WebSocketService {
     fun addSession(session: WebSocketSession)
     fun removeSession(session: WebSocketSession)
     fun sendMessage(session: WebSocketSession, message: TextMessage)
+    fun sendCreateMessageResponse(userId: Long, chat: ChatEntity, message: MessageEntity)
     fun sendCreateChatResponse(userId: Long, chat: ChatEntity, systemMessage: MessageEntity?, firstMessage: MessageEntity)
     fun sendUpdateRequiredResponse(userId: Long, chatId: List<Long>, unread: List<Int>)
 }
@@ -106,6 +107,26 @@ class WebSocketServiceImpl(
             session.sendMessage(
                 convertToTextMessage(WebSocketServerMessage.of(userId, messageEntity))
             )
+        }
+    }
+
+    // rest api로 메세지가 생성됐을 때 열려있는 웹소켓으로 보내주기
+    @Transactional
+    override fun sendCreateMessageResponse(userId: Long, chat: ChatEntity, message: MessageEntity) {
+        val session1 = getWebSocketSession(chat.participant1.id)
+        val session2 = getWebSocketSession(chat.participant2.id)
+        val (senderSession, receiverSession) = when (userId) {
+            chat.participant1.id -> Pair(session1, session2)
+            chat.participant2.id -> Pair(session2, session1)
+            else -> throw UserChatMismatch
+        }
+
+        val (toSender, toReceiver) = WebSocketServerMessage.senderAndReceiverPair(message)
+        senderSession?.run {
+            sendMessage(convertToTextMessage(toSender))
+        }
+        receiverSession?.run {
+            sendMessage(convertToTextMessage(toReceiver))
         }
     }
 

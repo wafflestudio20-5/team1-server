@@ -23,6 +23,15 @@ class ChatController(
         return chatService.createChat(userId, boardId, postId, replyId, request)
     }
 
+    @PostMapping("/api/chat/{chatId}")
+    fun sendMessage(
+        @UserIdFromToken userId: Long,
+        @PathVariable chatId: Long,
+        @Valid @RequestBody request: SendMessageRequest,
+    ): MessageInfo {
+        return chatService.sendMessage(userId, chatId, request)
+    }
+
     @GetMapping("/api/chat")
     fun getChat(
         @UserIdFromToken userId: Long,
