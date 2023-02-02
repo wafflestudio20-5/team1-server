@@ -8,6 +8,7 @@ import com.wafflytime.chat.database.MessageRepository
 import com.wafflytime.chat.dto.WebSocketChatCreationInfo
 import com.wafflytime.chat.dto.WebSocketServerMessage
 import com.wafflytime.chat.dto.WebSocketClientMessage
+import com.wafflytime.chat.dto.WebSocketUpdateRequired
 import com.wafflytime.chat.exception.ChatNotFound
 import com.wafflytime.chat.exception.UserChatMismatch
 import com.wafflytime.chat.exception.WebsocketAttributeError
@@ -21,11 +22,25 @@ import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 import java.time.LocalDateTime
 
+enum class WsCloseStatus(
+    private val code: Int,
+    private val reason: String,
+) {
+    ATTRIBUTE(4900, "웹소켓 session attribute 문제"),
+    EXPIRED(4901, "토큰 인증시간 만료"),
+    MISMATCH(4902, "해당 유저가 속한 채팅이 아닙니다"),
+    NEWSESSION(4903, "다른 기기에서 연결되어 접속이 종료됩니다");
+
+    fun value() = CloseStatus(code, reason)
+}
+
+
 interface WebSocketService {
     fun addSession(session: WebSocketSession)
     fun removeSession(session: WebSocketSession)
     fun sendMessage(session: WebSocketSession, message: TextMessage)
     fun sendCreateChatResponse(userId: Long, chat: ChatEntity, systemMessage: MessageEntity?, firstMessage: MessageEntity)
+    fun sendUpdateRequiredResponse(userId: Long)
 }
 
 @Service
@@ -39,7 +54,12 @@ class WebSocketServiceImpl(
     private val objectMapper: ObjectMapper = ObjectMapper()
 
     override fun addSession(session: WebSocketSession) {
-        webSocketSessions[userIdFromAttribute(session)] = session
+        val userId = userIdFromAttribute(session)
+        webSocketSessions[userId]?.run {
+            close(WsCloseStatus.NEWSESSION.value())
+        }
+
+        webSocketSessions[userId] = session
     }
 
     override fun removeSession(session: WebSocketSession) {
@@ -53,7 +73,7 @@ class WebSocketServiceImpl(
         val userId = try {
             userIdFromAttribute(session)
         } catch (e: WebsocketAttributeError) {
-            session.close(CloseStatus(4900, e.message))
+            session.close(WsCloseStatus.ATTRIBUTE.value())
             return
         }
         val (chatId, contents) = convertToJson(message)
@@ -61,7 +81,7 @@ class WebSocketServiceImpl(
         val (sender, receiver) = try {
             chat.getSenderAndReceiver(userId)
         } catch (e: UserChatMismatch) {
-            session.close(CloseStatus(4902, e.message))
+            session.close(WsCloseStatus.MISMATCH.value())
             return
         }
 
@@ -128,6 +148,12 @@ class WebSocketServiceImpl(
         }
     }
 
+    override fun sendUpdateRequiredResponse(userId: Long) {
+        webSocketSessions[userId]?.run {
+            sendMessage(convertToTextMessage(WebSocketUpdateRequired()))
+        }
+    }
+
     private fun getWebSocketSession(userId: Long): WebSocketSession? {
         val session = webSocketSessions[userId]
         session?.let { isSessionValid(it) }
@@ -138,12 +164,12 @@ class WebSocketServiceImpl(
         val expiration = try {
             jwtExpirationFromAttribute(session)
         } catch (e: WebsocketAttributeError) {
-            session.close(CloseStatus(4900, e.message))
+            session.close(WsCloseStatus.ATTRIBUTE.value())
             return false
         }
 
         if (expiration < LocalDateTime.now()) {
-            session.close(CloseStatus(4901, "토큰 인증시간 만료"))
+            session.close(WsCloseStatus.EXPIRED.value())
             return false
         }
 
@@ -181,6 +207,10 @@ class WebSocketServiceImpl(
 
     private fun convertToTextMessage(chatCreationInfo: WebSocketChatCreationInfo): TextMessage {
         return TextMessage(objectMapper.writeValueAsString(chatCreationInfo))
+    }
+
+    private fun convertToTextMessage(updateRequired: WebSocketUpdateRequired): TextMessage {
+        return TextMessage(objectMapper.writeValueAsString(updateRequired))
     }
 
 }

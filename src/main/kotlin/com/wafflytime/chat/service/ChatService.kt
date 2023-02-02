@@ -223,6 +223,8 @@ class ChatServiceImpl(
                 }
             }
         }
+
+        webSocketService.sendUpdateRequiredResponse(userId)
     }
 
     private fun getChatEntity(chatId: Long): ChatEntity {
