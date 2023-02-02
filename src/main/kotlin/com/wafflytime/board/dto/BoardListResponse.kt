@@ -15,7 +15,7 @@ data class BoardListResponse(
 
     data class BoardItem(
         val boardId: Long,
-        val name: String,
+        val title: String,
     )
 
     companion object {
