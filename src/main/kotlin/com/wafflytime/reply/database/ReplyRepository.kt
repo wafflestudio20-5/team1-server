@@ -46,10 +46,11 @@ class ReplyRepositorySupport(
             .fetch()
             .reversed()
 
-        return DoubleCursorPage(
+        return DoubleCursorPage.of(
             contents = result,
             page = page,
-            size = result.size.toLong()
+            size = result.size.toLong(),
+            requestSize = size
         )
     }
 
@@ -71,11 +72,11 @@ class ReplyRepositorySupport(
                 .fetchJoin()
                 .fetch()
                 .reversed()
-
-        return DoubleCursorPage(
+        return DoubleCursorPage.of(
             contents = result,
             cursor = result.firstOrNull()?.run { Pair(replyGroup, id) },
-            size = result.size.toLong()
+            size = result.size.toLong(),
+            requestSize = size
         )
     }
 
