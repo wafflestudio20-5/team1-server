@@ -18,6 +18,5 @@ object SelfChatForbidden : Chat400("자신에게 채팅을 보낼 수 없습니�
 object AlreadyBlocked : Chat400("이미 차단한 채팅입니다", 4)
 object AlreadyUnblocked : Chat400("이미 차단 해제한 채팅입니다", 5)
 object ListLengthMismatch : Chat400("채팅 개수가 맞지 않습니다", 6)
-object ListMismatch : Chat400("채팅 목록이 일치하지 않습니다", 7)
 
 object WebsocketAttributeError : Chat500("웹소켓 session attribute 문제", 99)
