@@ -37,7 +37,7 @@ class OAuthServiceImpl(
         val socialEmail = getSocialEmail(providerName, code)
         val user = userRepository.findBySocialEmail(socialEmail)
         if (user != null) {
-            return OAuthResponse(authTokenService.buildAuthToken(user, LocalDateTime.now()), false)
+            return OAuthResponse(authTokenService.createAuthToken(user, LocalDateTime.now()), false)
         }
         redisSocialTemplate.opsForValue().set(code, socialEmail)
         redisSocialTemplate.expire(code, 10, TimeUnit.MINUTES)
@@ -51,7 +51,7 @@ class OAuthServiceImpl(
             ?: throw OAuthCodeExpired
         val user = signUp(socialEmail, request.nickname)
         redisSocialTemplate.delete(code)
-        return authTokenService.buildAuthToken(user, LocalDateTime.now())
+        return authTokenService.createAuthToken(user, LocalDateTime.now())
     }
 
     @Transactional

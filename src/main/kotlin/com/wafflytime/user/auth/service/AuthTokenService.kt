@@ -1,11 +1,11 @@
 package com.wafflytime.user.auth.service
 
 import com.wafflytime.user.auth.dto.AuthToken
-import com.wafflytime.user.auth.database.RefreshTokenEntity
-import com.wafflytime.user.auth.database.RefreshTokenRepository
+import com.wafflytime.user.auth.database.AuthTokenEntity
+import com.wafflytime.user.auth.database.AuthTokenRepository
 import com.wafflytime.user.auth.exception.AuthTokenExpired
 import com.wafflytime.user.auth.exception.InvalidAuthToken
-import com.wafflytime.user.auth.exception.RefreshTokenTakenOver
+import com.wafflytime.user.auth.exception.AuthTokenTakenOver
 import com.wafflytime.user.info.database.UserEntity
 import io.jsonwebtoken.*
 import io.jsonwebtoken.security.Keys
@@ -30,9 +30,10 @@ data class AuthProperties @ConstructorBinding constructor(
 
 
 interface AuthTokenService {
-    fun buildAuthToken(user: UserEntity, now: LocalDateTime): AuthToken
-    fun refresh(refreshToken: String): AuthToken
-    fun deleteRefreshToken(userId: Long)
+    fun createAuthToken(user: UserEntity, now: LocalDateTime): AuthToken
+    fun updateAuthTokenEmailVerification(user: UserEntity, now: LocalDateTime): AuthToken
+    fun refresh(refreshToken: String): AuthToken?
+    fun deleteAuthTokenEntity(userId: Long, accessToken: String)
     fun authenticate(accessToken: String): Jws<Claims>
     fun getUserId(authResult: Jws<Claims>): Long
     fun isEmailVerified(authResult: Jws<Claims>): Boolean
@@ -43,41 +44,58 @@ interface AuthTokenService {
 @EnableConfigurationProperties(AuthProperties::class)
 class AuthTokenServiceImpl(
     private val authProperties: AuthProperties,
-    private val refreshTokenRepository: RefreshTokenRepository,
-): AuthTokenService {
+    private val authTokenRepository: AuthTokenRepository,
+) : AuthTokenService {
     private val tokenPrefix = "Bearer "
     private val accessSigningKey = Keys.hmacShaKeyFor(authProperties.accessSecret.toByteArray())
     private val refreshSigningKey = Keys.hmacShaKeyFor(authProperties.refreshSecret.toByteArray())
 
-    override fun buildAuthToken(user: UserEntity, now: LocalDateTime): AuthToken {
-        return buildAuthToken(user.id, now, user.univEmail != null)
+    override fun createAuthToken(user: UserEntity, now: LocalDateTime): AuthToken {
+        authTokenRepository.findAllByUserId(user.id).filter {
+            isExpired(it.refreshToken, refreshSigningKey)
+        }.forEach {
+            authTokenRepository.delete(it)
+        }
+
+        val authToken = buildAuthToken(user.id, now, user.univEmail != null)
+        authToken.run {
+            authTokenRepository.save(
+                AuthTokenEntity(user.id, accessToken, refreshToken)
+            )
+        }
+        return authToken
     }
 
-    // TODO: 1대다가 되는 경우 추가 구현 필요
     @Transactional
-    override fun refresh(refreshToken: String): AuthToken {
+    override fun updateAuthTokenEmailVerification(user: UserEntity, now: LocalDateTime): AuthToken {
+        authTokenRepository.deleteAllByUserId(user.id)
+        return createAuthToken(user, now)
+    }
+
+    @Transactional
+    override fun refresh(refreshToken: String): AuthToken? {
         val now = LocalDateTime.now()
 
         val authResult = verifyToken(refreshToken, refreshSigningKey)
         val userId = getUserId(authResult)
         val emailVerified = isEmailVerified(authResult)
 
-        val refreshTokenEntity = refreshTokenRepository.findByUserId(userId)
-            ?: throw InvalidAuthToken
-
-        if (refreshToken == tokenPrefix + refreshTokenEntity.token) {
-            return buildAuthToken(userId, now, emailVerified)
-        } else {
-            throw RefreshTokenTakenOver
+        val authTokenEntity = try {
+            findEntityByRefreshToken(refreshToken, userId)
+        } catch (e: AuthTokenTakenOver) {
+            return null
         }
+
+        val authToken = buildAuthToken(userId, now, emailVerified)
+        authTokenEntity.accessToken = authToken.accessToken
+        authTokenEntity.refreshToken = authToken.refreshToken
+
+        return authToken
     }
 
     @Transactional
-    override fun deleteRefreshToken(userId: Long) {
-        val refreshTokenEntity = refreshTokenRepository.findByUserId(userId)
-            ?: throw InvalidAuthToken
-
-        refreshTokenEntity.token = null
+    override fun deleteAuthTokenEntity(userId: Long, accessToken: String) {
+        authTokenRepository.delete(findEntityByAccessToken(accessToken, userId))
     }
 
     override fun authenticate(accessToken: String): Jws<Claims> {
@@ -87,7 +105,7 @@ class AuthTokenServiceImpl(
     override fun getUserId(authResult: Jws<Claims>): Long {
         try {
             return authResult.body.subject.toLong()
-        } catch(e: java.lang.NumberFormatException) {
+        } catch (e: java.lang.NumberFormatException) {
             throw InvalidAuthToken
         }
     }
@@ -105,20 +123,45 @@ class AuthTokenServiceImpl(
             .toLocalDateTime()
     }
 
+    private fun findEntityByAccessToken(accessToken: String, userId: Long): AuthTokenEntity {
+        val authTokenEntity =  authTokenRepository.findByAccessToken(parsePrefix(accessToken))
+            ?: run { handleTokenTakeOver(listOf(userId)) }
+        if (authTokenEntity.userId != userId) {
+            handleTokenTakeOver(listOf(userId, authTokenEntity.userId))
+        }
+
+        return authTokenEntity
+    }
+
+    private fun findEntityByRefreshToken(refreshToken: String, userId: Long): AuthTokenEntity {
+        val authTokenEntity = authTokenRepository.findByRefreshToken(parsePrefix(refreshToken))
+            ?: run { handleTokenTakeOver(listOf(userId)) }
+        if (authTokenEntity.userId != userId) {
+            handleTokenTakeOver(listOf(userId, authTokenEntity.userId))
+        }
+
+        return authTokenEntity
+    }
+
     private fun buildAuthToken(userId: Long, now: LocalDateTime, emailVerified: Boolean): AuthToken {
         val claims = Jwts.claims()
         claims["email-verified"] = if (emailVerified) "true" else "false"
 
-        val accessToken = buildJwtToken(authProperties.issuer, userId.toString(), accessSigningKey, now, now.plusMinutes(authProperties.expiration), claims)
-        val refreshToken = buildJwtToken(authProperties.issuer, userId.toString(), refreshSigningKey, now, now.plusDays(authProperties.refreshExpiration), claims)
-
-        refreshTokenRepository.save(
-            refreshTokenRepository.findByUserId(userId)?.apply {
-                token = refreshToken
-            } ?: RefreshTokenEntity(
-                userId,
-                refreshToken,
-            )
+        val accessToken = buildJwtToken(
+            authProperties.issuer,
+            userId.toString(),
+            accessSigningKey,
+            now,
+            now.plusMinutes(authProperties.expiration),
+            claims
+        )
+        val refreshToken = buildJwtToken(
+            authProperties.issuer,
+            userId.toString(),
+            refreshSigningKey,
+            now,
+            now.plusDays(authProperties.refreshExpiration),
+            claims
         )
 
         return AuthToken(
@@ -127,7 +170,14 @@ class AuthTokenServiceImpl(
         )
     }
 
-    private fun buildJwtToken(issuer: String, subject: String, key: Key, issuedAt: LocalDateTime, expiration: LocalDateTime, claims: Claims): String {
+    private fun buildJwtToken(
+        issuer: String,
+        subject: String,
+        key: Key,
+        issuedAt: LocalDateTime,
+        expiration: LocalDateTime,
+        claims: Claims
+    ): String {
         return Jwts.builder()
             .setIssuer(issuer)
             .setSubject(subject)
@@ -138,18 +188,39 @@ class AuthTokenServiceImpl(
             .compact()
     }
 
+    private fun handleTokenTakeOver(userId: List<Long>): Nothing {
+        userId.forEach {
+            authTokenRepository.deleteAllByUserId(it)
+        }
+        throw AuthTokenTakenOver
+    }
+
     private fun verifyToken(token: String, key: Key): Jws<Claims> {
         try {
             return parse(token, key)
-        } catch (ex: ExpiredJwtException) {
+        } catch (e: ExpiredJwtException) {
             throw AuthTokenExpired
-        } catch (ex: Exception) {
+        } catch (e: Exception) {
             throw InvalidAuthToken
         }
     }
 
+    private fun isExpired(token: String, key: Key): Boolean {
+        try {
+            parse(token, key)
+        } catch (e: Exception) {
+            return true
+        }
+
+        return false
+    }
+
+    private fun parsePrefix(token: String): String {
+        return token.replace(tokenPrefix, "").trim { it <= ' ' }
+    }
+
     private fun parse(token: String, key: Key): Jws<Claims> {
-        val prefixRemoved = token.replace(tokenPrefix, "").trim { it <= ' ' }
+        val prefixRemoved = parsePrefix(token)
         return Jwts.parserBuilder()
             .requireIssuer(authProperties.issuer)
             .setSigningKey(key)

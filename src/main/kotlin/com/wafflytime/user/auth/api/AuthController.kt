@@ -9,8 +9,10 @@ import com.wafflytime.user.auth.dto.LoginRequest
 import com.wafflytime.user.auth.dto.SignUpRequest
 
 import com.wafflytime.user.auth.dto.TempAdminSignUpRequest
+import com.wafflytime.user.auth.exception.AuthTokenTakenOver
 import com.wafflytime.user.auth.service.LocalAuthService
 import jakarta.validation.Valid
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -46,15 +48,19 @@ class AuthController(
 
     @ExemptEmailVerification
     @DeleteMapping("/api/auth/logout")
-    fun logout(@UserIdFromToken userId: Long) : String {
-        authTokenService.deleteRefreshToken(userId)
+    fun logout(
+        @UserIdFromToken userId: Long,
+        @RequestHeader(required = true, name = "Authorization") accessToken: String
+    ) : String {
+        authTokenService.deleteAuthTokenEntity(userId, accessToken)
         return "success"
     }
 
     @ExemptAuthentication
     @PutMapping("/api/auth/refresh")
-    fun refresh(@RequestHeader(name = "Authorization") refreshToken: String) : AuthToken {
-        return authTokenService.refresh(refreshToken)
+    fun refresh(@RequestHeader(required = true, name = "Authorization") refreshToken: String) : ResponseEntity<Any> {
+        return authTokenService.refresh(refreshToken)?.let { ResponseEntity.ok(it) }
+            ?: AuthTokenTakenOver.toResponse()
     }
 
 }

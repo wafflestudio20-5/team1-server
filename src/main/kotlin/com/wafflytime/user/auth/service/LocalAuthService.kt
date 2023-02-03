@@ -42,7 +42,7 @@ class LocalAuthServiceImpl(
         } catch (e: DataIntegrityViolationException) {
             throw SignUpConflict
         }
-        return authTokenService.buildAuthToken(user, LocalDateTime.now())
+        return authTokenService.createAuthToken(user, LocalDateTime.now())
     }
 
     @ExemptAuthentication
@@ -62,7 +62,7 @@ class LocalAuthServiceImpl(
         } catch (e: DataIntegrityViolationException) {
             throw SignUpConflict
         }
-        return authTokenService.buildAuthToken(user, LocalDateTime.now())
+        return authTokenService.createAuthToken(user, LocalDateTime.now())
     }
 
 
@@ -72,7 +72,7 @@ class LocalAuthServiceImpl(
         val user = userRepository.findByLoginId(request.id) ?: throw LoginFailure
 
         if (passwordEncoder.matches(request.password, user.password)) {
-            return authTokenService.buildAuthToken(user, LocalDateTime.now())
+            return authTokenService.createAuthToken(user, LocalDateTime.now())
         } else {
             throw LoginFailure
         }
