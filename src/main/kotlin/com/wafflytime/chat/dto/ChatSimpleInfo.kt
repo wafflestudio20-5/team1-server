@@ -18,7 +18,7 @@ data class ChatSimpleInfo(
         private const val anonymousName = "익명"
 
         fun of(userId: Long, entity: ChatEntity): ChatSimpleInfo = entity.run {
-            val recentMessage = messages.last()
+            val recentMessage = messages.first()
 
             when (userId) {
                 participant1.id -> ChatSimpleInfo(
