@@ -132,26 +132,26 @@ class WebSocketServiceImpl(
 
     @Transactional
     override fun sendCreateChatResponse(userId: Long, chat: ChatEntity, systemMessage: MessageEntity?, firstMessage: MessageEntity) {
-        val session1 = getWebSocketSession(chat.participant1.id)
-        val session2 = getWebSocketSession(chat.participant2.id)
-        val (senderSession, receiverSession) = when (userId) {
-            chat.participant1.id -> Pair(session1, session2)
-            chat.participant2.id -> Pair(session2, session1)
+        val (senderId, receiverId) = when (userId) {
+            chat.participant1.id -> Pair(chat.participant1.id, chat.participant2.id)
+            chat.participant2.id -> Pair(chat.participant2.id, chat.participant1.id)
             else -> throw UserChatMismatch
         }
 
+        val senderSession = getWebSocketSession(senderId)
+        val receiverSession = getWebSocketSession(receiverId)
         if (senderSession == null && receiverSession == null) return
 
         if (systemMessage != null) {
-            val chatCreationInfo = convertToTextMessage(WebSocketChatCreationInfo.of(chat))
+            val (creationInfoToSender, creationInfoToReceiver) = WebSocketChatCreationInfo.senderAndReceiverPair(chat)
             val systemMessageToBoth = WebSocketServerMessage.of(chat.participant1.id, systemMessage)
 
             senderSession?.run {
-                sendMessage(chatCreationInfo)
+                sendMessage(convertToTextMessage(creationInfoToSender))
                 sendMessage(convertToTextMessage(systemMessageToBoth))
             }
             receiverSession?.run {
-                sendMessage(chatCreationInfo)
+                sendMessage(convertToTextMessage(creationInfoToReceiver))
                 sendMessage(convertToTextMessage(systemMessageToBoth))
             }
         }
