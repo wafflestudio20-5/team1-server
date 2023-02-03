@@ -12,11 +12,12 @@ data class WebSocketChatCreationInfo(
 
         private const val anonymousName = "익명"
 
-        fun of(entity: ChatEntity): WebSocketChatCreationInfo = entity.run {
-            WebSocketChatCreationInfo(
-                id,
-                if (isAnonymous2) anonymousName else participant2.nickname,
+        fun senderAndReceiverPair(entity: ChatEntity): Pair<WebSocketChatCreationInfo, WebSocketChatCreationInfo> = entity.run {
+            Pair(
+                WebSocketChatCreationInfo(id, if(isAnonymous2) anonymousName else participant2.nickname),
+                WebSocketChatCreationInfo(id, if(isAnonymous1) anonymousName else participant1.nickname),
             )
         }
+
     }
 }

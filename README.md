@@ -92,5 +92,17 @@ runBlocking { future.forEach { it.await() } }
 현재 에타 웹에서는 자신이 작성한 게시물에 댓글이 달리는 경우, 알림이 오지만 이 알림은 새로고침을 해야만 확인할 수 있다. SSE(Server-Sent-Event)를 이용하여 유저가 화면을 보고 있는 중에는 알림이 뜰 수 있게 구현 하였다. (TODO: 프론트가 구현 완료되면 추후 알림 뜨는 사진 첨부)
 
 ### 6. OAuth Code with Redis
+소셜 로그인/회원 가입은 클라이언트에서 받아온 OAuth Authorization Code로 서버에서 access token을 받아온 후 로그인/회원가입 처리를 진행한다.
+기존 계정이 없어서 로그인 실패하는 경우 회원가입을 진행하려 하였으나, OAuth Authorization code를 재사용 할 수 없어 회원가입이 실패하는 문제가 있었다.
+
+#### 6-1. 임시 닉네임 적용
+소셜 로그인 실패시 임시 닉네임을 생성하여 가입시키는 방법으로 해결을 시도하였다.  
+이 경우 임시 닉네임이 다른 닉네임과 중복되면 안되고, 닉네임이 임시 닉네임이면 게시글/댓글을 못 쓰게 따로 설정해야하는 등 추가로 고려해야 할 요소가 많아지는 문제가 있다.
+
+#### 6-2. Redis 적용
+- 소셜 로그인 실패시 클라이언트로부터 받아온 OAuth Authorization Code를 key로, OAuth Authorization 측에서 얻어온 social email를 value로 하여 redis에 저장해두었다.
+- 회원가입 처리를 해야하는 경우, redis에서 OAuth Authorization Code에 해당하는 social email을 찾고, 닉네임을 받아서 최종적인 회원가입 처리를 진행하였다.  
+- 한번 사용한 OAuth Authorization Code는 더 사용할 일이 없으므로 바로 삭제 시켰다.
+- 회원가입을 진행하다 말고 종료하는 유저들의 데이터를 계속 쌓아둘 수 없기에, 저장된지 10분이 지난 데이터는 삭제시켰다.
 
 ### 7. Cursor, Double-Cursor Pagination
