@@ -100,9 +100,9 @@ runBlocking { future.forEach { it.await() } }
 이 경우 임시 닉네임이 다른 닉네임과 중복되면 안되고, 닉네임이 임시 닉네임이면 게시글/댓글을 못 쓰게 따로 설정해야하는 등 추가로 고려해야 할 요소가 많아지는 문제가 있다.
 
 #### 6-2. Redis 적용
-소셜 로그인 실패시 클라이언트로부터 받아온 OAuth Authorization Code를 key로, OAuth Authorization 측에서 얻어온 social email를 value로 하여 redis에 저장해두었다.
-회원가입 처리를 해야하는 경우, redis에서 OAuth Authorization Code에 해당하는 social email을 찾고, 닉네임을 받아서 최종적인 회원가입 처리를 진행하였다.  
-Redis 용량 관리를 위해 한번 사용한 OAuth Authorization Code는 더 사용할 일이 없으므로 바로 삭제 시켰다.
-또한, 회원가입을 진행하다 말고 종료하는 유저들의 데이터를 계속 쌓아둘 수 없기에 저장된지 10분이 지난 데이터는 삭제시켰다.
+- 소셜 로그인 실패시 클라이언트로부터 받아온 OAuth Authorization Code를 key로, OAuth Authorization 측에서 얻어온 social email를 value로 하여 redis에 저장해두었다.
+- 회원가입 처리를 해야하는 경우, redis에서 OAuth Authorization Code에 해당하는 social email을 찾고, 닉네임을 받아서 최종적인 회원가입 처리를 진행하였다.  
+- 한번 사용한 OAuth Authorization Code는 더 사용할 일이 없으므로 바로 삭제 시켰다.
+- 회원가입을 진행하다 말고 종료하는 유저들의 데이터를 계속 쌓아둘 수 없기에, 저장된지 10분이 지난 데이터는 삭제시켰다.
 
 ### 7. Cursor, Double-Cursor Pagination
