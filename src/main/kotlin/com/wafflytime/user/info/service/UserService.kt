@@ -112,13 +112,13 @@ class UserServiceImpl (
 
     override fun getMyScraps(userId: Long, page: Long, size: Long): CursorPage<PostResponse> {
         return scrapRepository.findScrapsByUserId(userId, page, size).map {
-            PostResponse.of(userId, it.post)
+            PostResponse.of(userId, it.post, s3Service.getPreSignedUrlsFromS3Keys(it.post.images))
         }
     }
 
     override fun getMyScraps(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
         return scrapRepository.findScrapsByUserId(userId, cursor, size).map {
-            PostResponse.of(userId, it.post)
+            PostResponse.of(userId, it.post, s3Service.getPreSignedUrlsFromS3Keys(it.post.images))
         }
     }
 
@@ -135,25 +135,25 @@ class UserServiceImpl (
 
     override fun getMyPosts(userId: Long, page: Long, size: Long): CursorPage<PostResponse> {
         return postRepository.findAllByWriterId(userId, page, size).map {
-            PostResponse.of(userId, it)
+            PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
     override fun getMyPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
         return postRepository.findAllByWriterId(userId, cursor, size).map {
-            PostResponse.of(userId, it)
+            PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
     override fun getMyRepliedPosts(userId: Long, page: Long, size: Long): CursorPage<PostResponse> {
         return postRepository.findAllByUserReply(userId, page, size).map {
-            PostResponse.of(userId, it)
+            PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
     override fun getMyRepliedPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
         return postRepository.findAllByUserReply(userId, cursor, size).map {
-            PostResponse.of(userId, it)
+            PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 

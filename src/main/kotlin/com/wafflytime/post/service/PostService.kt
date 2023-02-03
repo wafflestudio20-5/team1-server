@@ -159,19 +159,19 @@ class PostService(
 
     fun getHotPosts(userId: Long, page: Long, size: Long): CursorPage<PostResponse> {
         return postRepository.getHotPosts(page, size).map {
-            PostResponse.of(userId, it)
+            PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
     fun getHotPosts(userId: Long, cursor: Long?, size: Long): CursorPage<PostResponse> {
         return postRepository.getHotPosts(cursor, size).map {
-            PostResponse.of(userId, it)
+            PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
     fun getBestPosts(userId: Long, page: Long, size: Long): DoubleCursorPage<PostResponse> {
         return postRepository.getBestPosts(page, size).map {
-            PostResponse.of(userId, it)
+            PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
@@ -180,33 +180,33 @@ class PostService(
         val cursor = first?.let { Pair(it, second!!) }
 
         return postRepository.getBestPosts(cursor, size).map {
-            PostResponse.of(userId, it)
+            PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
     fun searchPosts(userId: Long, keyword: String, page: Long, size: Long): CursorPage<PostResponse> {
         return postRepository.findPostsByKeyword(keyword, page, size).map {
-            PostResponse.of(userId, it)
+            PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
     fun searchPosts(userId: Long, keyword: String, cursor: Long?, size: Long): CursorPage<PostResponse> {
         return postRepository.findPostsByKeyword(keyword, cursor, size).map {
-            PostResponse.of(userId, it)
+            PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
     fun searchPostsInBoard(userId: Long, boardId: Long, keyword: String, page: Long, size: Long): CursorPage<PostResponse> {
         boardService.getBoardEntity(boardId)
         return postRepository.findPostsInBoardByKeyword(boardId, keyword, page, size).map {
-            PostResponse.of(userId, it)
+            PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
     fun searchPostsInBoard(userId: Long, boardId: Long, keyword: String, cursor: Long?, size: Long): CursorPage<PostResponse> {
         boardService.getBoardEntity(boardId)
         return postRepository.findPostsInBoardByKeyword(boardId, keyword, cursor, size).map {
-            PostResponse.of(userId, it)
+            PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images))
         }
     }
 
@@ -215,6 +215,6 @@ class PostService(
     }
 
     fun getLatestPostsByCategory(userId: Long, category: BoardCategory, size: Int): List<PostResponse> {
-        return postRepository.findLatestPostsByCategory(category, size).map { PostResponse.of(userId, it) }
+        return postRepository.findLatestPostsByCategory(category, size).map { PostResponse.of(userId, it, s3Service.getPreSignedUrlsFromS3Keys(it.images)) }
     }
 }
