@@ -93,7 +93,7 @@ class S3Service(
         val imageResponseList = mutableListOf<ImageResponse>()
         images.forEach {
             imageResponseList.add(
-                ImageResponse(it.value.imageId, getPreSignedUrl(parseS3UrlToKey(it.value.s3Url), HttpMethod.GET), it.value.description)
+                ImageResponse(it.value.imageId, it.key, getPreSignedUrl(parseS3UrlToKey(it.value.s3Url), HttpMethod.GET), it.value.description)
             )
         }
         return imageResponseList
