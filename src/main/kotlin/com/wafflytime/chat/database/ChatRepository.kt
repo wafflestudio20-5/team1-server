@@ -49,21 +49,16 @@ class ChatRepositorySupportImpl(
         val userEntity1 = QUserEntity("userEntity1")
         val userEntity2 = QUserEntity("userEntity2")
 
-        val result = jpaQueryFactory
-            .selectFrom(chatEntity)
-            .where(chatEntity.participant1.id.eq(userId).or(chatEntity.participant2.id.eq(userId)))
+        val result = jpaQueryFactory.select(chatEntity)
+            .from(messageEntity)
+            .leftJoin(chatEntity).on(messageEntity.chat.id.eq(chatEntity.id))
+            .where(messageEntity.chat.participant1.id.eq(userId).or(messageEntity.chat.participant2.id.eq(userId)))
+            .leftJoin(userEntity1).on(chatEntity.participant1.id.eq(userEntity1.id))
+            .leftJoin(userEntity2).on(chatEntity.participant2.id.eq(userEntity2.id))
             .orderBy(chatEntity.modifiedAt.desc())
+            .groupBy(chatEntity.id)
             .offset(page * size)
             .limit(size)
-            .leftJoin(chatEntity.messages, messageEntity)
-            .where(messageEntity.chat.id.eq(chatEntity.id))
-            .fetchJoin()
-            .leftJoin(chatEntity.participant1, userEntity1)
-            .where(userEntity1.id.eq(chatEntity.participant1.id))
-            .fetchJoin()
-            .leftJoin(chatEntity.participant2, userEntity2)
-            .where(userEntity2.id.eq(chatEntity.participant2.id))
-            .fetchJoin()
             .fetch()
 
         return CursorPage.of(
@@ -86,22 +81,17 @@ class ChatRepositorySupportImpl(
                 ?: throw ChatNotFound
         }
 
-        val query = jpaQueryFactory
-            .selectFrom(chatEntity)
-            .where(chatEntity.participant1.id.eq(userId).or(chatEntity.participant2.id.eq(userId)))
+        val query = jpaQueryFactory.select(chatEntity)
+            .from(messageEntity)
+            .leftJoin(chatEntity).on(messageEntity.chat.id.eq(chatEntity.id))
+            .where(messageEntity.chat.participant1.id.eq(userId).or(messageEntity.chat.participant2.id.eq(userId)))
+            .leftJoin(userEntity1).on(chatEntity.participant1.id.eq(userEntity1.id))
+            .leftJoin(userEntity2).on(chatEntity.participant2.id.eq(userEntity2.id))
             .orderBy(chatEntity.modifiedAt.desc())
+            .groupBy(chatEntity.id)
 
         val result = (cursorEntity?.let { query.where(chatEntity.modifiedAt.lt(it.modifiedAt)) } ?: query)
             .limit(size)
-            .leftJoin(chatEntity.messages, messageEntity)
-            .where(messageEntity.chat.id.eq(chatEntity.id))
-            .fetchJoin()
-            .leftJoin(chatEntity.participant1, userEntity1)
-            .where(userEntity1.id.eq(chatEntity.participant1.id))
-            .fetchJoin()
-            .leftJoin(chatEntity.participant2, userEntity2)
-            .where(userEntity2.id.eq(chatEntity.participant2.id))
-            .fetchJoin()
             .fetch()
 
         return CursorPage.of(
