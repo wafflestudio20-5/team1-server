@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.http.server.ServerHttpResponse
+import org.springframework.http.server.ServletServerHttpRequest
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
@@ -70,14 +71,15 @@ class WebSocketHandshakeInterceptor(
         wsHandler: WebSocketHandler,
         attributes: MutableMap<String, Any>
     ): Boolean {
-        val accessToken = request.headers["Authorization"]?.first() ?: throw AuthTokenNotProvided
-
+        val servletServerHttpRequest = request as ServletServerHttpRequest
+        var accessToken = servletServerHttpRequest.servletRequest.getParameter("token")
+        if (accessToken == null) {
+            accessToken = request.headers["Authorization"]?.first() ?: throw AuthTokenNotProvided
+        }
         val authResult = authTokenService.authenticate(accessToken)
         if (!authTokenService.isEmailVerified(authResult)) throw MailNotVerified
-
         attributes["UserIdFromToken"] = authTokenService.getUserId(authResult)
         attributes["JwtExpiration"] = authTokenService.getExpiration(authResult)
-
         return super.beforeHandshake(request, response, wsHandler, attributes)
     }
 
