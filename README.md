@@ -18,6 +18,9 @@
 ### 2. Prod Development
 - Set ```-Dspring.profiles.active=prod``` in VM options
 
+## API Document
+https://foregoing-venom-883.notion.site/WafflyTime-API-b6aaf2b096924d2fbb251c443d66ba15
+
 ## Tech Stack
 - Spring Data Jpa
 - Spring Security
