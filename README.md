@@ -79,7 +79,7 @@ runBlocking { future.forEach { it.await() } }
 ```
 #### 3-3. Redis 적용
 - 여전히 속도가 느리다고 판단했고, 속도를 높이기 위해 redis를 활용하였다.
-- 각 board가 redis의 key가 되고 value는 최근 4개의 게시물을 리스트로가 된다. 특정 카테고리에 해당 하는 게시판에 게시물이 생성, 수정, 삭제 될 때마다 redis를 업데이트 해준다 
+- 각 board가 redis의 key가 되고 value는 최근 4개의 게시물을 리스트가 된다. 특정 카테고리에 해당 하는 게시판에 게시물이 생성, 수정, 삭제 될 때마다 redis를 업데이트 해준다 
 
 #### 3-4. Redis + coroutine
 - 3번쨰 방법에 coroutine까지 적용하였다. 우리는 local redis를 쓰기 때문에 coroutine을 사용했을 때 시간 차이가 크게 나지 않았다. 만약 실제 환경같이 remote redis 서버를 사용한다면, coroutine의 효과가 더 커질 것이라 추측한다
