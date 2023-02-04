@@ -87,6 +87,55 @@ runBlocking { future.forEach { it.await() } }
 **=> 기존에 약 140ms 정도 걸리던 처리 과정이 15ms까지 줄어들었다**
 
 ### 4. Real-Time Chat (WebSocket)
+Spring boot에서 제공하는 STOMP를 sub protocol로 사용해 구현하려고 했지만\
+(1) 테스트 하기 어렵고 커스텀에 관한 정보가 부족했고\
+(2) 1:1 채팅만이 성립하는 에타 쪽지에서 publish-subscribe 모델까지는 필요하지 않아서\
+`TextWebSocketHandler`와 `HttpSessionHandshakeInterceptor`를 상속받은 구현체를 만들어서 구현했다.
+
+한 유저당 서버측에서 유지하는 웹소켓 세션은 하나로 한정했고,\
+유저 웹소켓 세션이 존재하면 (즉, 쪽지 페이지에 유저가 접속중이면) 웹소켓을 통해 db에 작성된 쪽지 정보를 보내주고,\
+아니라면 SSE 알림을 보내 유저가 실시간으로 쪽지 수신 여부를 알 수 있게 했다.
+
+메세지는 아래의 간단한 sub protocol을 통해 주고 받는다.
+- 모든 메세지 형식은 json 형식을 따른다.
+- 프론트 -> 서버 메세지 형식은 유저가 송신하는 메세지 정보, 한 종류이다.
+```json
+{
+  "chatId": Long, // 쪽지를 보내는 채팅방 db id
+  "contents": String // 쪽지 내용
+}
+```
+- 서버 -> 프론트 메세지 형식은 전송/수신한 쪽지 정보인 `MESSAGE` 타입, rest api 요청을 통해 생성된 새 채팅방 정보인 `NEWCHAT` 타입, 그리고 한정된 상황에서 db 데이터에 변화가 있어 추가적인 rest api 요청을 통해 정보 최신화 할 것을 요청하는 `NEED_UPDATE` 타입, 3 종류이다.
+```json
+{
+  "chatId": Long, // 쪽지가 생성된 채팅방 db id
+  "messageId": Long, // 생성된 쪽지의 db id
+  "sentAt": { // 쪽지 작성 시각
+    "year": Int,
+    "month": Int,
+    "day": Int,
+    "hour": Int,
+    "minute": Int
+  },
+  "received": Boolean, // true이면 받은 메세지, false이면 보낸 메세지
+  "contents": String, // 쪽지 내용
+  "type": "MESSAGE"
+}
+```
+```json
+{
+  "chatId": Long, // 생성된 채팅방 db id
+  "target": String, // 채팅 상대 이름
+  "type": "NEWCHAT"
+}
+```
+```json
+{
+  "chatId": [Long, ...],
+  "unread": [Int, ...],
+  "type": "NEED_UPDATE"
+}
+```
 
 ### 5. SSE notification
 현재 에타 웹에서는 자신이 작성한 게시물에 댓글이 달리는 경우, 알림이 오지만 이 알림은 새로고침을 해야만 확인할 수 있다. SSE(Server-Sent-Event)를 이용하여 유저가 화면을 보고 있는 중에는 알림이 뜰 수 있게 구현 하였다. (TODO: 프론트가 구현 완료되면 추후 알림 뜨는 사진 첨부)
@@ -106,3 +155,22 @@ runBlocking { future.forEach { it.await() } }
 - 회원가입을 진행하다 말고 종료하는 유저들의 데이터를 계속 쌓아둘 수 없기에, 저장된지 10분이 지난 데이터는 삭제시켰다.
 
 ### 7. Cursor, Double-Cursor Pagination
+게시판 내 게시물을 열람할 때, 에타 웹에서는 이전/다음을 통해 이동하는 페이지 방식이 사용되고, 앱에서는 무한스크롤 방식이 사용된다.\
+전자에 적합한 것은 offset 기반 페이지네이션, 후자에 적합한 것은 cursor 기반 페이지네이션이므로 Generic 클래스를 사용해 pagination이 적용된 한 api에 두 방식의 요청이 가능하도록 했다.
+```kotlin
+data class CursorPage<T>(
+    val contents: List<T>,
+    val page: Long? = null,
+    val cursor: Long? = null, // DoubleCursorPage의 경우 Pair<Long, Long>? 타입
+    val size: Long,
+    val isLast: Boolean
+)
+```
+query parameter에 page, cursor, size가 존재하고, page가 offset기반 방식에, cursor가 cursor기반 방식에 사용된다.\
+offset기반 방식에서는 첫 페이지가 0임을 당연히 알 수 있지만, cursor기반 방식에서는 첫 페이지를 요청하기 위해 필요한 cursor가 무엇인지 알 수 없기 때문에 cursor가 주어지지 않은 (null 인) 경우에 첫 페이지를 제공한다.\
+따라서 offset기반 방식 요청인지 cursor기반 방식 요청인지는 page query parameter의 nullity를 기준으로 한다. 
+
+댓글은 대댓글의 존재 때문에 작성 시간 만으로 정렬할 수 없다.\
+따라서 원댓글의 작성시간이 최신이면 더 큰 값을 할당 받는 `replyGroup`의 순서를 1순위, 작성시간을 2순위로 정렬한다.\
+이에 따라 cursor기반 페이지네이션에도 커서가 두개 필요해 이때는 `DoubleCursorPage`를 사용해 페이지 사이에 누락되는 데이터가 없게 한다.\
+마찬가지로, 현재 구현의 best게시물은 공감 개수를 1순위, 작성시간을 2순위로 정렬하기 때문에 `DoubleCursorPage`를 사용한다.
